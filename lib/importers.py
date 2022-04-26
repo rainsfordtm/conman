@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-from lib.concordance.Concordance import *
+from lib.concordance import *
+from lib.tokenizers import *
 import csv, re
 
 class Error(Exception):
@@ -38,6 +39,10 @@ class Importer():
         
     ref_regex (str):
         Regex with named groups used to identify fields in the reference string.
+        
+    tokenizer (tokenizers.Tokenizer):
+        Tokenizer use to parse multi-word fields (typically left- and
+        right context).
     
     Methods:
     --------
@@ -45,6 +50,9 @@ class Importer():
     parse_ref(self, ref):
         Parses the reference field into a dictionary of metadata. Uses the
         regex in self.ref_regex.
+        
+    tokenize(self, s):
+        Uses self.tokenizer to tokenize a multi-word field.
     
     """
     
@@ -52,9 +60,10 @@ class Importer():
         """
         Constructs all attributes needed for an instance of the class.
         """
-        self.concordance = new Concordance([])
+        self.concordance = Concordance([])
         self.lcx_fields, self.keywds_fields, self.rcx_fields = [], [], []
         self.ref_regex = ''
+        self.tokenizer = Tokenizer()
         
     def parse_ref(self, ref):
         """
@@ -71,6 +80,20 @@ class Importer():
         if not self.ref_regex: return d
         m = re.match(self.ref_regex, ref)
         return m.groupdict()
+        
+    def tokenize(self, s):
+        """
+        Calls tokenize method of self.tokenizer to tokenize string s.
+    
+        Parameters:
+            s (str) : String containing tokens
+        
+        Return:
+            tokenize(self, s):
+              A list of tokens
+        """
+        return self.tokenizer.tokenize(s)
+        
         
 class TXMImporter(Importer):
     """
@@ -100,7 +123,7 @@ class TXMImporter(Importer):
         Constructs all attributes needed for an instance of the class.
         """
         Importer.__init__(self)
-        self.lcx_fields, self.keywds_fields, self.rcx_fields = [], [], 
+        self.lcx_fields, self.keywds_fields, self.rcx_fields = [], [], []
         
     
     def parse(self, path, encoding = 'utf-8', header = True):
@@ -122,10 +145,10 @@ class TXMImporter(Importer):
             # First line is the header.
             reader = csv.reader(f, delimiter='\t', quoting=csv.QUOTE_NONE)
         # Skip the first row if header is True
-        if header: x = reader.__next__()
-        for row in reader:
-            hit = self.parse_hit(row)
-            self.concordance.append(hit)
+            if header: x = reader.__next__()
+            for row in reader:
+                hit = self.parse_hit(row)
+                self.concordance.append(hit)
         return self.concordance
         
     def parse_hit(self, row):
@@ -141,10 +164,17 @@ class TXMImporter(Importer):
                 A Hit object.
                 
         """
-        lcx = [self.parse_token(item, self.lcx_fields) for item in row[1]]
-        keywds = [self.parse_token(item, self.keywds_fields) for item in row[2]]
-        rcx = [self.parse_token(item, self.rcx_fields) for item in row[3]]
+        # Tokenization
+        lcx_tokenized = self.tokenize(row[1])
+        keywds_tokenized = self.tokenize(row[2])
+        rcx_tokenized = self.tokenize(row[3])
+        # Parse tokens
+        lcx = [self.parse_token(item, self.lcx_fields) for item in lcx_tokenized]
+        keywds = [self.parse_token(item, self.keywds_fields) for item in keywds_tokenized]
+        rcx = [self.parse_token(item, self.rcx_fields) for item in rcx_tokenized]
+        # Combine to a list
         l, kw = context_to_list(lcx, keywds, rcx)
+        # Create Hit
         hit = Hit(l, kw)
         hit.ref = row[0]
         hit.meta = self.parse_ref(hit.ref)
@@ -219,7 +249,7 @@ def tags_to_tok(tags, tagnames = [], word_tag='word'):
     # Iterate over tags
     for tag in tags:
         tagname = tagnames.pop(0) if tagnames else get_tagname()
-        if tagname = word_tag:
+        if tagname == word_tag:
             form = tag
         else:
             tag_d[tagname] = tag
@@ -228,3 +258,5 @@ def tags_to_tok(tags, tagnames = [], word_tag='word'):
     tok = Token(form)
     tok.tags = tag_d
     return tok
+    
+
