@@ -235,7 +235,6 @@ def tags_to_tok(tags, tagnames = [], word_tag='word'):
         tags_to_tok(tags, [tagnames, [word_tag]]):
             A token instance.
     """
-    
     def get_tagname():
         nonlocal i
         s = 'tag' + str(i)
@@ -243,6 +242,7 @@ def tags_to_tok(tags, tagnames = [], word_tag='word'):
         return s
         
     i = 1
+    tagnames = tagnames[:] # COPY tagnames since the pop method is used.
     form, tag_d = '', {}
     # If tagnames is NOT passed, use the first tag as the form.
     if not tagnames: form = tags.pop(0)
