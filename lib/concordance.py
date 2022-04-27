@@ -106,6 +106,9 @@ class Hit(collections.UserList):
     Methods:
     --------
     
+    update_ids (ix, action, n):
+        Updates IDs - at the moment only in self.kw - if the hit is modified.
+    
     """
     
     def __init__(self, l = [], kw = (0, 0)):
@@ -114,7 +117,7 @@ class Hit(collections.UserList):
         
             Parameters:
                 l (list): A list of tokens.
-                ix (int): The index of the hit token.
+                kw (tuple): A fromix, toix tuple of the keywords.
         """
         l = [make_token(s) for s in l]
         collections.UserList.__init__(self, l)
@@ -134,6 +137,7 @@ class Hit(collections.UserList):
     
     def insert(self, i, item):
         item = make_token(item)
+        self.update_ids(i, 'insert', 1)
         collections.UserList.insert(self, i, item)
         
     # UserList methods modified to ensure that make_hit is run on
@@ -154,7 +158,6 @@ class Hit(collections.UserList):
     def extend(self, other):
         other = make_hit(other)
         collections.UserList.extend(self, other)
-
         
 class Token(collections.UserString):
     """
@@ -246,3 +249,4 @@ def make_token(s):
     if isinstance(s, Token): return s
     tok = Token(s)
     return tok
+   
