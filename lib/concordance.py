@@ -94,8 +94,8 @@ class Hit(collections.UserList):
     Attributes:
     -----------
     
-    kw : (fromix, toix)
-        Tuple containing the fromix and toix of the keyword tokens.
+    kws (list) :
+        List of the keyword tokens.
         
     meta (dict) :
         Metadata extracted from self.ref.
@@ -106,22 +106,23 @@ class Hit(collections.UserList):
     Methods:
     --------
     
-    update_ids (ix, action, n):
-        Updates IDs - at the moment only in self.kw - if the hit is modified.
-    
+    is_kw(tok) :
+        Returns True or False depending on whether the Token instance is a
+        keyword or not. Raises TypeError if tok is NOT a Token instance
+        (The class uses exact object equivalence.) 
     """
     
-    def __init__(self, l = [], kw = (0, 0)):
+    def __init__(self, l = [], kws = []):
         """
-        Constructs all attributes needed for an instance of the class (kwix).
+        Constructs all attributes needed for an instance of the class.
         
             Parameters:
                 l (list): A list of tokens.
-                kw (tuple): A fromix, toix tuple of the keywords.
+                kws (list): List of the keyword tokens.
         """
         l = [make_token(s) for s in l]
         collections.UserList.__init__(self, l)
-        self.kw = kw
+        self.kws = kws
         self.meta, self.ref = {}, ''
         
     # UserList methods modified to ensure that make_token is run on
@@ -158,6 +159,28 @@ class Hit(collections.UserList):
     def extend(self, other):
         other = make_hit(other)
         collections.UserList.extend(self, other)
+        
+    # Other methods
+    
+    def is_kw(self, tok):
+        """
+        Returns True or False depending on whether the Token instance is a
+        keyword or not. Raises TypeError if tok is NOT a Token instance
+        (The class uses exact object equivalence.)
+        
+        Parameters:
+            tok (concordance.Token) : A token instance
+            
+        Returns:
+            is_kw(self, tok):
+                True is tok is a keyword, False if tok is not a keyword.
+                TypeError if tok is not a concordance.Token.
+        """
+        if not isinstance(tok, Token):
+            raise TypeError('concordance.Token expect, {} received.',format(type(tok)))
+        for kw in self.kws:
+            if kw is tok: return True
+        return False
         
 class Token(collections.UserString):
     """
@@ -218,21 +241,20 @@ def make_concordance(l):
     cnc = Concordance(l)
     return cnc
 
-def make_hit(l, kw = (0, 0)):
+def make_hit(l, kws = []):
     """
     Function to convert a list or list-like object into a valid Hit instance.
     
     Parameters:
         l (list): A list of tokens.
-        kw (fromix, toix): A tuple containing the fromix and the toix of the 
-            keyword tokens.
+        kws (list): List of the keyword tokens.
         
     Returns:
-        make_hit(l, kw):
+        make_hit(l, kws):
             An instance of the Hit class.
     """
     if isinstance(l, Hit): return l
-    hit = Hit(l, kw)
+    hit = Hit(l, kws)
     return hit
     
 def make_token(s):

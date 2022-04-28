@@ -156,7 +156,7 @@ class TXMImporter(Importer):
         Parses a row from a TXM CSV file. Returns a Hit object.
         
         Parameters:
-            row (list):     List with four items (ref, left context, kw, 
+            row (list):     List with four items (ref, left context, keywords, 
                             right context)
             
         Returns:
@@ -173,9 +173,9 @@ class TXMImporter(Importer):
         keywds = [self.parse_token(item, self.keywds_fields) for item in keywds_tokenized]
         rcx = [self.parse_token(item, self.rcx_fields) for item in rcx_tokenized]
         # Combine to a list
-        l, kw = context_to_list(lcx, keywds, rcx)
+        l, kws = context_to_list(lcx, keywds, rcx)
         # Create Hit
-        hit = Hit(l, kw)
+        hit = Hit(l, kws)
         hit.ref = row[0]
         hit.meta = self.parse_ref(hit.ref)
         return hit
@@ -200,23 +200,24 @@ class TXMImporter(Importer):
 def context_to_list(lcx, keywds, rcx):
     """
     Merges three lists representing the left context, keywords, and
-    right context respectively into a single list, returning the fromix
-    and the toix of the keywords as a tuple, as required in Hit format.
+    right context respectively into a single list containing the whole 
+    sentence and a second list containing only the keywords.
     
     Parameters:
-        lcx (list)      : List containing tokens/strings in the left context
-        keywds (list)   : List containing the keywords
-        rcx (list)      : List containing tokens/strings in the right context
+        lcx (list)      : List containing Tokens in the left context
+        keywds (list)   : List containing the keywords Tokens
+        rcx (list)      : List containing Tokens in the right context
         
     Returns:
         context_to_list(lcx, keywds, rcx):
-            A list, kw tuple which can be used to initialize a Hit object.   
+            A list, kws tuple which can be used to initialize a Hit object.   
     """
-    fromix = len(lcx)
-    toix = len(lcx) + len(keywds)
+    # Check that keywds contains Tokens rather than strings, since the
+    # Hit object will check object identity.
+    keywds = [make_token(item) for item in keywds]
     l = lcx + keywds + rcx
-    kw = (fromix, toix)
-    return l, kw
+    kws = [keywd for keywd in keywds]
+    return l, kws
     
 def tags_to_tok(tags, tagnames = [], word_tag='word'):
     """
