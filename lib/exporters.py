@@ -146,7 +146,7 @@ class ConllExporter(Exporter):
             tok.tags[self.postag] if self.postag in tok.tags else '_',  # 5. postag
             self.get_feats(tok),                                      # 6. feats
             tok.tags[self.head] if self.head in tok.tags else '_',    # 7. head
-            tok.tags[self.deprel] if self.deprel in tok.tags else '_', # 8. deprel
+            tok.tags[self.deprel] if self.deprel in tok.tags else 'ROOT', # 8. deprel
             tok.tags[self.phead] if self.phead in tok.tags else '_',  # 9. phead
             tok.tags[self.pdeprel] if self.pdeprel in tok.tags else '_',  # 10. pdeprel
         ]
