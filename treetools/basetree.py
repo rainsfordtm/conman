@@ -904,7 +904,7 @@ class BaseTree(xml.dom.minidom.Document):
             node_map = knot.attributes
             for i in list(range(node_map.length)):
                 attr = node_map.item(i)
-                leaf.setAttributeNode(knot.removeAttributeNode(attr))
+                leaf.setAttribute(attr.name, attr.value)
             knot.parentNode.insertBefore(leaf, knot)
             knot.parentNode.removeChild(knot)
             knot.unlink()

@@ -2,7 +2,7 @@
 
 from conman.concordance import *
 from conman.tokenizers import *
-import treetools.basetree.parse_file
+import treetools.basetree
 import csv, re
 
 class Error(Exception):

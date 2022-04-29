@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
-from conman.importers import TXMImporter
-from conman.exporters import ConllExporter
+from conman.importers import *
+from conman.exporters import *
 
 importer = BaseTreeImporter()
 # importer.ref_regex = r'(?P<text>[^,]+), (?P<position>.*)'
 # importer.keywds_fields = ['word', 'lemma_dmf']
-cnc = importer.parse('/home/tmr/Code/py3/treetools/samples/basetree.xml')
+importer.keyword_attr = 'is_keyword'
+cnc = importer.parse('/home/tmr/tmp.xml')
 for hit in cnc:
     print(hit)
     print(hit.kws)
