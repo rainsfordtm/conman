@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from lib.importers import TXMImporter
-from lib.exporters import ConllExporter
+from conman.importers import TXMImporter
+from conman.exporters import ConllExporter
 
 importer = TXMImporter()
 importer.ref_regex = r'(?P<text>[^,]+), (?P<position>.*)'

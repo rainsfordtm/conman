@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from lib.concordance import *
-from lib.tokenizers import *
+from conman.concordance import *
+from conman.tokenizers import *
 import csv, re
 
 class Error(Exception):
