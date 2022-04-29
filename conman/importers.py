@@ -2,6 +2,7 @@
 
 from conman.concordance import *
 from conman.tokenizers import *
+import treetools.basetree.parse_file
 import csv, re
 
 class Error(Exception):
@@ -77,7 +78,7 @@ class Importer():
             parse_ref(self, ref):
                 A dictionary of metadata.
         """
-        if not self.ref_regex: return d
+        if not self.ref_regex: return {}
         m = re.match(self.ref_regex, ref)
         return m.groupdict()
         
@@ -94,6 +95,135 @@ class Importer():
         """
         return self.tokenizer.tokenize(s)
         
+class BaseTreeImporter(Importer):
+    """
+    Imports a Basetree XML file into a concordance.
+    
+    Additional attributes:
+    ----------------------
+    keyword_attr (str):
+        Name of attribute on leaf node which specifies whether the node is 
+        a keyword or not.
+        
+    keyword_true_values (list):
+        List of values for the node.getAttribute(self.keyword_attr) which should
+        be evaluated as "True". Defaults ['yes', 'y', 't', 'true'], not 
+        case-sensitive.
+    
+    Methods:
+    --------
+    is_keyword(self, elem):
+        Returns True if the passed leaf node from a BaseTree is marked as a
+        keyword. Uses attribute given in self.keyword_attr and values 
+        in self.keyword_true_values. If keyword_attr is not found, returns
+        False.
+    
+    leaf_to_token(self, elem):
+        Converts a leaf node from a BaseTree to a concordance.Token object.
+    
+    parse(self, path):
+        Parses a Basetree XML file using treetools.
+        
+    stree_to_hit(self, stree):
+        Converts a treetools.basetree.StringTree object to a concordance.Hit
+        object.
+        
+    """
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        Importer.__init__(self)
+        self.keyword_attr = ''
+        self.keyword_true_values = ['yes', 'y', 't', 'true']
+        
+    def is_keyword(self, elem):
+        """
+        Returns True if the passed leaf node from a BaseTree is marked as a
+        keyword. Uses attribute given in self.keyword_attr and values 
+        in self.keyword_true_values. If keyword_attr is not found, returns
+        False.
+        
+        Parameters:
+            elem (xml.dom.minidom.Element) :
+                Element node representing a leaf in a BaseTree.
+        
+        Returns:
+            is_keyword(self, elem): True or False
+        """
+        try:
+            s = elem.getAttribute(self.keyword_attr)
+        except:
+            return False
+        if s.lower() in self.keyword_true_values:
+            return True
+        return False
+        
+    def leaf_to_token(self, bst, elem):
+        """
+        Converts a leaf node from a BaseTree to concordance.Token object.
+        
+        Parameters:
+            bst (treetools.basetree.BaseTree) :
+                BaseTree containing the leaf node.
+            elem (xml.dom.minidom.Element) :
+                Element node representing a leaf in a BaseTree.
+        
+        Returns:
+            leaf_to_token(self, elem):
+               A concordance.Token node.
+        """
+        # 1. Get leaf attributes from bst object
+        attrs = bst.leaf_attrs[:]
+        # 2. Read the form
+        tok = Token(elem.getAttribute('value'))
+        attrs.remove('value')
+        # 3. Store all other attributes as tok.tags
+        tok.tags = dict(zip(attrs, [elem.getAttribute(attr) for attr in attrs]))
+        # 4. Return Token
+        return tok
+        
+    def parse(self, path):
+        """
+        Parses a Basetree XML file file using treetools.
+        
+        Parameters:
+            path (str) :        Path to the XML file.
+            
+        Returns:
+            parse(self, path):
+                A concordance object.
+        """
+        forest = treetools.basetree.parse_file(path)
+        for stree in forest:
+            hit = self.stree_to_hit(stree)
+            self.concordance.append(hit)
+        return self.concordance
+        
+    def stree_to_hit(self, stree):
+        """
+        Converts a treetools.basetree.StringTree object to a concordance.Hit
+        object.
+        
+        Parameters:
+            stree (treetools.basetree.StringTree):
+                A StringTree containing the hit
+            
+        Returns:
+            stree_to_hit(self, stree):
+                A Hit object.
+        """
+        l, kws = [], []
+        bst = stree.to_base_tree()
+        bst.restructure(knots = False) # Convert all knots to leaves.
+        bst.sort() # Ensures that leaves in the BaseTree are in text order.
+        for leaf in bst.leaves:
+            l.append(self.leaf_to_token(bst, leaf))
+            if self.is_keyword(leaf): kws.append(l[-1])
+        hit = Hit(l, kws)
+        hit.ref = stree.get_id()
+        hit.meta = self.parse_ref(hit.ref)
+        return hit
         
 class TXMImporter(Importer):
     """
