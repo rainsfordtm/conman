@@ -72,8 +72,21 @@ def script(transformer, tree, keyword_attr = '', keyword_node_regex = ''):
         tree.add_leaf_attr(attr)
     for leaf in tree.leaves:
         for attr in attrs:
-            leaf.setAttribute('attr', leaf.parentNode.getAttribute('attr'))
+            leaf.setAttribute(attr, leaf.parentNode.getAttribute(attr))
     
+    ####################################################################
+    # 5. Create ancestors attribute (records hierarchy)
+    ####################################################################
+    tree.add_leaf_attr('ancestors')
+    for leaf in tree.leaves:
+        l = []
+        node = leaf.parentNode.parentNode
+        while node is not tree.trunk:
+            l.append(node.getAttribute('cat'))
+            node = node.parentNode
+        l.reverse()
+        leaf.setAttribute('ancestors', '|'.join(l))
+            
     
     
     
