@@ -34,11 +34,13 @@ def script(transformer, tree, keyword_attr = '', keyword_node_regex = ''):
     def get_head(ic):
         nonlocal tree
         is_ip = True if re.match('IP.*', ic.getAttribute('cat')) else False
-        xjs = tree.find_child_nodes('cat', '.J', regex=True)
+        xjs = tree.find_child_nodes('cat', '.*J', ic, regex=True)
         if is_ip and xjs:
             return tree.get_child_leaves(xjs[0])[0]
         else:
-            return tree.get_child_leaves(tree.get_child_branches(ic)[0])[0]
+            nodes = ic.getElementsByTagName('leaf')
+            tree.order_nodes(nodes)
+            return nodes[0]
         
     def is_head(leaf, ic):
         nonlocal tree
