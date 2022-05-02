@@ -64,6 +64,20 @@ def script(transformer, tree, keyword_attr = '', keyword_node_regex = ''):
     transformer.ref = node.getAttribute('value')
     tree.del_node_deep(node.parentNode)
     
+    ####################################################################
+    # 4. Project all branch_attrs, except relation, on to the leaf.
+    ####################################################################
+    attrs = list(set(tree.branch_attrs) - set(tree.leaf_attrs) - set(['relation']))
+    for attr in attrs:
+        tree.add_leaf_attr(attr)
+    for leaf in tree.leaves:
+        for attr in attrs:
+            leaf.setAttribute('attr', leaf.parentNode.getAttribute('attr'))
+    
+    
+    
+    
+    
     return tree
     
     
