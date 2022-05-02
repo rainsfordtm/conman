@@ -133,13 +133,39 @@ class Parser():
 
 class PennPsd(Parser):
     
+    def __init__(self):
+        Parser.__init__(self)
+        self.in_comment = False # Flag to detect multi-line comments
+        
+    def is_comment(self, line):
+        # Detects following conditions for comments:
+        # 1. Line begins with '//'
+        # 2. Line begins with '/*' or '/~*'; sets self.in_comment to True
+        # 3. Line contains '*/', '*~/': treat as comment but set self.in_comment
+        # to False
+        # 4. self.in_comment is True
+        if re.match('//.*', line): return True
+        if re.match('/~?\*.*', line):
+            self.in_comment = True
+            return True
+        if re.search('\*~?/', line):
+            self.in_comment = False
+            return True
+        if self.in_comment: return True
+        return False
+    
     def linereader(self, line):
         # Routine adds to buffer up until the end of a tree is reached.
         # Must call the _flag_tree method when the end of a tree is found.
         # Must return the result of the _end_line method when finished.
-        if len(line) >= 2 and line[:2] == '//':
-            # Assume comment line
+        # 1. Detect comments and ignore them
+        if self.is_comment(line):
             return self._end_line('\n')
+        # 2. Call the tree parser
+        return self._linereader(line)
+            
+    def _linereader(self, line):
+        # 2. Parse the tree
         for i, char in enumerate(line):
             if char == ')':
                 self.depth -= 1
@@ -149,7 +175,11 @@ class PennPsd(Parser):
                 self.depth += 1
         return self._end_line(line)
         
-    def parse_tree(self, id_prefix=''):
+    def parse_tree(self, id_prefix='', node_numbers = False):
+        # Wrapper function.
+        return self._parse_tree(id_prefix, node_numbers)
+        
+    def _parse_tree(self, id_prefix='', node_numbers = False):
         
         def write_d():
             nonlocal buff, id_count, id_prefix, found_list
@@ -173,9 +203,23 @@ class PennPsd(Parser):
                             badtagcrash
             
             tokens = buff.split()
-            buff = ''
+            buff = '' # Initialize cs_id
             if len(tokens) == 0:
                 return None
+                
+            ###################################################################
+            # Addition to Horrible Code May 2022: this deals with node numbers.
+            # It assumes the first argument is a node number, which it stores
+            # as cs_id.
+            # Then it eliminates the node_number from tokens so the Horrible
+            # Old Code can work as normal.
+            ###################################################################
+            
+            if node_numbers:
+                cs_id = tokens[0]
+                tokens = tokens[1:] if len(tokens) > 1 else []
+                
+            ###################################################################
                 
             if len(tokens) in [1, 2]:
                 id_count += 1
@@ -183,6 +227,13 @@ class PennPsd(Parser):
                     [('id', id_prefix + str(id_count)), 
                     ('cat', tokens[0])]
                 )
+                ###############################################################
+                # Further addition: adds cs_id to the dictionary of node
+                # properties if node_numbers is enabled.
+                ###############################################################
+                if node_numbers:
+                    d['cs_id'] = cs_id
+                ###############################################################
                 l = tokens[0].rsplit('-', 1)
                 fl_populate(l, 'branch')
                 l = tokens[0].rsplit('=', 1)
@@ -207,8 +258,8 @@ class PennPsd(Parser):
                     return None
                 else:
                     return d
-                
-            print('PARSE ERROR:', buff)
+            if buff: # don't tell me anything if the buffer is empty.
+                print('PARSE ERROR:', buff)
             
         if not self.last_tree:
             return None
@@ -236,6 +287,37 @@ class PennPsd(Parser):
         
         # Finish
         self.last_nest = self._bn_stack[0]
+        return self.last_nest, self.last_contacts
+        
+class PennPsdOut(PennPsd):
+    
+    def __init__(self):
+        Parser.__init__(self)
+        # Buffer to store all comments preceding the tree.
+        # Flushed by self.add_comment.
+        self.comments = '' 
+        
+    def add_comment(self):
+        # Has to store the comment somewhere, so adds it to 
+        # self.last_nest[0][0], i.e. the top node in the tree, as a comment
+        # attribute, replacing all whitespace with simple spaces
+        # TECHNICALLY, this is a malformed basetree because all nodes should
+        # have the same attributes but hey...
+        self.last_nest[0][0]['comment'] = re.sub(r'\s+', ' ', self.comments)
+        self.comments = ''
+        
+    def linereader(self, line):
+        if self.is_comment(line):
+            self.comments += line + '\n'
+            return self._end_line('\n')
+        # 2. Call the tree parser
+        return self._linereader(line)
+        
+    def parse_tree(self, id_prefix='', node_numbers = True):
+        # 1. Run the normal _parse_tree method with line numbers.  
+        self._parse_tree(id_prefix, node_numbers)
+        # 2. Add comments as a COMMENT node in the tree
+        self.add_comment()
         return self.last_nest, self.last_contacts
 
 class Syntax2(Parser):

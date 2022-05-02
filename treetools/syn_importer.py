@@ -120,6 +120,7 @@ def build_forest(in_file, format):
         if listnest and listnest[0]:
             # Check it's not empty --- may occasionally happen with final tree
             # in syntax2
+            print(listnest)
             try:
                 addlistnest(tree_id, listnest, contacts)
             except:
@@ -146,7 +147,19 @@ def build_forest(in_file, format):
     forest.name = os.path.splitext(os.path.basename(in_file))[0]
     
     if format == 'penn-psd':
-        parser = lib.parsers.PennPsd()
+        parser = treetools.parsers.PennPsd()
+        forest.structure_rules = {
+            'contacts': True, 
+            'crossing_branches': False,
+            'fallen_branches': True,
+            'fallen_leaves': True,
+            'knots': True,
+            'max_leaves_per_branch': 1,
+            'min_leaves_per_branch': 0,
+            'terminal_branches': False
+        }
+    elif format == 'penn-psd-out':
+        parser = treetools.parsers.PennPsdOut()
         forest.structure_rules = {
             'contacts': True, 
             'crossing_branches': False,
@@ -158,7 +171,7 @@ def build_forest(in_file, format):
             'terminal_branches': False
         }
     elif format == 'syntax2':
-        parser = lib.parsers.Syntax2()
+        parser = treetools.parsers.Syntax2()
         forest.structure_rules = {
             'contacts': True, 
             'crossing_branches': False,
@@ -203,7 +216,7 @@ if __name__ == '__main__':
         'Parses a (probably text-based) corpus file and saves a basetree XML.'
         )
     parser.add_argument('infile', help='Input text file.')
-    parser.add_argument('parser', choices=['penn-psd', 'syntax2'], 
+    parser.add_argument('parser', choices=['penn-psd', 'penn-psd-out', 'syntax2'], 
         help='Parser to use for text file.'
     )
     parser.add_argument('-o', '--output', default='out.xml', 

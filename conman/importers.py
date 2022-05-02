@@ -2,7 +2,8 @@
 
 from conman.concordance import *
 from conman.tokenizers import *
-import treetools.basetree
+import treetools.basetree, treetools.syn_importer, treetools.transformers
+import conman.scripts.pennout2cnc
 import csv, re
 
 class Error(Exception):
@@ -225,6 +226,76 @@ class BaseTreeImporter(Importer):
         hit.meta = self.parse_ref(hit.ref)
         return hit
         
+class PennOutImporter(BaseTreeImporter):
+    """
+    Imports a .out file from CorpusSearch containing hits marked in the
+    text. Inherits from BaseTreeImporter as it first converts the .out
+    file to a BaseTree.
+    
+    Additional attributes:
+    ----------------------
+    
+    keyword_node_regex (str):
+        Regex used to identify the node number of the keyword node from
+        the comment above the tree. The matching node must be identified
+        by the named group 'keyword_node'.
+        Default is r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*', i.e. the first
+        number in the comment (typically the dominating IP).
+        
+    script(transformer, keyword_node_regex=self.keyword_node_regex):
+        Function containing instructions used to transform each BaseTree
+        from the .out file into the desired format for the BaseTreeImporter,
+        i.e. where all relevant information is stored as leaf attributes.
+        Should add the attribute in self.keyword_attr to all nodes, with a 
+        value matching self.keyword_true_values if the node number matches
+        self.keyword_node_regex.
+        Default is the 'script' function in conman/scripts/pennout2cnc.py.
+        
+    Methods:
+    --------
+    
+    parse(self, path, encoding = 'utf-8'):
+        Parses a Penn .out file.
+   
+    """
+    
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        BaseTreeImporter.__init__(self)
+        self.keyword_node_regex = r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*'
+        self.script = conman.scripts.pennout2cnc.script 
+        
+    def parse(self, path, encoding = 'utf-8'):
+        """
+        Parses a Penn .out file.
+        
+        Parameters:
+            path (str) :        Path to the .out file.
+            
+        Returns:
+            parse(self, path):
+                A concordance object.
+        """
+        # 1. Call syn_importer on the .out file. to create a BaseForest.
+        forest = treetools.syn_importer.build_forest(path, 'penn-psd-out')
+        # 2. Initialize a transformer
+        transformer = treetools.transformers.Transformer()
+        # 3. Set the script method from self.script
+        transformer.script = self.script
+        # 4. Transform the forest (in situ)
+        forest = transformer.transform(
+            forest,
+            keyword_attr = self.keyword_attr,
+            keyword_node_regex = self.keyword_node_regex
+            )
+        # 5. Add each tree in the forest to the concordance
+        for stree in forest:
+            hit = self.stree_to_hit(stree)
+            self.concordance.append(hit)
+        return self.concordance
+      
 class TXMImporter(Importer):
     """
     Imports a CSV file exported from TXM to build a concordance.  
