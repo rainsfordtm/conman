@@ -345,6 +345,9 @@ class StringTree(collections.UserString):
         else: 
             return ''
             
+    def update_id(self, s):
+        re.sub(r'(?<=tree\sid=")[^"]+', s, self.data)
+            
     def validate(self):
         """Class-internal SAX-based validation of trees loaded from XML
         text file.

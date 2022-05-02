@@ -120,7 +120,6 @@ def build_forest(in_file, format):
         if listnest and listnest[0]:
             # Check it's not empty --- may occasionally happen with final tree
             # in syntax2
-            print(listnest)
             try:
                 addlistnest(tree_id, listnest, contacts)
             except:

@@ -235,6 +235,11 @@ class PennOutImporter(BaseTreeImporter):
     Additional attributes:
     ----------------------
     
+    dump_xml (str):
+        Path to which the post-transformation XML should be saved (useful
+        for checking if the .psd transformer is doing what it's expected to do.)
+        If not set, defaults to '' and XML is not saved.
+
     keyword_node_regex (str):
         Regex used to identify the node number of the keyword node from
         the comment above the tree. The matching node must be identified
@@ -242,6 +247,11 @@ class PennOutImporter(BaseTreeImporter):
         Default is r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*', i.e. the first
         number in the comment (typically the dominating IP).
         
+    word_lemma_regex (str):
+        Regex used to split words from lemmas in the PSD file.
+        The regex must include the named groups 'word' and 'lemma'.
+        Default is a hyphen, e.g. r'(?P<word>[^\-]*)-(?P<lemma>.*)'
+   
     script(transformer, keyword_node_regex=self.keyword_node_regex):
         Function containing instructions used to transform each BaseTree
         from the .out file into the desired format for the BaseTreeImporter,
@@ -264,8 +274,10 @@ class PennOutImporter(BaseTreeImporter):
         Constructs all attributes needed for an instance of the class.
         """
         BaseTreeImporter.__init__(self)
+        self.dump_xml = ''
         self.keyword_node_regex = r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*'
-        self.script = conman.scripts.pennout2cnc.script 
+        self.word_lemma_regex = r'(?P<word>[^\-]*)-(?P<lemma>.*)'
+        self.script = conman.scripts.pennout2cnc.script
         
     def parse(self, path, encoding = 'utf-8'):
         """
@@ -284,16 +296,22 @@ class PennOutImporter(BaseTreeImporter):
         transformer = treetools.transformers.Transformer()
         # 3. Set the script method from self.script
         transformer.script = self.script
-        # 4. Transform the forest (in situ)
+        # 4. Transform the forest
         forest = transformer.transform(
             forest,
             keyword_attr = self.keyword_attr,
-            keyword_node_regex = self.keyword_node_regex
+            keyword_node_regex = self.keyword_node_regex,
+            word_lemma_regex = self.word_lemma_regex
             )
         # 5. Add each tree in the forest to the concordance
         for stree in forest:
             hit = self.stree_to_hit(stree)
             self.concordance.append(hit)
+        # 6. Dump the XML if a path is set
+        if self.dump_xml:
+            with open(self.dump_xml, 'w') as f:
+                f.write(forest.toxml())
+        # 7. Return concordance.s 
         return self.concordance
       
 class TXMImporter(Importer):

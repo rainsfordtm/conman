@@ -16,6 +16,7 @@ class Transformer():
     transform(self, forest):
         Applies the transformations given in self.script to each tree in
         a BaseForest.
+        
     """
     
     def __init__(self):
@@ -38,12 +39,19 @@ class Transformer():
                 A treetools.basetree.BaseForest instance.
         """
         for i, stree in enumerate(forest):
+            old_id = stree.get_id()
             tree = stree.to_base_tree()
             # Self passed explicitly because it's a FUNCTION not a METHOD.
             tree = self.script(self, tree, **kwargs)
-            forest[i] = tree.to_string_tree()
-            
+            stree = tree.to_string_tree()
+            try:
+                forest[i] = tree.to_string_tree()
+            except:
+                # Revert to the old_id
+                stree.update_id(old_id)
+                forest[i] = tree.to_string_tree()
         return forest
+        
             
 def script(transformer, tree, **kwargs):
     """

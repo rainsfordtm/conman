@@ -76,12 +76,12 @@ def script(transformer, tree,
     ####################################################################
     # 3. Deal with the reference node
     # It's the final leaf in the tree
-    # In order to save it for posterity, it is stored as transformer.ref
+    # Updates the tree ID.
     # Then the node is deleted.
     #####################################################################
     tree.sort()
     node = tree.leaves[-1]
-    transformer.ref = node.getAttribute('value')
+    tree.trunk.parentNode.setAttribute('id', node.getAttribute('value'))
     tree.del_node_deep(node.parentNode)
     
     ####################################################################
@@ -134,7 +134,7 @@ def script(transformer, tree,
         if m and 'lemma' in m.groupdict():
             leaf.setAttribute('lemma', m.groupdict()['lemma'])
         if m and 'word' in m.groupdict():
-            leaf.setAttribute('value', m.groupdict()['value'])
+            leaf.setAttribute('value', m.groupdict()['word'])
      
     return tree
     
