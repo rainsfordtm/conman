@@ -17,7 +17,8 @@ transformer.script = conman.scripts.pennout2cnc.script
 # 4. Transform the forest (in situ)
 forest = transformer.transform(forest,
    keyword_attr = 'keyword',
-   keyword_node_regex = r'.*\s+(?P<keyword_node>[0-9]+) V.*'
+   keyword_node_regex = r'.*\s+(?P<keyword_node>[0-9]+) V.*',
+   word_lemma_regex = r'(?P<word>.*)@l=(?P<lemma>)$'
 )
 with open('/home/tmr/tmp.xml', 'w') as f:
     f.write(forest.toxml())

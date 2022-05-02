@@ -7,7 +7,10 @@
 # before it can be run.
 # 
 
-def script(transformer, tree, keyword_attr = '', keyword_node_regex = ''):
+def script(transformer, tree, 
+    keyword_attr = '',
+    keyword_node_regex = '',
+    word_lemma_regex = '(?P<word>.*)'):
     # Required positional arguments for ALL scripts are:
     # self: an instance of the treetools.transformer.Transformer class
     # tree: an instance of the treetools.basetree.BaseTree class.
@@ -121,7 +124,18 @@ def script(transformer, tree, keyword_attr = '', keyword_node_regex = ''):
             leaf.setAttribute('conll_HEAD', '0')
         else:
             leaf.setAttribute('conll_HEAD', str(get_head(ic).getAttribute('order')))
-    
+            
+    ###################################################################
+    # 7. Use the word-lemma regex to split word from lemmas
+    ###################################################################
+    tree.add_leaf_attr('lemma')
+    for leaf in tree.leaves:
+        m = re.match(word_lemma_regex, leaf.getAttribute('value'))
+        if m and 'lemma' in m.groupdict():
+            leaf.setAttribute('lemma', m.groupdict()['lemma'])
+        if m and 'word' in m.groupdict():
+            leaf.setAttribute('value', m.groupdict()['value'])
+     
     return tree
     
     
