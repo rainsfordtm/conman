@@ -39,6 +39,8 @@ class Transformer():
                 A treetools.basetree.BaseForest instance.
         """
         for i, stree in enumerate(forest):
+            if len(forest) > 1000 and float(i/1000) == int(i/1000):
+                print('Transforming tree {} of {}'.format(str(i), len(forest)))
             old_id = stree.get_id()
             tree = stree.to_base_tree()
             # Self passed explicitly because it's a FUNCTION not a METHOD.

@@ -39,11 +39,12 @@ def script(transformer, tree,
         is_ip = True if re.match('IP.*', ic.getAttribute('cat')) else False
         xjs = tree.find_child_nodes('cat', '.*J', ic, regex=True)
         if is_ip and xjs:
-            return tree.get_child_leaves(xjs[0])[0]
+            nodes = tree.get_child_leaves(xjs[0])
+            return nodes[0] if nodes else None
         else:
             nodes = ic.getElementsByTagName('leaf')
             tree.order_nodes(nodes)
-            return nodes[0]
+            return nodes[0] if nodes else None
         
     def is_head(leaf, ic):
         nonlocal tree
@@ -123,7 +124,9 @@ def script(transformer, tree,
             # Head is sentence root
             leaf.setAttribute('conll_HEAD', '0')
         else:
-            leaf.setAttribute('conll_HEAD', str(get_head(ic).getAttribute('order')))
+            head = get_head(ic)
+            if head:
+                leaf.setAttribute('conll_HEAD', str(head.getAttribute('order')))
             
     ###################################################################
     # 7. Use the word-lemma regex to split word from lemmas
