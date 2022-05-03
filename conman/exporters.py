@@ -48,11 +48,11 @@ class Exporter():
             path (str):                     File name
             encoding (str):                 Character encoding
         """
-        with open(path, 'w' encoding=encoding) as f:
+        with open(path, 'w', encoding=encoding) as f:
             for hit in cnc:
                 f.write(hit.to_string(
                     hit.TOKENS,
-                    delimiter='\n',
+                    delimiter=self.tok_delimiter,
                     tok_fmt=self.tok_fmt,
                     kw_fmt=self.kw_fmt))
                 f.write('\n')
