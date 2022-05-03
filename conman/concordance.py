@@ -91,14 +91,20 @@ class Hit(collections.UserList):
     
     Core data: a List of instances of Tokens.
     
+    Constants:
+    ----------
+    Token constants (tok_constant): 
+        TOKENS, LCX, RCX, TOKENS. 
+            Used to specify which tokens should be return by methods in the class.
+    
     Attributes:
     -----------
     
     kws (list) :
         List of the keyword tokens.
         
-    meta (dict) :
-        Metadata extracted from self.ref.
+    tags (dict) :
+        Dictionary containing further annotation (e.g. metadata).
         
     ref (str) :
         String representing the reference (original corpus format).
@@ -106,11 +112,29 @@ class Hit(collections.UserList):
     Methods:
     --------
     
+    format_token(self, [tok_fmt, [kw_fmt]]):
+        Returns a string representation of tok formatted according to 
+        the tok_fmt and kw_fmt format strings.
+    
+    get_tokens(tok_constant):
+        Returns the specified tokens as a list.
+
     is_kw(tok) :
         Returns True or False depending on whether the Token instance is a
         keyword or not. Raises TypeError if tok is NOT a Token instance
-        (The class uses exact object equivalence.) 
+        (The class uses exact object equivalence.)
+        
+    to_string(self, [tok_constant, [delimiter, [tok_fmt, [kw_fmt]]]]) 
+        Return a list of some or all of the tokens in the hit as a string
+        formatted according to the arguments passed.
+        
     """
+    
+    TOKENS = 0
+    LCX = 1
+    RCX = 2
+    TOKENS = 3
+
     
     def __init__(self, l = [], kws = []):
         """
@@ -123,7 +147,7 @@ class Hit(collections.UserList):
         l = [make_token(s) for s in l]
         collections.UserList.__init__(self, l)
         self.kws = kws
-        self.meta, self.ref = {}, ''
+        self.tags, self.ref = {}, ''
         
     # UserList methods modified to ensure that make_token is run on
     # all modifications to the hit.
@@ -162,6 +186,43 @@ class Hit(collections.UserList):
         
     # Other methods
     
+    def get_tokens(self, tok_constant = Hit.TOKENS):
+        """
+        Returns the specified tokens as a list.
+        
+        Parameters:
+            tok_constant:   A tok_constant specifying which tokens to return.
+            
+        Returns:
+            get_tokens(self, tok_constant):
+                A list of tokens
+        """
+        if tok_constant == Hit.TOKENS:
+            return [tok for tok in self.data]
+        if tok_constant == Hit.KEYWORDS:
+            return [tok for tok in self.kws]
+        if not self.kws:
+            # No context possible if there are no keywords
+            return []
+        if tok_constant == Hit.LCX:
+            l = []
+            toks = self.data[:]
+            tok = toks.pop(0)
+            while not self.is_kw(tok):
+                l.append(tok)
+                tok = toks.pop(0)
+            return toks
+        if tok_constant == Hit.RCX:
+            l = []
+            toks = self.data[:]
+            tok = toks.pop(-1)
+            while not self.is_kw(tok):
+                l.append(tok)
+                tok = toks.pop(-1)
+            toks.reverse()
+            return toks
+        return []
+    
     def is_kw(self, tok):
         """
         Returns True or False depending on whether the Token instance is a
@@ -182,6 +243,50 @@ class Hit(collections.UserList):
             if kw is tok: return True
         return False
         
+    def format_token(self, tok, tok_fmt = '{0}', kw_fmt = '{0}'):
+        """
+        Returns a string representation of tok formatted according to 
+        the tok_fmt and kw_fmt format strings.
+        
+        Parameters:
+            tok (concordance.Token):    a token
+            tok_fmt (str):                  Format string giving arguments of token to print
+            kw_fmt (str):                   Format string giving special formatting of keyword
+            
+        Returns:
+            format_token(self, [tok_fmt, [kw_fmt]]):
+                A string representing the token.
+        """
+        if self.is_kw(tok):
+            return kw_fmt.format(tok_fmt.format(tok))
+        else:
+            return tok_fmt.format(tok)
+            
+        
+    def to_string(self, 
+            tok_constant = Hit.TOKENS,
+            delimiter = ' ', 
+            tok_fmt = '{0}',
+            kw_fmt = '{0}'):
+        """
+        Return a string representing some or all of the tokens in the hit as a string
+        formatted according to the arguments passed.
+        
+        Parameters:
+            
+        tok_constant (tok_constant):    Constant specifying which tokens to print
+        delimiter (str):                String used to delimit the tokens
+        tok_fmt (str):                  Format string giving arguments of token to print
+        kw_fmt (str):                   Format string giving special formatting of keyword
+        
+        Returns:
+            to_string(self, [tok_constant, pdelimiter, [tok_fmt, [kw_fmt]]]):
+                A string representing the token.
+        """
+        toks = self.get_tokens(tok_constant)
+        l = [self.format_token(tok, tok_fmt, kw_fmt) for tok in toks]
+        return delimiter.join(l)
+        
 class Token(collections.UserString):
     """
     Class to store a single Token.
@@ -193,10 +298,6 @@ class Token(collections.UserString):
     
     tags : dict
         Annotation attached to the token.
-        
-    Methods:
-    --------
-    
     """
     
     def __init__(self, s):

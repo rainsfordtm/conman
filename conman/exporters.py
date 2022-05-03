@@ -1,23 +1,136 @@
 #!/usr/bin/python3
 
-class Exporter():
+import csv
+from conman.concordance import Hit
+
+class HitExporter():
     """
-    Parent Class to export a concordance. Defines core methods for Child classes.
+    Parent Class to export a concordance in some kind of tabular form as 
+    a text file. Defines core methods for Child classes. 
+    Default methods produce an Excel-style CSV file with one hit per line
+    as a KWIC concordance.
+    
+    Constants:
+    ----------
+    SPECIAL_FIELDS (list):
+        List of fieldnames reserved for fields not stored
+        in the tags dictionary of the hit.
     
     Attributes:
     -----------
-    concordance (concordance.Concordance): The concordance to be exported.
-    
+    dialect (str):
+        Dialect to use for the CSV writer. Options are:
+            'excel':    Comma-separated, quote with " only when necessary.
+            'tab'  :    Tab-separated, no quoting or escaping.
+            
+    header (bool):
+        Write a header row if set to True. Default is True.
+        
+    fields (list):
+        List of fields to export in the order in which the columns should be
+        represented in the file. Fields are looked up by default in the
+        .tags dictionary of the hit, but the HitExporter.SPECIAL_FIELDS are
+        reserved values:
+        
+        Hits:
+        -----
+        KEYWORDS:   Keyword tokens only
+        LCX:        Tokens preceding keywords only
+        RCX:        Tokens following keywords only
+        REF:        hit.ref
+        TOKENS:     All tokens
+
+    kw_fmt(str):
+        Format string used IN ADDITION to tok_fmt to format each keyword.
+        Default is '{0}', i.e. just the same as a normal token. 
+        
+    tok_fmt (str):
+        Format string used to represent each token. Takes a single positional
+        argument, which is evaluated as a token instance. Default is '{0}',
+        i.e. just the token as a string.
+        
+        
     Methods:
     --------
+    
+    hit_to_list(self, hit):
+        Converts a hit to a list ready for export.
+    
+    export(self, path, [encoding]):
+        Exports concordance cnc to path in a tabular format.
+    
     """
+    
+    SPECIAL_FIELDS = ['KEYWORDS', 'LCX', 'RCX', 'TOKENS', 'REF']
+    
     def __init__(self):
         """
         Constructs all attributes needed for an instance of the class.
         """
         self.concordance = None
-
-class ConllExporter(Exporter):
+        self.header = True
+        self.dialect = 'excel'
+        self.kw_fmt = '{0}'
+        self.tok_fmt = '{0}'
+        self.fields = ['REF', 'LCX', 'KEYWORDS', 'RCX']
+        csv.register_dialect(
+            'tab',
+            delimiter='\t',
+            quoting=csv.QUOTE_NONE
+            )
+        
+    def export(self, cnc, path, encoding = 'utf-8'):
+        """
+        Exports concordance cnc to path in a tabular format.
+        
+        Parameters:
+            cnc (concordance.Concordance):  Concordance to export
+            path (str):                     File name
+            encoding (str):                 Character encoding
+        """
+        with open(path, 'w', encoding=encoding, newline='') as f:
+            writer = csv.writer(f, dialect=self.dialect)
+            if self.header:
+                writer.writerow(self.fields)
+            for hit in cnc:
+                writer.writerow(self.hit_to_list(hit))
+                
+    def hit_to_list(self, hit):
+        """
+        Converts a hit to a list ready for export.
+        
+        Parameters:
+            hit (concordance.Hit):  The hit to be exported
+            
+        Returns:
+            hit_to_list(self, hit):
+                A list of the fields in the hit.
+        """
+        l = []
+        for field in self.fields:
+            if field in HitExporter.SPECIAL_FIELDS:
+                # 1. Token printing fields.
+                for special_field, tok_spec in [
+                    ('KEYWORDS', Hit.KEYWORDS),
+                    ('LCX', Hit.LCX),
+                    ('RCX', Hit.RCX),
+                    ('TOKENS', Hit.TOKENS)
+                ]:
+                    if field == special_field:
+                        l.append(hit.to_string(
+                            delimiter = ' ',
+                            tok_spec = tok_spec,
+                            tok_fmt = self.tok_fmt,
+                            kw_fmt = self.kw_fmt
+                        ))
+                # 2. Check for the REF field
+                if field == 'REF':
+                    l.append(self.ref)
+            # 3. Otherwise, use self.tags
+            else:
+                l.append(hit.tags[field] if field in hit.tags else '') 
+                
+class ConllExporter():
     """
     Exports the concordance to a Conll file.
     
@@ -52,7 +165,6 @@ class ConllExporter(Exporter):
         """
         Constructs all attributes needed for an instance of the class.
         """
-        Exporter.__init__(self)
         self.lemma = 'conll_LEMMA'
         self.cpostag = 'conll_CPOSTAG'
         self.postag = 'conll_POSTAG'
@@ -150,7 +262,4 @@ class ConllExporter(Exporter):
             tok.tags[self.phead] if self.phead in tok.tags else '_',  # 9. phead
             tok.tags[self.pdeprel] if self.pdeprel in tok.tags else '_',  # 10. pdeprel
         ]
-            
-        
-        
-
+       

@@ -223,7 +223,7 @@ class BaseTreeImporter(Importer):
             if self.is_keyword(leaf): kws.append(l[-1])
         hit = Hit(l, kws)
         hit.ref = stree.get_id()
-        hit.meta = self.parse_ref(hit.ref)
+        hit.tags = self.parse_ref(hit.ref)
         return hit
         
 class PennOutImporter(BaseTreeImporter):
@@ -396,7 +396,7 @@ class TXMImporter(Importer):
         # Create Hit
         hit = Hit(l, kws)
         hit.ref = row[0]
-        hit.meta = self.parse_ref(hit.ref)
+        hit.tags = self.parse_ref(hit.ref)
         return hit
         
     def parse_token(self, s, tagnames):
