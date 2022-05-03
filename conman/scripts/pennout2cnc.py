@@ -64,8 +64,12 @@ def script(transformer, tree,
     tree.add_branch_attr(keyword_attr)
     # Find the keyword in the tree
     keyword_branch = tree.find_nodes('cs_id', keyword_node, regex=False)[0]
-    # Set the attribute to True
+    # Set the attribute to True on the keyword branch
     keyword_branch.setAttribute(keyword_attr, 'True')
+    # Get all descendents
+    branches = keyword_branch.getElementsByTagName('branch')
+    for branch in branches:
+        branch.setAttribute('keyword', 'True')
     
     ###############################
     # 2. Remove all code nodes

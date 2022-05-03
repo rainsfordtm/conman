@@ -11,9 +11,10 @@ importer = PennOutImporter()
 importer.keyword_attr = 'keyword'
 importer.word_lemma_regex = r'(?P<word>.*)@l=(?P<lemma>.*)$'
 importer.keyword_node_regex = r'.* (?P<keyword_node>[0-9]+) V.*'
-importer.dump_xml = '/home/tmr/tmp.xml'
-cnc = importer.parse('/home/tmr/tmp.out')
+# importer.dump_xml = '/home/tmr/tmp.xml'
+cnc = importer.parse('/home/tmr/test-achim.out')
+cnc.save('/home/tmr/test-achim.cnc')
 exporter = TableExporter()
 # exporter.tok_delimiter='\n'
-# exporter.tok_fmt = "{0}_{0.tags[cat]}"
-exporter.export(cnc, '/home/tmr/tmp.txt')
+exporter.kw_fmt = '{0}_{0.tags[lemma]}_{0.tags[cat]}'
+exporter.export(cnc, '/home/tmr/test-achim.csv')
