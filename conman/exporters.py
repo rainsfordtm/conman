@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import csv
-from conman.concordance import Hit
 
 class HitExporter():
     """
@@ -41,8 +40,9 @@ class HitExporter():
         TOKENS:     All tokens
 
     kw_fmt(str):
-        Format string used IN ADDITION to tok_fmt to format each keyword.
-        Default is '{0}', i.e. just the same as a normal token. 
+        Format string used to format each keyword. Takes a single positional
+        argument, which is evaluated as a token instance. Default is '',
+        which is evaluated as 'use tok_fmt'.
         
     tok_fmt (str):
         Format string used to represent each token. Takes a single positional
@@ -70,7 +70,7 @@ class HitExporter():
         self.concordance = None
         self.header = True
         self.dialect = 'excel'
-        self.kw_fmt = '{0}'
+        self.kw_fmt = ''
         self.tok_fmt = '{0}'
         self.fields = ['REF', 'LCX', 'KEYWORDS', 'RCX']
         csv.register_dialect(
@@ -108,27 +108,28 @@ class HitExporter():
         """
         l = []
         for field in self.fields:
-            if field in HitExporter.SPECIAL_FIELDS:
+            if field in self.SPECIAL_FIELDS:
                 # 1. Token printing fields.
-                for special_field, tok_spec in [
-                    ('KEYWORDS', Hit.KEYWORDS),
-                    ('LCX', Hit.LCX),
-                    ('RCX', Hit.RCX),
-                    ('TOKENS', Hit.TOKENS)
+                for special_field, tok_constant in [
+                    ('KEYWORDS', hit.KEYWORDS),
+                    ('LCX', hit.LCX),
+                    ('RCX', hit.RCX),
+                    ('TOKENS', hit.TOKENS)
                 ]:
                     if field == special_field:
                         l.append(hit.to_string(
                             delimiter = ' ',
-                            tok_spec = tok_spec,
+                            tok_constant = tok_constant,
                             tok_fmt = self.tok_fmt,
-                            kw_fmt = self.kw_fmt
+                            kw_fmt = self.kw_fmt or self.tok_fmt
                         ))
                 # 2. Check for the REF field
                 if field == 'REF':
-                    l.append(self.ref)
+                    l.append(hit.ref)
             # 3. Otherwise, use self.tags
             else:
-                l.append(hit.tags[field] if field in hit.tags else '') 
+                l.append(hit.tags[field] if field in hit.tags else '')
+        return l
                 
 class ConllExporter():
     """

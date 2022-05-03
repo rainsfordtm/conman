@@ -133,8 +133,7 @@ class Hit(collections.UserList):
     TOKENS = 0
     LCX = 1
     RCX = 2
-    TOKENS = 3
-
+    KEYWORDS = 3
     
     def __init__(self, l = [], kws = []):
         """
@@ -186,7 +185,7 @@ class Hit(collections.UserList):
         
     # Other methods
     
-    def get_tokens(self, tok_constant = Hit.TOKENS):
+    def get_tokens(self, tok_constant = 0):
         """
         Returns the specified tokens as a list.
         
@@ -197,30 +196,30 @@ class Hit(collections.UserList):
             get_tokens(self, tok_constant):
                 A list of tokens
         """
-        if tok_constant == Hit.TOKENS:
+        if tok_constant == self.TOKENS:
             return [tok for tok in self.data]
-        if tok_constant == Hit.KEYWORDS:
+        if tok_constant == self.KEYWORDS:
             return [tok for tok in self.kws]
         if not self.kws:
             # No context possible if there are no keywords
             return []
-        if tok_constant == Hit.LCX:
+        if tok_constant == self.LCX:
             l = []
             toks = self.data[:]
             tok = toks.pop(0)
             while not self.is_kw(tok):
                 l.append(tok)
                 tok = toks.pop(0)
-            return toks
-        if tok_constant == Hit.RCX:
+            return l
+        if tok_constant == self.RCX:
             l = []
             toks = self.data[:]
             tok = toks.pop(-1)
             while not self.is_kw(tok):
                 l.append(tok)
                 tok = toks.pop(-1)
-            toks.reverse()
-            return toks
+            l.reverse()
+            return l
         return []
     
     def is_kw(self, tok):
@@ -258,13 +257,13 @@ class Hit(collections.UserList):
                 A string representing the token.
         """
         if self.is_kw(tok):
-            return kw_fmt.format(tok_fmt.format(tok))
+            return kw_fmt.format(tok)
         else:
             return tok_fmt.format(tok)
             
         
     def to_string(self, 
-            tok_constant = Hit.TOKENS,
+            tok_constant = 0,
             delimiter = ' ', 
             tok_fmt = '{0}',
             kw_fmt = '{0}'):
