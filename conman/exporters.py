@@ -2,9 +2,64 @@
 
 import csv
 
-class HitExporter():
+class Exporter():
     """
-    Parent Class to export a concordance in some kind of tabular form as 
+    Most basic of all exporters that simply prints each hit in the concordance
+    on each line. Token appearance can be controlled by kw_fmt, tok_fmt,
+    and tok_delimiter.
+    
+    Attributes:
+    -----------
+
+    kw_fmt(str):
+        Format string used to format each keyword. Takes a single positional
+        argument, which is evaluated as a token instance. Default is '',
+        which is evaluated as 'use tok_fmt'.
+        
+    tok_delimiter (str):
+        String used to delimit the tokens. Default is ' '.
+        
+    tok_fmt (str):
+        Format string used to represent each token. Takes a single positional
+        argument, which is evaluated as a token instance. Default is '{0}',
+        i.e. just the token as a string.
+        
+    Methods:
+    --------
+    
+    export(self, cnc, path, [encoding]):
+        Exports concordance cnc to path, one token per line.
+    """
+    
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        self.kw_fmt = ''
+        self.tok_fmt = '{0}'
+        self.tok_delimiter = ' '
+        
+    def export(self, cnc, path, encoding = 'utf-8'):
+        """
+        Exports concordance cnc to path in a tabular format.
+        
+        Parameters:
+            cnc (concordance.Concordance):  Concordance to export
+            path (str):                     File name
+            encoding (str):                 Character encoding
+        """
+        with open(path, 'w' encoding=encoding) as f:
+            for hit in cnc:
+                f.write(hit.to_string(
+                    hit.TOKENS,
+                    delimiter='\n',
+                    tok_fmt=self.tok_fmt,
+                    kw_fmt=self.kw_fmt))
+                f.write('\n')
+
+class TableExporter(Exporter):
+    """
+    Class to export a concordance in some kind of tabular form as 
     a text file. Defines core methods for Child classes. 
     Default methods produce an Excel-style CSV file with one hit per line
     as a KWIC concordance.
@@ -39,16 +94,6 @@ class HitExporter():
         REF:        hit.ref
         TOKENS:     All tokens
 
-    kw_fmt(str):
-        Format string used to format each keyword. Takes a single positional
-        argument, which is evaluated as a token instance. Default is '',
-        which is evaluated as 'use tok_fmt'.
-        
-    tok_fmt (str):
-        Format string used to represent each token. Takes a single positional
-        argument, which is evaluated as a token instance. Default is '{0}',
-        i.e. just the token as a string.
-        
         
     Methods:
     --------
@@ -67,11 +112,10 @@ class HitExporter():
         """
         Constructs all attributes needed for an instance of the class.
         """
+        Exporter.__init__(self)
         self.concordance = None
         self.header = True
         self.dialect = 'excel'
-        self.kw_fmt = ''
-        self.tok_fmt = '{0}'
         self.fields = ['REF', 'LCX', 'KEYWORDS', 'RCX']
         csv.register_dialect(
             'tab',
@@ -118,7 +162,7 @@ class HitExporter():
                 ]:
                     if field == special_field:
                         l.append(hit.to_string(
-                            delimiter = ' ',
+                            delimiter = self.tok_delimiter,
                             tok_constant = tok_constant,
                             tok_fmt = self.tok_fmt,
                             kw_fmt = self.kw_fmt or self.tok_fmt
@@ -130,7 +174,7 @@ class HitExporter():
             else:
                 l.append(hit.tags[field] if field in hit.tags else '')
         return l
-                
+        
 class ConllExporter():
     """
     Exports the concordance to a Conll file.
