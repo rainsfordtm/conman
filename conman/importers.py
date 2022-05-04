@@ -27,17 +27,20 @@ class Importer():
     concordance (concordance.Concordance):
         Concordance object
         
-    lcx_fields (list):
-        List of tag names exported in the left context of the concordance.
-        "word" is used as the base form.
+    lcx_regex (str):
+        Regular expression string used to interpret fields in each token
+        string in the left context. Default is r'(?P<word>.*)', i.e. the 
+        whole string is a word. Also used if there are NO keywords.
         
-    keywds_fields (list):
-        List of tag names exported in the keywords column of the concordance.
-        "word" is used as the base form.
+    keywds_regex (str):
+        Regular expression string used to interpret fields in each token
+        string in the keywords. Default is r'(?P<word>.*)', i.e. the 
+        whole string is a word.
         
-    rcx_fields (list):
-        List of tag names exported in the right context of the concordance.
-        "word" is used as the base form.
+    rcx_regex (str):
+        Regular expression string used to interpret fields in each token
+        string in the right context. Default is r'(?P<word>.*)', i.e. the 
+        whole string is a word.
         
     ref_regex (str):
         Regex with named groups used to identify fields in the reference string.
@@ -48,24 +51,77 @@ class Importer():
     
     Methods:
     --------
+    get_tokens(self, s, special_field):
+        Converts a string into a list of tokens, using the tokenizer and 
+        the regex.
     
     parse_ref(self, ref):
         Parses the reference field into a dictionary of metadata. Uses the
         regex in self.ref_regex.
+        
+    parse_token(self, s, regex):
+        Parses a token string into fields using the regex. The key "word" is
+        reserved for the form of the token.
         
     tokenize(self, s):
         Uses self.tokenizer to tokenize a multi-word field.
     
     """
     
+    SPECIAL_FIELDS = ['KEYWORDS', 'LCX', 'RCX', 'TOKENS', 'REF', 'UUID']
+    
     def __init__(self):
         """
         Constructs all attributes needed for an instance of the class.
         """
         self.concordance = Concordance([])
-        self.lcx_fields, self.keywds_fields, self.rcx_fields = [], [], []
+        self.lcx_regex, self.keywds_regex, self.rcx_regex = \
+            r'(?P<word>.*)', r'(?P<word>.*)', r'(?P<word>.*)' 
         self.ref_regex = ''
         self.tokenizer = Tokenizer()
+        
+    def get_tokens(self, s, special_field):
+        """
+        Converts a string into a list of tokens, using the tokenizer and 
+        the regex.
+        
+        Parameters:
+            s (str) :           A string containing tokens
+            special_field (str):One of the special fields in SPECIAL_FIELDS
+                                which selects the right regex.
+                                
+        Returns:
+            get_tokens(self, s, special_field):
+                A list of concordance.Tokens.
+        """
+        l = self.tokenize(s)
+        if special_field in ['LCX', 'TOKENS']:
+            return [self.parse_token(item, self.lcx_regex) for item in l]
+        if special_field == 'KEYWORDS':
+            return [self.parse_token(item, self.keywds_regex) for item in l]
+        if special_field == 'RCX':
+            return [self.parse_token(item, self.rcx_regex) for item in l]
+            
+    def parse_token(self, s, regex):
+        """
+        Parses a token string into fields using the regex. The key "word" is
+        reserved for the form of the token.
+        
+        Parameters:
+            s (str):        A string representing a token
+            regex (str):    A regex mapping the token string to fields, one
+                            of which must be 'word'.
+        
+        Returns:
+            parse_token(self, s, regex):
+                A concordance.Token instance.
+        """
+        m = re.match(regex, s)
+        if not m or m and not 'word' in m.groupdict():
+            return ParseError("Can't identify the token in '{}', regex '{}'".format(s, regex))
+        tok = Token(m.groupdict()['word'])
+        tok.tags = dict([(key, value) for key, value in m.groupdict().items])
+        tok.tags.pop('word')
         
     def parse_ref(self, ref):
         """
@@ -313,58 +369,85 @@ class PennOutImporter(BaseTreeImporter):
                 f.write(forest.toxml())
         # 7. Return concordance.s 
         return self.concordance
-      
-class TXMImporter(Importer):
+        
+class TableImporter(Importer):
     """
-    Imports a CSV file exported from TXM to build a concordance.  
+    Imports a concordance in some kind of tabular form.
+    Defines core methods for child classes.
     
-    Additional attributes:
+    Additional Attributes:
     ----------------------
-    
+    dialect (str):
+        Dialect to use for the CSV reader. Options are:
+            'excel':    Comma-separated, quote with " only when necessary.
+            'tab'  :    Tab-separated, no quoting or escaping.
+            
+    header (bool):
+        File has a header row if set to True. Default is True.
+        
+    fields (list):
+        List of fields to import in the order in which the columns should be
+        represented in the file, overrides data read from the file header. 
+        Fields are stored by default in the .tags dictionary of the hit, but
+        the TableImporter.SPECIAL_FIELDS are reserved values:
+        Default values read a four-column concordance exported from TXM.
+        
+        Hits:
+        -----
+        KEYWORDS:   Keyword tokens only
+        LCX:        Tokens preceding keywords only
+        RCX:        Tokens following keywords only
+        REF:        hit.ref
+        UUID:       unique ID
+        TOKENS:     Tokens
+        
     Methods:
     --------
     
     parse(self, path, encoding = 'utf-8'):
-        Parses a CSV file (Four columns, tab separated) exported from TXM.
+        Parses a CSV file.
         
     parse_hit(self, row):
-        Parses a row from a TXM CSV file. Returns a Hit object.
+        Parses a row from the CSV file. Returns a Hit object.
         
     parse_token(self, s):
-        Parses the tokens in the TXM concordance file, using the underscore
+        Parses the tokens in the concordance file, using the underscore
         to split the fields. The tag names must be set by the lcx_fields,
         keywds_fields and rcx_fields attribute of the class.
-    
     """
     
     def __init__(self):
-        """
-        Constructs all attributes needed for an instance of the class.
-        """
         Importer.__init__(self)
-        self.lcx_fields, self.keywds_fields, self.rcx_fields = [], [], []
+        self.header = True
+        self.dialect = 'excel'
+        self.fields = ['REF', 'LCX', 'KEYWORDS', 'RCX']
+        csv.register_dialect(
+            'tab',
+            delimiter='\t',
+            quoting=csv.QUOTE_NONE
+            )
         
-    
-    def parse(self, path, encoding = 'utf-8', header = True):
+    def parse(self, path, encoding = 'utf-8'):
         """
-        Parses a CSV file (Four columns, tab separated, header) exported from TXM.
+        Parses a CSV file.
         
         Parameters:
             path (str):     Path to the CSV or text file.
             encoding (str): Text encoding of the CSV or text file.
-            header (bool):  True (default) if the first line of the file is
-                            a header.
         
         Returns:
             parse(self, path, [encoding, [header]]):
                 A concordance object.
         """
         with open(path, 'r', encoding=encoding, newline='') as f:
-            # TXM generates a tab delimited file with no quote characters.
-            # First line is the header.
-            reader = csv.reader(f, delimiter='\t', quoting=csv.QUOTE_NONE)
+            reader = csv.reader(f, self.dialect)
         # Skip the first row if header is True
-            if header: x = reader.__next__()
+            if self.header:
+                header_row = reader.__next__()
+                if not self.fields and header_row  
+                    self.fields = header_row
+                elif not self.fields:
+                    raise ParseError("No column names given. Set importer.fields or importer.header = True.")
             for row in reader:
                 hit = self.parse_hit(row)
                 self.concordance.append(hit)
@@ -372,50 +455,44 @@ class TXMImporter(Importer):
         
     def parse_hit(self, row):
         """
-        Parses a row from a TXM CSV file. Returns a Hit object.
+        Parses a row from a CSV file. Returns a Hit object.
         
         Parameters:
-            row (list):     List with four items (ref, left context, keywords, 
-                            right context)
+            row (list):     List of fields. 
             
         Returns:
             parse_hit(self, row):
                 A Hit object.
                 
         """
-        # Tokenization
-        lcx_tokenized = self.tokenize(row[1])
-        keywds_tokenized = self.tokenize(row[2])
-        rcx_tokenized = self.tokenize(row[3])
-        # Parse tokens
-        lcx = [self.parse_token(item, self.lcx_fields) for item in lcx_tokenized]
-        keywds = [self.parse_token(item, self.keywds_fields) for item in keywds_tokenized]
-        rcx = [self.parse_token(item, self.rcx_fields) for item in rcx_tokenized]
-        # Combine to a list
-        l, kws = context_to_list(lcx, keywds, rcx)
-        # Create Hit
-        hit = Hit(l, kws)
-        hit.ref = row[0]
-        hit.tags = self.parse_ref(hit.ref)
+        uuid, ref, d = None, '', dict()
+        # Parse the fields
+        for key, value in zip(self.fields, row):
+            if key in self.SPECIAL_FIELDS:
+                if key == 'UUID':
+                    uuid = make_uuid(value)
+                elif key == 'REF':
+                    ref = value
+                else:
+                    d[key] = self.get_tokens(value, key)
+            else:
+                d[key] = value
+        # Create list of all tokens
+        if 'KEYWORDS' in d:
+            l, kws = context_to_list(d['LCX'], d['KEYWORDS'], d['RCX'])
+        else:
+            l, kws = d['TOKENS'], []
+        # Create Hit, passing uuid
+        hit = Hit(l, kws, uuid)
+        hit.ref = ref
+        # Parse the reference to add metadata
+        for key, value in self.parse_ref(hit.ref):
+            d[key] = value
+        # Set as hit.tags
+        hit.tags = d
         return hit
         
-    def parse_token(self, s, tagnames):
-        """
-        Parses a token string from the TXM concordance file, using the underscore
-        to split the fields. The tag names must be set by the lcx_fields,
-        keywds_fields and rcx_fields attribute of the class.
-        
-        Parameters:
-            s (str):    A string representing a token
-            
-        Returns:
-            parse_token(self, s):
-                A Token instance.
-        """
-        l = s.split('_')
-        tok = tags_to_tok(l, tagnames)
-        return tok
-        
+      
 def context_to_list(lcx, keywds, rcx):
     """
     Merges three lists representing the left context, keywords, and

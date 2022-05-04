@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import collections, pickle
+import collections, pickle, uuid
 
 class Error(Exception):
     """
@@ -11,6 +11,12 @@ class Error(Exception):
 class LoadError(Error):
     """
     Error raised when loading a pickled concordance fails.
+    """
+    pass
+
+class UUIDError(Error):
+    """
+    Error raised when converting to a UUID fails.
     """
     pass
 
@@ -26,6 +32,10 @@ class Concordance(collections.UserList):
     Methods:
     --------
     
+    get_uuids(self):
+        Returns a list of UUIDs for all the Hits in the concordance in the
+        order in which they are currently stored.
+
     save(self, path):
         Saves the concordance to path using pickle (binary).
     
@@ -75,6 +85,18 @@ class Concordance(collections.UserList):
         collections.UserList.extend(self, other)
         
     # Other methods
+    def get_uuids(self):
+        """
+        Returns a list of UUIDs for all the Hits in the concordance in the
+        order in which they are currently stored.
+        
+        Returns:
+            get_uuids(self):
+                List of UUIDs in the order that they currently appear.
+        """
+        return [hit.uuid for hit in self.data]
+
+    
     def save(self, path):
         """
         Saves the concordance to path using pickle (binary).
@@ -100,6 +122,10 @@ class Hit(collections.UserList):
     Attributes:
     -----------
     
+    concordance (concordance.Concordance):
+        Pointer to the concordance in which the hit is contained. Default is
+        None.
+        
     kws (list) :
         List of the keyword tokens.
         
@@ -108,6 +134,12 @@ class Hit(collections.UserList):
         
     ref (str) :
         String representing the reference (original corpus format).
+        
+    Properties:
+    -----------
+    
+    uuid (uuid.UUID):
+        Unique ID.
         
     Methods:
     --------
@@ -135,18 +167,26 @@ class Hit(collections.UserList):
     RCX = 2
     KEYWORDS = 3
     
-    def __init__(self, l = [], kws = []):
+    def __init__(self, l = [], kws = [], uuid = None):
         """
         Constructs all attributes needed for an instance of the class.
         
             Parameters:
-                l (list): A list of tokens.
-                kws (list): List of the keyword tokens.
+                l (list):           A list of tokens.
+                kws (list):         List of the keyword tokens.
+                uuid :              A UUID object or something than can be
+                                    used to initialize one.
         """
         l = [make_token(s) for s in l]
         collections.UserList.__init__(self, l)
         self.kws = kws
-        self.tags, self.ref = {}, ''
+        self.concordance, self.tags, self.ref = None, {}, ''
+        self._uuid = make_uuid(uuid) if uuid else uuid.uuid4()
+        
+    # Properties
+    @property
+    def uuid(self):
+        return self._uuid
         
     # UserList methods modified to ensure that make_token is run on
     # all modifications to the hit.
@@ -357,6 +397,48 @@ def make_hit(l, kws = []):
     hit = Hit(l, kws)
     return hit
     
+def make_uuid(uuid):
+    """
+    Function to convert the passed argument to a uuid.UUID object if possible.
+    Otherwise returns TypeError.
+    
+    Parameters:
+        uuid (uuid.UUID or str or bytes or 6-tuple or int) :
+            A object which can initialize a UUID.
+    
+    Returns:
+        make_uuid(uuid):
+            A uuid.UUID object
+    """
+    # Case 1: it's a uuid.UUID already
+    if isinstance(uuid, uuid.UUID): return uuid
+    # Case 2: it's a string
+    if isinstance(uuid, str):
+        try:
+            return uuid.UUID(uuid)
+        except:
+            raise UUIDError('Cannot convert str "{}" to UUID'.format(uuid))
+    # Case 3: it's an integer
+    if isinstance(uuid, int):
+        try:
+            return uuid.UUID(int=uuid)
+        except:
+            raise UUIDError('Cannot convert int "{}" to UUID'.format(str(uuid)))
+    # Case 4: it's a six-tuple (i.e. the fields argument)
+    if isinstance(uuid, tuple):
+        try:
+            return uuid.UUID(fields=uuid)
+        except:
+            raise UUIDError('Cannot convert tuple "{}" to UUID'.format(str(uuid)))
+    # Case 5: it's a bytes object
+    if isinstance(uuid, bytes):
+        try:
+            return uuid.UUID(bytes=uuid)
+        except:
+            raise UUIDError('Cannot convert bytes "{}" to UUID'.format(str(uuid)))
+    # Case 6: it's not a recognized type, raise TypeError
+    raise TypeError('Type {} not supported by concordance.make_uuid'.format(type(uuid)))
+
 def make_token(s):
     """
     Function to convert a list or list-like object into a valid Hit instance.
