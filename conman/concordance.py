@@ -52,18 +52,22 @@ class Concordance(collections.UserList):
         collections.UserList.__init__(self, l)
     
     # UserList methods modified to ensure that make_hit is run on
-    # all modifications to the concordance.
+    # all modifications to the concordance and that the .concordance attribute
+    # is set.
     
     def __setitem__(self, i, item):
         item = make_hit(item)
+        item.concordance = self
         collections.UserList.__setitem__(self, i, item)
         
     def append(self, item):
         item = make_hit(item)
+        item.concordance = self
         collections.UserList.append(self, item)
     
     def insert(self, i, item):
         item = make_hit(item)
+        item.concordance = self
         collections.UserList.insert(self, i, item)
         
     # UserList methods modified to ensure that make_concordance is run on
