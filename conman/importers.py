@@ -120,8 +120,9 @@ class Importer():
         if not m or m and not 'word' in m.groupdict():
             return ParseError("Can't identify the token in '{}', regex '{}'".format(s, regex))
         tok = Token(m.groupdict()['word'])
-        tok.tags = dict([(key, value) for key, value in m.groupdict().items])
+        tok.tags = dict([(key, value) for key, value in m.groupdict().items()])
         tok.tags.pop('word')
+        return tok
         
     def parse_ref(self, ref):
         """
@@ -444,7 +445,7 @@ class TableImporter(Importer):
         # Skip the first row if header is True
             if self.header:
                 header_row = reader.__next__()
-                if not self.fields and header_row  
+                if not self.fields and header_row: 
                     self.fields = header_row
                 elif not self.fields:
                     raise ParseError("No column names given. Set importer.fields or importer.header = True.")
@@ -479,14 +480,14 @@ class TableImporter(Importer):
                 d[key] = value
         # Create list of all tokens
         if 'KEYWORDS' in d:
-            l, kws = context_to_list(d['LCX'], d['KEYWORDS'], d['RCX'])
+            l, kws = context_to_list(d.pop('LCX'), d.pop('KEYWORDS'), d.pop('RCX'))
         else:
-            l, kws = d['TOKENS'], []
+            l, kws = d.pop('TOKENS'), []
         # Create Hit, passing uuid
         hit = Hit(l, kws, uuid)
         hit.ref = ref
         # Parse the reference to add metadata
-        for key, value in self.parse_ref(hit.ref):
+        for key, value in self.parse_ref(hit.ref).items():
             d[key] = value
         # Set as hit.tags
         hit.tags = d

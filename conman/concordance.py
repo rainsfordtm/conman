@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-import collections, pickle, uuid
+import collections, pickle
+from uuid import UUID, uuid4
 
 class Error(Exception):
     """
@@ -181,7 +182,7 @@ class Hit(collections.UserList):
         collections.UserList.__init__(self, l)
         self.kws = kws
         self.concordance, self.tags, self.ref = None, {}, ''
-        self._uuid = make_uuid(uuid) if uuid else uuid.uuid4()
+        self._uuid = make_uuid(uuid) if uuid else uuid4()
         
     # Properties
     @property
@@ -411,29 +412,29 @@ def make_uuid(uuid):
             A uuid.UUID object
     """
     # Case 1: it's a uuid.UUID already
-    if isinstance(uuid, uuid.UUID): return uuid
+    if isinstance(uuid, UUID): return uuid
     # Case 2: it's a string
     if isinstance(uuid, str):
         try:
-            return uuid.UUID(uuid)
+            return UUID(uuid)
         except:
             raise UUIDError('Cannot convert str "{}" to UUID'.format(uuid))
     # Case 3: it's an integer
     if isinstance(uuid, int):
         try:
-            return uuid.UUID(int=uuid)
+            return UUID(int=uuid)
         except:
             raise UUIDError('Cannot convert int "{}" to UUID'.format(str(uuid)))
     # Case 4: it's a six-tuple (i.e. the fields argument)
     if isinstance(uuid, tuple):
         try:
-            return uuid.UUID(fields=uuid)
+            return UUID(fields=uuid)
         except:
             raise UUIDError('Cannot convert tuple "{}" to UUID'.format(str(uuid)))
     # Case 5: it's a bytes object
     if isinstance(uuid, bytes):
         try:
-            return uuid.UUID(bytes=uuid)
+            return UUID(bytes=uuid)
         except:
             raise UUIDError('Cannot convert bytes "{}" to UUID'.format(str(uuid)))
     # Case 6: it's not a recognized type, raise TypeError
