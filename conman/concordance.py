@@ -369,7 +369,7 @@ def load_concordance(path):
     if not isinstance(cnc, Concordance):
         raise LoadError('File does not contain a concordance.')
     return cnc
-
+    
 def make_concordance(l):
     """
     Function to convert a list or list-like object into a valid Concordance

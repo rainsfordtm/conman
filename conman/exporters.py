@@ -83,7 +83,7 @@ class TableExporter(Exporter):
     fields (list):
         List of fields to export in the order in which the columns should be
         represented in the file. Fields are looked up by default in the
-        .tags dictionary of the hit, but the HitExporter.SPECIAL_FIELDS are
+        .tags dictionary of the hit, but the TableExporter.SPECIAL_FIELDS are
         reserved values:
         
         Hits:
@@ -93,6 +93,7 @@ class TableExporter(Exporter):
         RCX:        Tokens following keywords only
         REF:        hit.ref
         TOKENS:     All tokens
+        UUID:       hit.uuid
 
         
     Methods:
@@ -106,7 +107,7 @@ class TableExporter(Exporter):
     
     """
     
-    SPECIAL_FIELDS = ['KEYWORDS', 'LCX', 'RCX', 'TOKENS', 'REF']
+    SPECIAL_FIELDS = ['KEYWORDS', 'LCX', 'RCX', 'TOKENS', 'REF', 'UUID']
     
     def __init__(self):
         """
@@ -116,7 +117,7 @@ class TableExporter(Exporter):
         self.concordance = None
         self.header = True
         self.dialect = 'excel'
-        self.fields = ['REF', 'LCX', 'KEYWORDS', 'RCX']
+        self.fields = ['UUID', 'REF', 'LCX', 'KEYWORDS', 'RCX']
         csv.register_dialect(
             'tab',
             delimiter='\t',
@@ -170,6 +171,9 @@ class TableExporter(Exporter):
                 # 2. Check for the REF field
                 if field == 'REF':
                     l.append(hit.ref)
+                # 3. Check for the UUID field
+                if field == 'UUID':
+                    l.append(hit.uuid)
             # 3. Otherwise, use self.tags
             else:
                 l.append(hit.tags[field] if field in hit.tags else '')
@@ -194,9 +198,8 @@ class ConllExporter():
     Methods:
     --------
     export(self, cnc, path, [add_ref]): 
-        Exports concordance cnc as a Conll file.
-        If add_ref = True (default) add the reference as a comment on the
-        preceding line.
+        Exports a concordance as a Conll file suitable for dependency parsing.
+        If add_refs is True, adds hit.uuid and hit.ref as comments.
     
     get_feats(self, tok):
         Returns a string for the feats column of the Conll table.
@@ -219,17 +222,20 @@ class ConllExporter():
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
     
-    def export(self, cnc, path, add_ref = True):
+    def export(self, cnc, path, add_refs = True):
         """
         Exports a concordance as a Conll file suitable for dependency parsing.
+        If add_refs is True, adds hit.uuid and hit.ref as comments.
         
         Parameters:
             cnc (concordance.Concordance): A concordance.
             path (str)                   : Path for Conll file.
+            add_refs (bool)              : Boolean
         """
         with open(path, 'w', encoding='utf-8') as f:
             for hit in cnc:
-                if add_ref:
+                if add_refs:
+                    f.write('# ' + hit.uuid + '\n')
                     f.write('# ' + hit.ref + '\n')
                 f.write(self.hit_to_string(hit))
                 f.write('\n')
