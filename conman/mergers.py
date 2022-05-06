@@ -93,8 +93,8 @@ class ConcordanceMerger():
             merge(self, cnc, other_cnc):
                 A modified cnc concordance.
         """
-        for ix, other_hit in enumerate(other_cnc):
-            hit = self.match_hit(cnc, other_hit, ix)
+        for i, other_hit in enumerate(other_cnc):
+            hit = self.match_hit(cnc, other_hit, i)
             if not hit:
                 if self.add_hits:
                     cnc.append(other_hit)
