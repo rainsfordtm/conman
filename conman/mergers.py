@@ -65,7 +65,7 @@ class ConcordanceMerger():
         None if nothing can be found.
         
         Parameters:
-            cnc (concordance.Concordance):      The concordance to be modified
+            cnc (concordance.Concordance):      The concordance to be modified.
             other_hit (concordance.Hit):        The hit to be matched.
             ix (int):                           The index of other_hit.
             
@@ -131,4 +131,118 @@ class ConcordanceMerger():
                 filter(lambda x: x.uuid in l, cnc)
             ))
         return cnc
+        
+class TokenMerger():
+    """
+    Class used to align the tokens and merge the attributes in corresponding
+    Hits.
+    
+    Attributes:
+    -----------
+    aligner (tta.aligner.Aligner):
+        An Aligner which can be used to match the tokens.
+    id_tag (str):
+        Tag containing ID for the token. Must be unique within the hit.
+        Default is ''.
+    update_tags (bool):
+        Update values already present in tok.tags with new values from the
+        merging hit. Default is True.
+    
+    Methods:
+    --------
+    match_token(self, hit, other_tok):
+        Finds the tok in hit which corresponds to other_tok. Returns
+        None if nothing can be found.
+    merge(self, hit, other_hit):
+        Modifies the Hit hit by adding data from Hit other_hit.
+    """
+    
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        self.aligner = None
+        self.id_tag = ''
+        self.update_tags = True
+        
+    #########################################################################
+    # Private methods needed to implement the aligner
+    #########################################################################
+        
+    def _initialize_aligner(self, hit, other_hit):
+        # Re-run the aligner ensuring that the ID is the index of each
+        # token in the hit. Otherwise match_token doesn't work.
+        self.aligner.a_list = [(i, tok) for i, tok in enumerate(hit)]
+        self.aligner.b_list = [(i, tok) for i, tok in enumerate(other_hit)]
+        self.aligner.align()
+        
+    def _match_token_aligner(self, hit, other_tok, ix):
+        # Uses the aligner to find the token.
+        if not self.aligner.aligned:
+            self.aligner.align()
+        for alignment in self.aligner.aligned:
+            if ix in alignment[1]:
+                return hit[alignment[0]]
+        return None
+        
+    def match_token(self, hit, other_tok, ix):
+        """
+        Finds the tok in hit which corresponds to other_tok. Returns
+        None if nothing can be found.
+        
+        Parameters:
+            hit (concordance.Hit):          The Hit to be modified.
+            other_tok (concordance.Hit):    The token to be matched.
+            ix (int):                       The index of other_tok.
+        
+        Returns:
+            match_token(self, hit, other_tok, ix):
+                The corresponding tok in hit, or None if not found.
+        """
+        # Use id_tag if one is set, and return None if there's no matching ID.
+        if self.id_tag and self.id_tag in other_tok.tags:
+            other_id = other_tok.tags[self.id_tag]
+            l = list(filter(lambda x: x.tags.get(self.id_tag) == other_id, hit))
+            return l[0] if l else None
+        # Otherwise, use aligner if one is set.
+        if self.aligner:
+            return self._match_token_aligner(hit, other_tok, ix)
+        # Otherwise, use the index
+        return hit[ix] if ix < len(hit) else None
+        
+
+        
+    def merge(self, hit, other_hit):
+        """
+        Modifies the Hit hit by adding data from Hit other_hit.
+        
+        Parameters:
+        hit (concordance.Hit):          The hit to be modified.
+        other_hit (concordance.Hit):    The hit containing the new data.
+        
+        Returns:
+            merge(self, hit, other_hit):
+                A concordance.Hit object combining data from hit and other_hit.
+        """
+        if self.aligner:
+            self._initialize_aligner(hit, other_hit)
+        for i, other_tok in enumerate(other_hit):
+            tok = self.match_tok(hit, other_tok, i)
+            if not tok:
+                # Token can't be matched: ignore it (no modification of tokens
+                # allowed).
+                continue
+            if self.update_tags:
+                tok.tags.update(other_tok.tags)
+            else:
+                # i.e. only add new tags, so take a copy and perform 2 updates.
+                d = tok.tags.copy()
+                tok.tags.update(other_tok.tags)
+                tok.tags.update(d)
+        return hit
+            
+        
+    
+
+
         

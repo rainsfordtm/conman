@@ -168,7 +168,7 @@ class BaseTreeImporter(Importer):
         List of values for the node.getAttribute(self.keyword_attr) which should
         be evaluated as "True". Defaults ['yes', 'y', 't', 'true'], not 
         case-sensitive.
-    
+        
     Methods:
     --------
     is_keyword(self, elem):
@@ -279,8 +279,13 @@ class BaseTreeImporter(Importer):
         for leaf in bst.leaves:
             l.append(self.leaf_to_token(bst, leaf))
             if self.is_keyword(leaf): kws.append(l[-1])
-        hit = Hit(l, kws)
-        hit.ref = stree.get_id()
+        tree_id = stree.get_id()
+        # On the off-chance that tree id is a UUID, use it, otherwise generate
+        # one.
+        uuid = get_uuid(tree_id) 
+        hit = Hit(l, kws, uuid)
+        # Use tree_id for the ref whatever.
+        hit.ref = tree_id
         hit.tags = self.parse_ref(hit.ref)
         return hit
         
