@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from conman.concordance import Concordance
+
 class ConcordanceMerger():
     """
     Class used to merge two concordance.Concordance objects. Matching
@@ -29,6 +31,9 @@ class ConcordanceMerger():
     
     Methods:
     --------
+    check_settings(self):
+        Performs a sanity check on the merger parameters and prints a 
+        warning if something is not compatible.
     match_hit(self, cnc, other_hit):
         Finds the hit in cnc which corresponds to other_hit. Returns
         None if nothing can be found.
@@ -45,6 +50,14 @@ class ConcordanceMerger():
         self.update_tags = True
         self.match_by = ''
         self.token_merger = None
+        
+    def check_settings(self):
+        """
+        Performs a sanity check on the merger parameters and prints a 
+        warning if something is not compatible.
+        """
+        if self.del_hits and not self.match_by == 'uuid':
+            print("WARNING: Merger not set to match by UUID. Hits will not be deleted.")
         
     def match_hit(self, cnc, other_hit, ix):
         """
@@ -64,7 +77,7 @@ class ConcordanceMerger():
             l = cnc.get_uuids()
             return cnc[l.index(other_hit.uuid)] if other_hit.uuid in l else None
         l = [(hit.ref, i) for i, hit in enumerate(cnc)]
-        if self.match_by = 'ref':
+        if self.match_by == 'ref':
             matches = list(filter(lambda x: x[0] == other_hit.ref, l))
             if len(matches) == 0:
                 # No matching reference
@@ -93,13 +106,14 @@ class ConcordanceMerger():
             merge(self, cnc, other_cnc):
                 A modified cnc concordance.
         """
+        self.check_settings()
         for i, other_hit in enumerate(other_cnc):
             hit = self.match_hit(cnc, other_hit, i)
             if not hit:
                 if self.add_hits:
                     cnc.append(other_hit)
                 continue
-            if update_tags:
+            if self.update_tags:
                 hit.tags.update(other_hit.tags)
             else:
                 # i.e. only add new tags, so take a copy and perform 2 updates.

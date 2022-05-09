@@ -2,6 +2,7 @@
 
 from conman.concordance import *
 from conman.tokenizers import *
+from uuid import uuid4
 import treetools.basetree, treetools.syn_importer, treetools.transformers
 import conman.scripts.pennout2cnc
 import csv, re
@@ -383,8 +384,12 @@ class TableImporter(Importer):
             'excel':    Comma-separated, quote with " only when necessary.
             'tab'  :    Tab-separated, no quoting or escaping.
             
-    header (bool):
+    has_header (bool):
         File has a header row if set to True. Default is True.
+        
+    ignore_header (bool):
+        Ignore the header in the CSV file and use values in self.fields.
+        Default is False.
         
     fields (list):
         List of fields to import in the order in which the columns should be
@@ -419,7 +424,8 @@ class TableImporter(Importer):
     
     def __init__(self):
         Importer.__init__(self)
-        self.header = True
+        self.has_header = True
+        self.ignore_header = False
         self.dialect = 'excel'
         self.fields = ['REF', 'LCX', 'KEYWORDS', 'RCX']
         csv.register_dialect(
@@ -443,9 +449,9 @@ class TableImporter(Importer):
         with open(path, 'r', encoding=encoding, newline='') as f:
             reader = csv.reader(f, self.dialect)
         # Skip the first row if header is True
-            if self.header:
+            if self.has_header:
                 header_row = reader.__next__()
-                if not self.fields and header_row: 
+                if not self.ignore_header: 
                     self.fields = header_row
                 elif not self.fields:
                     raise ParseError("No column names given. Set importer.fields or importer.header = True.")
@@ -471,7 +477,7 @@ class TableImporter(Importer):
         for key, value in zip(self.fields, row):
             if key in self.SPECIAL_FIELDS:
                 if key == 'UUID':
-                    uuid = make_uuid(value)
+                    uuid = get_uuid(value) # Get UUID will always return a UUID.
                 elif key == 'REF':
                     ref = value
                 else:
@@ -516,6 +522,24 @@ def context_to_list(lcx, keywds, rcx):
     kws = [keywd for keywd in keywds]
     return l, kws
     
+def get_uuid(s):
+    """
+    Returns a UUID generated from the string or a new UUID, if s isn't a
+    valid UUID. TODO: log something here.
+    
+    Parameters:
+        s (str):    A string representing a UUID
+        
+    Returns:
+        get_uuid(s):
+            A uuid.UUID object.
+    """
+    try:
+        uuid = make_uuid(s)
+    except:
+        uuid = uuid4()
+    return uuid
+    
 def tags_to_tok(tags, tagnames = [], word_tag='word'):
     """
     Converts a list of tags to a token using the names in tagnames.
@@ -557,4 +581,3 @@ def tags_to_tok(tags, tagnames = [], word_tag='word'):
     tok.tags = tag_d
     return tok
     
-
