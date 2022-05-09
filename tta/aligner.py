@@ -2,7 +2,7 @@
 # Alignment algorithm
 
 import difflib, re, csv
-from lib.io import ints
+from tta.io import ints
 
 class Error(Exception):
     pass

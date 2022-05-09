@@ -122,7 +122,7 @@ class ConcordanceMerger():
                 hit.tags.update(d)
             # Call the token_merger, if one is given.
             if self.token_merger:
-                self.token_merger.merge(hit, other_hit)
+                hit = self.token_merger.merge(hit, other_hit)
         # MUST check use_uuid because if the cncs use different UUIDs it will
         # delete every hit in the first cnc.
         if self.del_hits and self.match_by == 'uuid':
@@ -139,8 +139,6 @@ class TokenMerger():
     
     Attributes:
     -----------
-    aligner (tta.aligner.Aligner):
-        An Aligner which can be used to match the tokens.
     id_tag (str):
         Tag containing ID for the token. Must be unique within the hit.
         Default is ''.
@@ -161,7 +159,7 @@ class TokenMerger():
         """
         Constructs all attributes needed for an instance of the class.
         """
-        self.aligner = None
+        # self.aligner = None # DISABLED
         self.id_tag = ''
         self.update_tags = True
         
@@ -174,7 +172,13 @@ class TokenMerger():
         # token in the hit. Otherwise match_token doesn't work.
         self.aligner.a_list = [(i, tok) for i, tok in enumerate(hit)]
         self.aligner.b_list = [(i, tok) for i, tok in enumerate(other_hit)]
-        self.aligner.align()
+        self.aligner.threshold = 3 # Short matches, lower threshold for pass1
+        try:
+            self.aligner.align()
+        except:
+            print(self.aligner.a_list)
+            print(self.aligner.b_list)
+            print(self.aligner.aligned)
         
     def _match_token_aligner(self, hit, other_tok, ix):
         # Uses the aligner to find the token.
@@ -204,13 +208,11 @@ class TokenMerger():
             other_id = other_tok.tags[self.id_tag]
             l = list(filter(lambda x: x.tags.get(self.id_tag) == other_id, hit))
             return l[0] if l else None
-        # Otherwise, use aligner if one is set.
-        if self.aligner:
-            return self._match_token_aligner(hit, other_tok, ix)
+        # Otherwise, use aligner if one is set. DISABLED
+        # if self.aligner:
+        #    return self._match_token_aligner(hit, other_tok, ix)
         # Otherwise, use the index
         return hit[ix] if ix < len(hit) else None
-        
-
         
     def merge(self, hit, other_hit):
         """
@@ -224,10 +226,10 @@ class TokenMerger():
             merge(self, hit, other_hit):
                 A concordance.Hit object combining data from hit and other_hit.
         """
-        if self.aligner:
-            self._initialize_aligner(hit, other_hit)
+        # if self.aligner:
+        #     self._initialize_aligner(hit, other_hit) DISABLED
         for i, other_tok in enumerate(other_hit):
-            tok = self.match_tok(hit, other_tok, i)
+            tok = self.match_token(hit, other_tok, i)
             if not tok:
                 # Token can't be matched: ignore it (no modification of tokens
                 # allowed).

@@ -302,10 +302,15 @@ class Hit(collections.UserList):
                 A string representing the token.
         """
         if self.is_kw(tok):
-            return kw_fmt.format(tok)
+            try:
+                return kw_fmt.format(tok)
+            except:
+                return str(tok)
         else:
-            return tok_fmt.format(tok)
-            
+            try:
+                return tok_fmt.format(tok)
+            except:
+                return str(tok)
         
     def to_string(self, 
             tok_constant = 0,

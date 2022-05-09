@@ -129,7 +129,7 @@ class Importer():
             parse(self, path, [encoding, [delimiter]]):
                 A concordance object.
         """
-        with open(path, 'r' encoding=encoding) as f:
+        with open(path, 'r', encoding=encoding) as f:
             s = ''
             for line in f:
                 s += line
@@ -138,10 +138,14 @@ class Importer():
                 for group in l[:-1]:
                     hit = self.parse_hit(group)
                     self.concordance.append(hit)
+                    print(self.concordance)
                 s = l[-1]
-            hit = self.parse_hit(s)
-            if hit:
-                self.concordance.append(hit)
+            # At EOF strip all trailing whitespace
+            s = s.rstrip()
+            if s:
+                hit = self.parse_hit(s)
+                if hit:
+                    self.concordance.append(hit)
         return self.concordance
         
     def parse_hit(self, s):
@@ -174,7 +178,7 @@ class Importer():
         """
         m = re.match(regex, s)
         if not m or m and not 'word' in m.groupdict():
-            return ParseError("Can't identify the token in '{}', regex '{}'".format(s, regex))
+            raise ParseError("Can't identify the token in '{}', regex '{}'".format(s, regex))
         tok = Token(m.groupdict()['word'])
         tok.tags = dict([(key, value) for key, value in m.groupdict().items()])
         tok.tags.pop('word')
