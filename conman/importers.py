@@ -21,7 +21,9 @@ class ParseError(Error):
 
 class Importer():
     """
-    Parent Class to build a concordance. Defines core methods for Child classes.  
+    Parent Class to build a concordance. Reads any simple text file where
+    hits are delimited by a fixed sequence of characters (typically \n).
+    Also defines core methods for Child classes.
     
     Attributes:
     -----------
@@ -55,6 +57,13 @@ class Importer():
     get_tokens(self, s, special_field):
         Converts a string into a list of tokens, using the tokenizer and 
         the regex.
+        
+    parse(self, path, [encoding, [delimiter]]):
+        Parses a text file and splits hits using the regex passed in
+        delimiter. Default is '\n', i.e. one line per hit.
+        
+    parse_hit(self, s):
+        Parses a string into a hit.
     
     parse_ref(self, ref):
         Parses the reference field into a dictionary of metadata. Uses the
@@ -102,6 +111,52 @@ class Importer():
             return [self.parse_token(item, self.keywds_regex) for item in l]
         if special_field == 'RCX':
             return [self.parse_token(item, self.rcx_regex) for item in l]
+            
+    def parse(self, path, encoding = 'utf-8', delimiter = '\n'):
+        """
+        Parses a text file and splits hits using the value passed in
+        delimiter. Default is '\n', i.e. one line per hit.
+        
+        Parameters:
+        -----------
+            path (str):         Path to text file.
+            encoding (str):     Text encoding of the CSV or text file.
+            delimiter (str):    Regex representing the characters used as 
+                                a delimiter.
+        
+        Returns:
+        --------
+            parse(self, path, [encoding, [delimiter]]):
+                A concordance object.
+        """
+        with open(path, 'r' encoding=encoding) as f:
+            s = ''
+            for line in f:
+                s += line
+                if not re.search(delimiter, s): continue
+                l = re.split(delimiter, s)
+                for group in l[:-1]:
+                    hit = self.parse_hit(group)
+                    self.concordance.append(hit)
+                s = l[-1]
+            hit = self.parse_hit(s)
+            if hit:
+                self.concordance.append(hit)
+        return self.concordance
+        
+    def parse_hit(self, s):
+        """
+        Parses a string into a hit.
+        
+        Parameters:
+            s (str):        A string containing the hit
+            
+        Returns:
+            parse_hit(self, s):
+                A concordance.Hit object.
+        """
+        l = self.get_tokens(s, 'TOKENS')
+        return Hit(l) if l else None
             
     def parse_token(self, s, regex):
         """
