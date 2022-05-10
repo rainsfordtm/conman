@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import csv
+import csv, os.path
 
 class Exporter():
     """
@@ -314,3 +314,27 @@ class ConllExporter():
             tok.tags[self.pdeprel] if self.pdeprel in tok.tags else '_',  # 10. pdeprel
         ]
        
+def get_exporter_from_path(path):
+    """
+    Function to pick a default exporter from the filename extension.
+    Currently implements the following:
+    
+    .csv    : TableExporter
+    .txt    : Exporter
+    .conll  : ConllExporter
+    .conllu : ConllExporter
+    
+    All other extensions trigger ParseError.
+    
+    Parameters:
+    path (str) : Path to the output file
+    
+    Returns:
+        get_exporter_from_path(path)
+            An Exporter object.
+    """
+    ext = os.path.splitext(path)[1]
+    if ext == '.csv': return TableExporter()
+    if ext == '.txt': return Exporter()
+    if ext in ['.conll', '.conllu']: return ConllExporter()
+    raise ParseError('No default exporter for file extension "{}".'.format(ext))

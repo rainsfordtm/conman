@@ -5,7 +5,7 @@ from conman.tokenizers import *
 from uuid import uuid4
 import treetools.basetree, treetools.syn_importer, treetools.transformers
 import conman.scripts.pennout2cnc
-import csv, re
+import csv, re, os.path
 
 class Error(Exception):
     """
@@ -585,6 +585,32 @@ def context_to_list(lcx, keywds, rcx):
     l = lcx + keywds + rcx
     kws = [keywd for keywd in keywds]
     return l, kws
+    
+def get_importer_from_path(path):
+    """
+    Function to pick a default importer from the filename extension.
+    Currently implements the following:
+    
+    .csv : TableImporter
+    .out : PennOutImporter
+    .txt : Importer
+    .xml : BaseTreeImporter
+    
+    All other extensions trigger ParseError.
+    
+    Parameters:
+    path (str) : Path to the input file
+    
+    Returns:
+        get_importer_from_path(path)
+            An Importer object.
+    """
+    ext = os.path.splitext(path)[1]
+    if ext == '.csv': return TableImporter()
+    if ext == '.out': return PennOutImporter()
+    if ext == '.txt': return Importer()
+    if ext == '.xml': return BaseTreeImporter()
+    raise ParseError('No default importer for file extension "{}".'.format(ext))
     
 def get_uuid(s):
     """

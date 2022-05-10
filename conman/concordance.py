@@ -1,7 +1,11 @@
 #!/usr/bin/python3
 
-import collections, pickle
+import collections, pickle, os.path
 from uuid import UUID, uuid4
+
+# This global variable is available in the whole of conman for identifying
+# valid path extensions for a concordance.
+CONCORDANCE_EXTS = ['.cnc']
 
 class Error(Exception):
     """
@@ -109,6 +113,8 @@ class Concordance(collections.UserList):
         Parameters:
             path (str): Path to file where object should be saved.
         """
+        if not os.path.splitext(path)[1] in CONCORDANCE_EXTS:
+            path += CONCORDANCE_EXTS[0]
         with open(path, 'wb') as f:
             pickle.dump(self, f)
     
