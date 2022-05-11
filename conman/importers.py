@@ -369,11 +369,6 @@ class PennOutImporter(BaseTreeImporter):
         Default is r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*', i.e. the first
         number in the comment (typically the dominating IP).
         
-    word_lemma_regex (str):
-        Regex used to split words from lemmas in the PSD file.
-        The regex must include the named groups 'word' and 'lemma'.
-        Default is a hyphen, e.g. r'(?P<word>[^\-]*)-(?P<lemma>.*)'
-   
     script(transformer, keyword_node_regex=self.keyword_node_regex):
         Function containing instructions used to transform each BaseTree
         from the .out file into the desired format for the BaseTreeImporter,
@@ -398,7 +393,6 @@ class PennOutImporter(BaseTreeImporter):
         BaseTreeImporter.__init__(self)
         self.dump_xml = ''
         self.keyword_node_regex = r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*'
-        self.word_lemma_regex = r'(?P<word>[^\-]*)-(?P<lemma>.*)'
         self.script = conman.scripts.pennout2cnc.script
         
     def parse(self, path, encoding = 'utf-8'):
@@ -423,7 +417,7 @@ class PennOutImporter(BaseTreeImporter):
             forest,
             keyword_attr = self.keyword_attr,
             keyword_node_regex = self.keyword_node_regex,
-            word_lemma_regex = self.word_lemma_regex
+            word_lemma_regex = self.lcx_regex
             )
         # 5. Add each tree in the forest to the concordance
         for stree in forest:

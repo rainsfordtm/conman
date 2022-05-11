@@ -8,6 +8,7 @@ import os.path, argparse
 from conman.importers import *
 from conman.exporters import *
 from conman.mergers import *
+from conman.tokenizers import *
 from conman.concordance import load_concordance
 from configparser import ConfigParser
 
@@ -81,8 +82,49 @@ class Launcher():
             
     def _initialize_from_workflow(self):
         # TODO
-        pass
-
+        # 1. Read default section
+        for key in ['importer', 'other_importer', 'exporter']:
+            value = self.workflow.get('DEFAULT', key, fallback='')
+            if value:
+                try:
+                    eval('self.' + key + ' = ' + value + '()')
+                except:
+                    raise ConfigError('{} "{}" not recognized'.format(key, s))
+        # 2. Read importer and other_importer sections
+        for section, importer in [
+            ('importer', self.importer), ('other_importer', self.other_importer)
+        ]:
+            # Only read if the importer has been set.
+            if not importer: continue
+            # Read the values
+            for key in ['lcx_regex', 'keywds_regex', 'rcx_regex', 'ref_regex']:
+                value = self.workflow.get(section, key, fallback='')
+                if value:
+                    eval('importer.' + key + "=r'''" + value + "'''")
+            value = self.workflow.get(section, 'tokenizer', fallback='')
+            if value:
+                eval('importer.tokenizer=' + value + '()')
+            if isinstance(importer, TableImporter):
+                value = self.workflow.get(section, 'TI_dialect', fallback='')
+                if value:
+                    importer.dialect = value
+                value = self.workflow.get(section, 'TI_has_header', fallback='')
+                if value:
+                    importer.has_header = True if value.lower() == 'true' else False
+                value = self.workflow.get(section, 'TI_fields', fallback='')
+                if value:
+                    importer.fields = value.split(',')
+                    importer.ignore_header = True
+            if isinstance(importer, BaseTreeImporter):
+                value = self.workflow.get(section, 'BT_keyword_attr', fallback='')
+                if value:
+                    importer.keyword_attr = value
+            if isinstance(importer, PennOutImporter):
+                value = self.workflow.get(section, 'Pn_keyword_node_regex', fallback='')
+                if value:
+                    eval("importer.keyword_node_regex=r'''" + value + "'''")
+        # 3. Read exporter section (TODO)
+                    
     def launch(self):
         """
         Runs the conversion.
