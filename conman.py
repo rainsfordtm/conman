@@ -5,6 +5,7 @@
 ################################################################################
 
 import os.path, argparse
+import importlib.machinery
 from conman.importers import *
 from conman.exporters import *
 from conman.mergers import *
@@ -113,17 +114,53 @@ class Launcher():
                     importer.has_header = True if value.lower() == 'true' else False
                 value = self.workflow.get(section, 'TI_fields', fallback='')
                 if value:
-                    importer.fields = value.split(',')
+                    importer.fields = [x.strip() for x in value.split(',')]
                     importer.ignore_header = True
             if isinstance(importer, BaseTreeImporter):
                 value = self.workflow.get(section, 'BT_keyword_attr', fallback='')
                 if value:
                     importer.keyword_attr = value
             if isinstance(importer, PennOutImporter):
-                value = self.workflow.get(section, 'Pn_keyword_node_regex', fallback='')
+                value = self.workflow.get(section, 'PO_keyword_node_regex', fallback='')
                 if value:
                     eval("importer.keyword_node_regex=r'''" + value + "'''")
-        # 3. Read exporter section (TODO)
+                # Read advanced values for PennOutImporter
+                value = self.workflow.get('advanced', 'PO_dump_xml', fallback='')
+                if value:
+                    importer.dump_xml = True if value.lower() == 'true' else False
+                value = self.workflow.get('advanced', 'PO_script_file', fallback='')
+                if value:
+                    name = os.path.splitext(os.path.basename(value))[0]
+                    script_module = importlib.machinery.SourceFileLoader(name, value)
+                    importer.script = script_module.script
+        # 3. Read exporter section
+        if exporter:
+            for key in ['tok_fmt', 'kw_fmt', 'tok_delimiter']:
+                value = self.workflow.get('exporter', key, fallback='')
+                if value:
+                    eval('exporter.' + key + "='" + value + "'")
+            if isinstance(exporter, TableExporter):
+                value = self.workflow.get('exporter', 'TE_dialect', fallback='')
+                if value:
+                    exporter.dialect = value
+                value = self.workflow.get('exporter', 'TE_header', fallback='')
+                if value:
+                    exporter.header = True if value.lower() == 'true' else False
+                value = self.workflow.get('exporter', 'TE_fields', fallback='')
+                if value:
+                    exporter.fields = [x.strip() for x in value.split(',')]
+            if isinstance(exporter, ConllExporter):
+                for key in [
+                    'CE_lemma', 'CE_cpostag', 'CE_postag', 'CE_head',
+                    'CE_deprel', 'CE_phead', 'CE_pdeprel'
+                ]:
+                    value = self.workflow.get('exporter', key, fallback='')
+                    if value:
+                        eval('exporter.' + key[3:] + "='" + value + "'")
+                value = self.workflow.get('exporter', 'CE_feats', fallback='')
+                if value:
+                    exporter.feats = [x.strip() for x in value.split(',')]
+        # 4. Read merger section (TODO)
                     
     def launch(self):
         """
