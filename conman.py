@@ -160,18 +160,50 @@ class Launcher():
                 value = self.workflow.get('exporter', 'CE_feats', fallback='')
                 if value:
                     exporter.feats = [x.strip() for x in value.split(',')]
-        # 4. Read merger section (TODO)
+        # 4. Read merger section
+        if self.path_other:
+            self.merger = ConcordanceMerger()
+            for key in ['add_hits', 'del_hits']:
+                value = self.workflow.get('merger', key, fallback='')
+            if value.lower() == 'true':
+                eval('self.merger.' + key + '=True')
+            value = self.workflow.get('merger', 'match_by', fallback='')
+            if value in ['uuid', 'ref']: self.merger.match_by = value
+                
+            value = self.workflow.get('merger', 'update_hit_tags', fallback='')
+            if value.lower() == 'true': self.merger.update_tags = True
+            value = self.workflow.get('merger', 'merge_tokens', fallback='')
+            if value.lower() == 'true':
+                self.merger.token_merger = TokenMerger()
+                value = self.workflow.get('merger', 'update_token_tags', fallback='')
+                if value.lower() == 'true':
+                    self.merger.token_merger.update_tags = True
+                value = self.workflow.get('merger', 'tok_id_tag', fallback='')
+                if value:
+                    self.merger.token_merger.id_tag = value
+        # 5. Load the concordances if there are no importers or exporters
+        # specified in the workflow file.
+        if not importer:
+            try:
+                self.cnc = load_concordance(self.path_in)
+            except LoadError:
+                raise('No importer set and cannot load concordance from {}'.format(self.path_in))
+        if self.path_other and not self.other_importer:
+            try:
+                self.other_cnc = load_concordance(self.path_other)
+            except LoadError:
+                raise('No other importer set and cannot load concordance from {}'.format(self.path_other))
                     
     def launch(self):
         """
         Runs the conversion.
         """
-        # 1. Initalization
+        # 1. Initalization, including loading.
         if self.workflow:
             self._initialize_from_workflow()
         else:
             self._initialize_from_path()
-        # 2. Loading and importing
+        # 2. Importing
         if not self.cnc:
             if self.importer:
                 self.cnc = self.importer.parse(self.path_in)

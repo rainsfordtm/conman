@@ -24,7 +24,7 @@ class ConcordanceMerger():
         are 'uuid' and 'ref'. If empty string (default), assumes list index.
     update_tags (bool):
         Update values already present in hit.tags with new values from the
-        merging concordance. Default is True.
+        merging concordance. Default is False.
     token_merger (mergers.TokenMerger) :
         Provides a TokenMerger to add token-level data from other_cnc to cnc.
         If None provided, tokens are left unchanged. Default is None.
@@ -47,7 +47,7 @@ class ConcordanceMerger():
         Constructs all attributes needed for an instance of the class.
         """
         self.add_hits, self.del_hits = False, False
-        self.update_tags = True
+        self.update_tags = False
         self.match_by = ''
         self.token_merger = None
         
@@ -144,7 +144,7 @@ class TokenMerger():
         Default is ''.
     update_tags (bool):
         Update values already present in tok.tags with new values from the
-        merging hit. Default is True.
+        merging hit. Default is False.
     
     Methods:
     --------
@@ -161,7 +161,7 @@ class TokenMerger():
         """
         # self.aligner = None # DISABLED
         self.id_tag = ''
-        self.update_tags = True
+        self.update_tags = False
         
     #########################################################################
     # Private methods needed to implement the aligner
