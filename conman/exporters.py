@@ -39,6 +39,21 @@ class Exporter():
         self.tok_fmt = '{0}'
         self.tok_delimiter = ' '
         
+    @classmethod
+    def create(cls, exporter_type):
+        """
+        Creates an instance of exporter_type and returns it.
+        """
+        
+        EXPORTER_TYPE_TO_CLASS_MAP = {
+          'Exporter':  Exporter,
+          'TableExporter': TableExporter,
+          'ConllExporter': ConllExporter
+        }
+        if exporter_type not in EXPORTER_TYPE_TO_CLASS_MAP:
+              raise ValueError('Bad exporter type {}'.format(exporter_type))
+        return EXPORTER_TYPE_TO_CLASS_MAP[exporter_type]()
+        
     def export(self, cnc, path, encoding = 'utf-8'):
         """
         Exports concordance cnc to path in a tabular format.
@@ -117,12 +132,20 @@ class TableExporter(Exporter):
         self.concordance = None
         self.header = True
         self.dialect = 'excel'
-        self.fields = ['UUID', 'REF', 'LCX', 'KEYWORDS', 'RCX']
+        self.fields = []
         csv.register_dialect(
             'tab',
             delimiter='\t',
             quoting=csv.QUOTE_NONE
             )
+        
+    def _set_default_fields(self, cnc):
+        # Set the default fields if none have been given at the moment of
+        # export.
+        # Default name plus all tags in self.tags
+        self.fields = ['UUID', 'REF', 'LCX', 'KEYWORDS', 'RCX']
+        for key in cnc[0].tags:
+            self.fields.append(key)
         
     def export(self, cnc, path, encoding = 'utf-8'):
         """
@@ -133,6 +156,7 @@ class TableExporter(Exporter):
             path (str):                     File name
             encoding (str):                 Character encoding
         """
+        if not self.fields: self._set_default_fields(cnc)
         with open(path, 'w', encoding=encoding, newline='') as f:
             writer = csv.writer(f, dialect=self.dialect)
             if self.header:
@@ -221,7 +245,7 @@ class ConllExporter():
         self.phead = 'conll_PHEAD'
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
-    
+        
     def export(self, cnc, path, add_refs = True):
         """
         Exports a concordance as a Conll file suitable for dependency parsing.
@@ -235,7 +259,7 @@ class ConllExporter():
         with open(path, 'w', encoding='utf-8') as f:
             for hit in cnc:
                 if add_refs:
-                    f.write('# ' + hit.uuid + '\n')
+                    f.write('# ' + str(hit.uuid) + '\n')
                     f.write('# ' + hit.ref + '\n')
                 f.write(self.hit_to_string(hit))
                 f.write('\n')

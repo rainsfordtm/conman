@@ -8,7 +8,7 @@
 # 
 
 def script(transformer, tree, 
-    keyword_attr = '',
+    keyword_attr = 'KEYWORDS',
     keyword_node_regex = '',
     word_lemma_regex = '(?P<word>.*)'):
     # Required positional arguments for ALL scripts are:
@@ -60,6 +60,9 @@ def script(transformer, tree,
     # Find keyword node number using keyword_node_regex
     m = re.match(keyword_node_regex, comment)
     keyword_node = m.groupdict()['keyword_node']
+    print(keyword_node_regex)
+    print(comment)
+    print(keyword_node)
     # Add the keyword attr to all branches
     tree.add_branch_attr(keyword_attr)
     # Find the keyword in the tree
@@ -69,7 +72,7 @@ def script(transformer, tree,
     # Get all descendents
     branches = keyword_branch.getElementsByTagName('branch')
     for branch in branches:
-        branch.setAttribute('keyword', 'True')
+        branch.setAttribute(keyword_attr, 'True')
     
     ###############################
     # 2. Remove all code nodes

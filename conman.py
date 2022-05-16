@@ -87,10 +87,11 @@ class Launcher():
         for key in ['importer', 'other_importer', 'exporter']:
             value = self.workflow.get('DEFAULT', key, fallback='')
             if value:
-                try:
-                    eval('self.' + key + ' = ' + value + '()')
-                except:
-                    raise ConfigError('{} "{}" not recognized'.format(key, s))
+                if key == 'exporter':
+                    obj = Exporter.create(value)
+                else:
+                    obj = Importer.create(value)
+                setattr(self, key, obj)
         # 2. Read importer and other_importer sections
         for section, importer in [
             ('importer', self.importer), ('other_importer', self.other_importer)
@@ -101,10 +102,10 @@ class Launcher():
             for key in ['lcx_regex', 'keywds_regex', 'rcx_regex', 'ref_regex']:
                 value = self.workflow.get(section, key, fallback='')
                 if value:
-                    eval('importer.' + key + "=r'''" + value + "'''")
+                    setattr(importer, key, eval("r'''" + value + "'''"))
             value = self.workflow.get(section, 'tokenizer', fallback='')
             if value:
-                eval('importer.tokenizer=' + value + '()')
+                importer.tokenizer = Tokenizer.create(value)
             if isinstance(importer, TableImporter):
                 value = self.workflow.get(section, 'TI_dialect', fallback='')
                 if value:
@@ -123,53 +124,53 @@ class Launcher():
             if isinstance(importer, PennOutImporter):
                 value = self.workflow.get(section, 'PO_keyword_node_regex', fallback='')
                 if value:
-                    eval("importer.keyword_node_regex=r'''" + value + "'''")
+                    importer.keyword_node_regex = eval("r'''" + value + "'''")
+                    print(importer.keyword_node_regex)
                 # Read advanced values for PennOutImporter
                 value = self.workflow.get('advanced', 'PO_dump_xml', fallback='')
                 if value:
-                    importer.dump_xml = True if value.lower() == 'true' else False
+                    importer.dump_xml = value
                 value = self.workflow.get('advanced', 'PO_script_file', fallback='')
                 if value:
                     name = os.path.splitext(os.path.basename(value))[0]
                     script_module = importlib.machinery.SourceFileLoader(name, value)
                     importer.script = script_module.script
         # 3. Read exporter section
-        if exporter:
+        if self.exporter:
             for key in ['tok_fmt', 'kw_fmt', 'tok_delimiter']:
                 value = self.workflow.get('exporter', key, fallback='')
                 if value:
-                    eval('exporter.' + key + "='" + value + "'")
-            if isinstance(exporter, TableExporter):
+                    setattr(self.exporter, key, value)
+            if isinstance(self.exporter, TableExporter):
                 value = self.workflow.get('exporter', 'TE_dialect', fallback='')
                 if value:
-                    exporter.dialect = value
+                    self.exporter.dialect = value
                 value = self.workflow.get('exporter', 'TE_header', fallback='')
                 if value:
-                    exporter.header = True if value.lower() == 'true' else False
+                    self.exporter.header = True if value.lower() == 'true' else False
                 value = self.workflow.get('exporter', 'TE_fields', fallback='')
                 if value:
-                    exporter.fields = [x.strip() for x in value.split(',')]
-            if isinstance(exporter, ConllExporter):
+                    self.exporter.fields = [x.strip() for x in value.split(',')]
+            if isinstance(self.exporter, ConllExporter):
                 for key in [
                     'CE_lemma', 'CE_cpostag', 'CE_postag', 'CE_head',
                     'CE_deprel', 'CE_phead', 'CE_pdeprel'
                 ]:
                     value = self.workflow.get('exporter', key, fallback='')
                     if value:
-                        eval('exporter.' + key[3:] + "='" + value + "'")
+                        setattr(self.exporter, key[3:], value)
                 value = self.workflow.get('exporter', 'CE_feats', fallback='')
                 if value:
-                    exporter.feats = [x.strip() for x in value.split(',')]
+                    self.exporter.feats = [x.strip() for x in value.split(',')]
         # 4. Read merger section
         if self.path_other:
             self.merger = ConcordanceMerger()
             for key in ['add_hits', 'del_hits']:
                 value = self.workflow.get('merger', key, fallback='')
             if value.lower() == 'true':
-                eval('self.merger.' + key + '=True')
+                setattr(self.merger, key, True)
             value = self.workflow.get('merger', 'match_by', fallback='')
             if value in ['uuid', 'ref']: self.merger.match_by = value
-                
             value = self.workflow.get('merger', 'update_hit_tags', fallback='')
             if value.lower() == 'true': self.merger.update_tags = True
             value = self.workflow.get('merger', 'merge_tokens', fallback='')
@@ -183,17 +184,23 @@ class Launcher():
                     self.merger.token_merger.id_tag = value
         # 5. Load the concordances if there are no importers or exporters
         # specified in the workflow file.
-        if not importer:
+        if not self.importer:
             try:
                 self.cnc = load_concordance(self.path_in)
             except LoadError:
-                raise('No importer set and cannot load concordance from {}'.format(self.path_in))
+                raise ConfigError('No importer set and cannot load concordance from {}'.format(self.path_in))
         if self.path_other and not self.other_importer:
             try:
                 self.other_cnc = load_concordance(self.path_other)
             except LoadError:
-                raise('No other importer set and cannot load concordance from {}'.format(self.path_other))
-                    
+                raise ConfigError('No other importer set and cannot load concordance from {}'.format(self.path_other))
+        if not self.exporter:
+            if os.path.splitext(self.path_out)[1] in CONCORDANCE_EXTS:
+                # save don't export
+                self.path_save = self.path_out
+            else:
+                raise ConfigError('No exporter set and out file is not a concordance file.')
+            
     def launch(self):
         """
         Runs the conversion.
@@ -216,12 +223,13 @@ class Launcher():
         # 3. Merging
         if self.other_cnc:
             if not self.merger: self.merger = ConcordanceMerger()
-            self.cnc = merger.merge(self.cnc, self.other_cnc)
+            self.cnc = self.merger.merge(self.cnc, self.other_cnc)
         # 4. Exporting and saving
+        print(self.path_save)
         if self.path_save:
-            cnc.save(self.path_save)
+            self.cnc.save(self.path_save)
         if self.exporter and self.path_out:
-            exporter.export(self.cnc, self.path_out)
+            self.exporter.export(self.cnc, self.path_out)
         if not self.path_save and not self.exporter:
             raise ConfigError('Cannot save or export the result.')
 
@@ -243,7 +251,8 @@ def main(path_in, path_out, path_other='', path_workflow='', save=False):
         launcher.path_other = path_other
     if path_workflow:
         cfg = ConfigParser()
-        cfg.read_file(path_workflow)
+        with open(path_workflow, 'r') as f:
+            cfg.read_file(f)
         launcher.workflow = cfg
     launcher.launch()
 
@@ -259,10 +268,10 @@ if __name__ == '__main__':
         nargs='?', 
         default='out.cnc'
     )
-    parser.add_argument('-m', '--merge', nargs='?', default='',
+    parser.add_argument('-m', '--merge', nargs=1, default=[''],
         help='Concordance to merge with input file.')
     
-    parser.add_argument('-w', '--workflow', nargs='?', default='',
+    parser.add_argument('-w', '--workflow', nargs=1, default=[''],
         help='Workflow configuration file.')
     
     parser.add_argument('-s', '--save', action='store_true', 
@@ -273,7 +282,7 @@ if __name__ == '__main__':
     
     # Convert Namespace to dict.
     args = vars(parser.parse_args())
-    
-    launcher = Launcher()
-    main(args.pop('infile'), args.pop('outfile'), args.pop('merge'),
-        args.pop('workflow'), args.pop('save'))
+    merge = args.pop('merge')[0] if 'merge' in args else ''
+    workflow = args.pop('workflow')[0] if 'workflow' in args else ''
+    main(args.pop('infile'), args.pop('outfile'), merge,
+        workflow, args.pop('save'))

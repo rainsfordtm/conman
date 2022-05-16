@@ -80,6 +80,22 @@ class Importer():
     
     SPECIAL_FIELDS = ['KEYWORDS', 'LCX', 'RCX', 'TOKENS', 'REF', 'UUID']
     
+    @classmethod
+    def create(cls, importer_type):
+        """
+        Creates an instance of importer_type and returns it.
+        """
+        
+        IMPORTER_TYPE_TO_CLASS_MAP = {
+          'Importer':  Importer,
+          'TableImporter': TableImporter,
+          'PennOutImporter': PennOutImporter,
+          'BaseTreeImporter': BaseTreeImporter
+        }
+        if importer_type not in IMPORTER_TYPE_TO_CLASS_MAP:
+              raise ValueError('Bad importer type {}'.format(importer_type))
+        return IMPORTER_TYPE_TO_CLASS_MAP[importer_type]()
+    
     def __init__(self):
         """
         Constructs all attributes needed for an instance of the class.
@@ -252,7 +268,7 @@ class BaseTreeImporter(Importer):
         Constructs all attributes needed for an instance of the class.
         """
         Importer.__init__(self)
-        self.keyword_attr = ''
+        self.keyword_attr = 'KEYWORDS'
         self.keyword_true_values = ['yes', 'y', 't', 'true']
         
     def is_keyword(self, elem):
@@ -543,10 +559,16 @@ class TableImporter(Importer):
             else:
                 d[key] = value
         # Create list of all tokens
+        #print(d)
         if 'KEYWORDS' in d:
             l, kws = context_to_list(d.pop('LCX'), d.pop('KEYWORDS'), d.pop('RCX'))
         else:
-            l, kws = d.pop('TOKENS'), []
+            try:
+                l, kws = d.pop('TOKENS'), []
+            except KeyError:
+                raise ParseError('Cannot find TOKEN or KEYWORDS field in file. ' + \
+                    'Use automatically recognized names in the header or set fieldnames ' + \
+                    'manually in the workflow file.')
         # Create Hit, passing uuid
         hit = Hit(l, kws, uuid)
         hit.ref = ref
@@ -557,6 +579,19 @@ class TableImporter(Importer):
         hit.tags = d
         return hit
         
+    def sniff_dialect(self, path):
+        """
+        Resets self.dialect and self.has_header based on the results of
+        csv.sniffer.
+        
+        Parameters:
+            path (str):     Path to the CSV file.
+        """
+        with open(path, 'r', newline='') as f:
+            sniffer = csv.Sniffer()
+            self.dialect = sniffer.sniff(f.read(1024))
+            f.seek(0)
+            self.has_header = sniffer.has_header(f.readline())
       
 def context_to_list(lcx, keywds, rcx):
     """
@@ -600,7 +635,11 @@ def get_importer_from_path(path):
             An Importer object.
     """
     ext = os.path.splitext(path)[1]
-    if ext == '.csv': return TableImporter()
+    if ext == '.csv':
+        importer = TableImporter()
+        # CSV files being what they are, call the sniffer.
+        importer.sniff_dialect(path)
+        return importer
     if ext == '.out': return PennOutImporter()
     if ext == '.txt': return Importer()
     if ext == '.xml': return BaseTreeImporter()

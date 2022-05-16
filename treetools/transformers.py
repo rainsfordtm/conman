@@ -45,7 +45,6 @@ class Transformer():
             tree = stree.to_base_tree()
             # Self passed explicitly because it's a FUNCTION not a METHOD.
             tree = self.script(self, tree, **kwargs)
-            stree = tree.to_string_tree()
             try:
                 forest[i] = tree.to_string_tree()
             except:

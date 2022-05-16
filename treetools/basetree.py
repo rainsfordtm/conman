@@ -1059,6 +1059,8 @@ class BaseTree(xml.dom.minidom.Document):
             self._add_attr(self.leaves, attr)
             
     def _add_attr(self, node_list, attr):
+        if not is_valid_attr(attr):
+            raise ModifyTreeError('Attribute name "{}" is not valid'.format(attr))
         for node in node_list:
             node.setAttribute(attr, '--')
         self._refresh_lists()
@@ -1330,6 +1332,15 @@ def xmlent_resolve(s):
     s = s.replace('&lt;', '<')
     s = s.replace('&gt;', '>')
     return s
+    
+def is_valid_attr(s):
+    """
+    Returns True if s is a valid attribute name.
+    """
+    if not s: return False
+    for char in ['&', '"', "'", '<', '>']:
+        if char in s: return False
+    return True
     
 def tostring(tree):
     return xml.etree.ElementTree.tostring(tree.getroot(), 'utf-8').decode('utf-8')
