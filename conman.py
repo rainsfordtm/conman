@@ -136,7 +136,7 @@ class Launcher():
                     importer.script = script_module.script
         # 3. Read exporter section
         if self.exporter:
-            for key in ['tok_fmt', 'kw_fmt', 'tok_delimiter']:
+            for key in ['encoding', 'tok_fmt', 'kw_fmt', 'tok_delimiter']:
                 value = self.workflow.get('exporter', key, fallback='')
                 if key == 'tok_delimiter' and value:
                     # convert to normal string to allow \n, \s, etc.
