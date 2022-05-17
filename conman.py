@@ -82,7 +82,6 @@ class Launcher():
             self.path_save = self.path_out
             
     def _initialize_from_workflow(self):
-        # TODO
         # 1. Read default section
         for key in ['importer', 'other_importer', 'exporter']:
             value = self.workflow.get('DEFAULT', key, fallback='')
@@ -99,10 +98,10 @@ class Launcher():
             # Only read if the importer has been set.
             if not importer: continue
             # Read the values
-            for key in ['lcx_regex', 'keywds_regex', 'rcx_regex', 'ref_regex']:
+            for key in ['encoding', 'lcx_regex', 'keywds_regex', 'rcx_regex', 'ref_regex']:
                 value = self.workflow.get(section, key, fallback='')
                 if value:
-                    setattr(importer, key, eval("r'''" + value + "'''"))
+                    setattr(importer, key, value)
             value = self.workflow.get(section, 'tokenizer', fallback='')
             if value:
                 importer.tokenizer = Tokenizer.create(value)
@@ -124,7 +123,7 @@ class Launcher():
             if isinstance(importer, PennOutImporter):
                 value = self.workflow.get(section, 'PO_keyword_node_regex', fallback='')
                 if value:
-                    importer.keyword_node_regex = eval("r'''" + value + "'''")
+                    importer.keyword_node_regex = value
                     print(importer.keyword_node_regex)
                 # Read advanced values for PennOutImporter
                 value = self.workflow.get('advanced', 'PO_dump_xml', fallback='')

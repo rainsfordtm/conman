@@ -16,7 +16,7 @@ def main(in_file, out_file, format):
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         f.write(forest.toxml())
     
-def build_forest(in_file, format):
+def build_forest(in_file, format, encoding='utf-8', errors='replace'):
     
     #########################################################################
     # Subprocs for BUILD_FOREST                                             #
@@ -188,7 +188,7 @@ def build_forest(in_file, format):
     # Feed parser the file line-by-line
     tree_id_counter = 0
     listnest = contacts = []
-    with open(in_file, 'r') as f:
+    with open(in_file, 'r', encoding=encoding, errors=errors) as f:
         for i, l in enumerate(f.readlines()):
             end_tree = parser.linereader(l)
             if end_tree:

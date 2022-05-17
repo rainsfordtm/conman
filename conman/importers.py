@@ -30,6 +30,9 @@ class Importer():
     concordance (concordance.Concordance):
         Concordance object
         
+    encoding (str):
+        Text encoding to use for reading the file. Default is 'utf-8'.
+        
     lcx_regex (str):
         Regular expression string used to interpret fields in each token
         string in the left context. Default is r'(?P<word>.*)', i.e. the 
@@ -101,6 +104,7 @@ class Importer():
         Constructs all attributes needed for an instance of the class.
         """
         self.concordance = Concordance([])
+        self.encoding = 'utf-8'
         self.lcx_regex, self.keywds_regex, self.rcx_regex = \
             r'(?P<word>.*)', r'(?P<word>.*)', r'(?P<word>.*)' 
         self.ref_regex = ''
@@ -128,7 +132,7 @@ class Importer():
         if special_field == 'RCX':
             return [self.parse_token(item, self.rcx_regex) for item in l]
             
-    def parse(self, path, encoding = 'utf-8', delimiter = '\n'):
+    def parse(self, path, delimiter = '\n'):
         """
         Parses a text file and splits hits using the value passed in
         delimiter. Default is '\n', i.e. one line per hit.
@@ -145,7 +149,7 @@ class Importer():
             parse(self, path, [encoding, [delimiter]]):
                 A concordance object.
         """
-        with open(path, 'r', encoding=encoding) as f:
+        with open(path, 'r', encoding=self.encoding, errors='replace') as f:
             s = ''
             for line in f:
                 s += line
@@ -411,7 +415,7 @@ class PennOutImporter(BaseTreeImporter):
         self.keyword_node_regex = r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*'
         self.script = conman.scripts.pennout2cnc.script
         
-    def parse(self, path, encoding = 'utf-8'):
+    def parse(self, path):
         """
         Parses a Penn .out file.
         
@@ -423,7 +427,9 @@ class PennOutImporter(BaseTreeImporter):
                 A concordance object.
         """
         # 1. Call syn_importer on the .out file. to create a BaseForest.
-        forest = treetools.syn_importer.build_forest(path, 'penn-psd-out')
+        forest = treetools.syn_importer.build_forest(
+            path, 'penn-psd-out', encoding=self.encoding, errors='replace'
+        )
         # 2. Initialize a transformer
         transformer = treetools.transformers.Transformer()
         # 3. Set the script method from self.script
@@ -508,7 +514,7 @@ class TableImporter(Importer):
             quoting=csv.QUOTE_NONE
             )
         
-    def parse(self, path, encoding = 'utf-8'):
+    def parse(self, path):
         """
         Parses a CSV file.
         
@@ -520,7 +526,7 @@ class TableImporter(Importer):
             parse(self, path, [encoding, [header]]):
                 A concordance object.
         """
-        with open(path, 'r', encoding=encoding, newline='') as f:
+        with open(path, 'r', encoding=self.encoding, errors='replace', newline='') as f:
             reader = csv.reader(f, self.dialect)
         # Skip the first row if header is True
             if self.has_header:

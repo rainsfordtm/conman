@@ -10,6 +10,8 @@ class Exporter():
     
     Attributes:
     -----------
+    encoding (str):
+        Name of codec to use to write the exported file. Default is utf-8.
 
     kw_fmt(str):
         Format string used to format each keyword. Takes a single positional
@@ -34,6 +36,7 @@ class Exporter():
         """
         Constructs all attributes needed for an instance of the class.
         """
+        self.encoding = 'utf-8'
         self.kw_fmt = '{0}'
         self.tok_fmt = '{0}'
         self.tok_delimiter = ' '
@@ -54,7 +57,7 @@ class Exporter():
               raise ValueError('Bad exporter type {}'.format(exporter_type))
         return EXPORTER_TYPE_TO_CLASS_MAP[exporter_type]()
         
-    def export(self, cnc, path, encoding = 'utf-8'):
+    def export(self, cnc, path):
         """
         Exports concordance cnc to path in a tabular format.
         
@@ -63,7 +66,7 @@ class Exporter():
             path (str):                     File name
             encoding (str):                 Character encoding
         """
-        with open(path, 'w', encoding=encoding) as f:
+        with open(path, 'w', encoding=self.encoding, errors='replace') as f:
             for hit in cnc:
                 f.write(hit.to_string(
                     hit.TOKENS,
@@ -95,7 +98,7 @@ class TokenListExporter(Exporter):
         Exporter.__init__(self)
         self.hit_end_token = ''
         
-    def export(self, cnc, path, encoding = 'utf-8'):
+    def export(self, cnc, path):
         """
         Exports concordance cnc to path in a one-token-per-line format.
         
@@ -104,7 +107,7 @@ class TokenListExporter(Exporter):
             path (str):                     File name
             encoding (str):                 Character encoding
         """
-        with open(path, 'w', encoding=encoding) as f:
+        with open(path, 'w', encoding=self.encoding, errors='replace') as f:
             for hit in cnc:
                 f.write(hit.to_string(
                     hit.TOKENS,
@@ -189,7 +192,7 @@ class TableExporter(Exporter):
         for key in cnc[0].tags:
             self.fields.append(key)
         
-    def export(self, cnc, path, encoding = 'utf-8'):
+    def export(self, cnc, path):
         """
         Exports concordance cnc to path in a tabular format.
         
@@ -199,7 +202,7 @@ class TableExporter(Exporter):
             encoding (str):                 Character encoding
         """
         if not self.fields: self._set_default_fields(cnc)
-        with open(path, 'w', encoding=encoding, newline='') as f:
+        with open(path, 'w', encoding=self.encoding, errors='replace', newline='') as f:
             writer = csv.writer(f, dialect=self.dialect)
             if self.header:
                 writer.writerow(self.fields)
@@ -298,7 +301,7 @@ class ConllExporter():
             path (str)                   : Path for Conll file.
             add_refs (bool)              : Boolean
         """
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding=self.encoding, errors='replace') as f:
             for hit in cnc:
                 if add_refs:
                     f.write('# ' + str(hit.uuid) + '\n')
