@@ -139,8 +139,15 @@ class Launcher():
         if self.exporter:
             for key in ['tok_fmt', 'kw_fmt', 'tok_delimiter']:
                 value = self.workflow.get('exporter', key, fallback='')
+                if key == 'tok_delimiter' and value:
+                    # convert to normal string to allow \n, \s, etc.
+                    value = fix_escape_characters(value)
                 if value:
                     setattr(self.exporter, key, value)
+            if isinstance(self.exporter, TokenListExporter):
+                value = self.workflow.get('exporter', 'TL_hit_end_token', fallback='')
+                if value:
+                    self.exporter.hit_end_token = value
             if isinstance(self.exporter, TableExporter):
                 value = self.workflow.get('exporter', 'TE_dialect', fallback='')
                 if value:
@@ -225,7 +232,6 @@ class Launcher():
             if not self.merger: self.merger = ConcordanceMerger()
             self.cnc = self.merger.merge(self.cnc, self.other_cnc)
         # 4. Exporting and saving
-        print(self.path_save)
         if self.path_save:
             self.cnc.save(self.path_save)
         if self.exporter and self.path_out:
@@ -255,6 +261,15 @@ def main(path_in, path_out, path_other='', path_workflow='', save=False):
             cfg.read_file(f)
         launcher.workflow = cfg
     launcher.launch()
+   
+def fix_escape_characters(s):
+    """
+    Interprets escape characters mangled by the config parser.
+    """
+    s = s.replace('\\n', '\n')
+    s = s.replace('\\t', '\t')
+    s = s.replace('\\r', '\r')
+    return s
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -286,3 +301,5 @@ if __name__ == '__main__':
     workflow = args.pop('workflow')[0] if 'workflow' in args else ''
     main(args.pop('infile'), args.pop('outfile'), merge,
         workflow, args.pop('save'))
+    
+

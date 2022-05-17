@@ -13,8 +13,7 @@ class Exporter():
 
     kw_fmt(str):
         Format string used to format each keyword. Takes a single positional
-        argument, which is evaluated as a token instance. Default is '',
-        which is evaluated as 'use tok_fmt'.
+        argument, which is evaluated as a token instance. Default is '{0}'.
         
     tok_delimiter (str):
         String used to delimit the tokens. Default is ' '.
@@ -28,14 +27,14 @@ class Exporter():
     --------
     
     export(self, cnc, path, [encoding]):
-        Exports concordance cnc to path, one token per line.
+        Exports concordance cnc to path, one hit per line.
     """
     
     def __init__(self):
         """
         Constructs all attributes needed for an instance of the class.
         """
-        self.kw_fmt = ''
+        self.kw_fmt = '{0}'
         self.tok_fmt = '{0}'
         self.tok_delimiter = ' '
         
@@ -47,6 +46,7 @@ class Exporter():
         
         EXPORTER_TYPE_TO_CLASS_MAP = {
           'Exporter':  Exporter,
+          'TokenListExporter': TokenListExporter,
           'TableExporter': TableExporter,
           'ConllExporter': ConllExporter
         }
@@ -71,6 +71,48 @@ class Exporter():
                     tok_fmt=self.tok_fmt,
                     kw_fmt=self.kw_fmt))
                 f.write('\n')
+
+class TokenListExporter(Exporter):
+    """
+    Class to export the tokens in a one-token-per-line list format.
+    
+    Attributes:
+    -----------
+    hit_end_token (str):
+        Character used as a dummy token to delimit the hits (essential).
+        Default is '', i.e. an empty line.
+    
+    Methods:
+    --------
+    export(self, cnc, path, [encoding]):
+        Exports concordance cnc to path, one token per line.
+    """
+    
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        Exporter.__init__(self)
+        self.hit_end_token = ''
+        
+    def export(self, cnc, path, encoding = 'utf-8'):
+        """
+        Exports concordance cnc to path in a one-token-per-line format.
+        
+        Parameters:
+            cnc (concordance.Concordance):  Concordance to export
+            path (str):                     File name
+            encoding (str):                 Character encoding
+        """
+        with open(path, 'w', encoding=encoding) as f:
+            for hit in cnc:
+                f.write(hit.to_string(
+                    hit.TOKENS,
+                    delimiter='\n',
+                    tok_fmt=self.tok_fmt,
+                    kw_fmt=self.kw_fmt))
+                f.write('\n' + self.hit_end_token + '\n')
+                    
 
 class TableExporter(Exporter):
     """
