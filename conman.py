@@ -9,6 +9,7 @@ import importlib.machinery
 from conman.importers import *
 from conman.exporters import *
 from conman.mergers import *
+from conman.annotators import Annotator
 from conman.tokenizers import *
 from conman.concordance import load_concordance
 from configparser import ConfigParser
@@ -37,6 +38,7 @@ class Launcher():
     other_cnc (concordance.Concordance):    The other concordance to merge.
     other_importer (importers.Importer):    Importer for other_cnc.
     merger (mergers.ConcordanceMerger):     Merger for cnc and other_cnc.
+    annotator (annotators.Annotator):       Annotator for cnc (used after merge).
     path_in (str):                          Path to the base concordance.
     path_out (str):                         Path to the output file.
     path_other (str):                       Path to the other concordance.
@@ -61,6 +63,7 @@ class Launcher():
         self.importer, self.other_importer = None, None
         self.exporter = None
         self.merger = None
+        self.annotator = None
         self.workflow = None
         
     def _initialize_from_path(self):
@@ -83,11 +86,13 @@ class Launcher():
             
     def _initialize_from_workflow(self):
         # 1. Read default section
-        for key in ['importer', 'other_importer', 'exporter']:
+        for key in ['importer', 'other_importer', 'annotator', 'exporter']:
             value = self.workflow.get('DEFAULT', key, fallback='')
             if value:
                 if key == 'exporter':
                     obj = Exporter.create(value)
+                elif key == 'annotator':
+                    obj = Annotator.create(value)
                 else:
                     obj = Importer.create(value)
                 setattr(self, key, obj)
@@ -105,6 +110,10 @@ class Launcher():
             value = self.workflow.get(section, 'tokenizer', fallback='')
             if value:
                 importer.tokenizer = Tokenizer.create(value)
+            if isinstance(importer, TokenListImporter):
+                value = self.workflow.get(section, 'TL_hit_end_token', fallback='')
+                if value:
+                    importer.hit_end_token = value
             if isinstance(importer, TableImporter):
                 value = self.workflow.get(section, 'TI_dialect', fallback='')
                 if value:
@@ -188,7 +197,23 @@ class Launcher():
                 value = self.workflow.get('merger', 'tok_id_tag', fallback='')
                 if value:
                     self.merger.token_merger.id_tag = value
-        # 5. Load the concordances if there are no importers or exporters
+        # 5. Manage annotator settings (i.e. changing the script)
+        if self.annotator:
+            for key in self.workflow.options('annotator'):
+                value = self.workflow.get('annotator', key)
+                if value:
+                    try:
+                        self.annotator.kwargs[key] = eval(value)
+                    except:
+                        raise ConfigError('Error in annotator option "{}={}"'.format(key, value))
+            value = self.workflow.get('advanced', 'annotator_script_file', fallback='')
+            if value:
+                # Load the module
+                name = os.path.splitext(os.path.basename(value))[0]
+                script_module = importlib.machinery.SourceFileLoader(name, value)
+                # Update the class method
+                Annotator.script = script_module.script
+        # 6. Load the concordances if there are no importers or exporters
         # specified in the workflow file.
         if not self.importer:
             try:
@@ -230,10 +255,14 @@ class Launcher():
         if self.other_cnc:
             if not self.merger: self.merger = ConcordanceMerger()
             self.cnc = self.merger.merge(self.cnc, self.other_cnc)
-        # 4. Exporting and saving
+        # 4. Annotating
+        if self.annotator:
+            self.cnc = self.annotator.annotate(self.cnc)
+        # 5. Exporting and saving
         if self.path_save:
             self.cnc.save(self.path_save)
         if self.exporter and self.path_out:
+            print(self.exporter.kw_fmt)
             self.exporter.export(self.cnc, self.path_out)
         if not self.path_save and not self.exporter:
             raise ConfigError('Cannot save or export the result.')

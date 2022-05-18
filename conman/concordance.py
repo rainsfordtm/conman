@@ -311,6 +311,7 @@ class Hit(collections.UserList):
             try:
                 return kw_fmt.format(tok)
             except:
+                #print(tok.tags)
                 return str(tok)
         else:
             try:

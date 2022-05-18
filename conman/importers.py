@@ -91,6 +91,7 @@ class Importer():
         
         IMPORTER_TYPE_TO_CLASS_MAP = {
           'Importer':  Importer,
+          'TokenListImporter': TokenListImporter,
           'TableImporter': TableImporter,
           'PennOutImporter': PennOutImporter,
           'BaseTreeImporter': BaseTreeImporter
@@ -158,7 +159,6 @@ class Importer():
                 for group in l[:-1]:
                     hit = self.parse_hit(group)
                     self.concordance.append(hit)
-                    print(self.concordance)
                 s = l[-1]
             # At EOF strip all trailing whitespace
             s = s.rstrip()
@@ -233,6 +233,55 @@ class Importer():
         """
         return self.tokenizer.tokenize(s)
         
+class TokenListImporter(Importer):
+    """
+    Class to import the tokens in a one-token-per-line list format.
+    
+    Attributes:
+    -----------
+    hit_end_token (str):
+        Character used as a dummy token to delimit the hits (essential).
+        Default is '', i.e. an empty line.
+    
+    Methods:
+    --------
+    parse(self, path):
+        Imports concordance from path, one token per line.
+    """
+    
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        Importer.__init__(self)
+        self.hit_end_token = ''
+        
+    def parse(self, path):
+        """
+        Imports concordance from path, one token per line.
+        
+        Parameters
+        ----------
+        path (str):
+            Path to the file to import.
+            
+        Returns:
+        --------
+        parse(self, path):
+            A concordance object
+        """     
+        with open(path, 'r', encoding=self.encoding, errors='replace') as f:
+            l = []
+            for line in f:
+                tok = self.parse_token(line[:-1], self.lcx_regex)
+                if tok != self.hit_end_token:
+                    l.append(tok)
+                else:
+                    hit = Hit(l)
+                    self.concordance.append(hit)
+                    l = []
+        return self.concordance 
+
 class BaseTreeImporter(Importer):
     """
     Imports a Basetree XML file into a concordance.
