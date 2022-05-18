@@ -3,7 +3,7 @@
 # This file contains the 'script' function for raising keyword tags to 
 # hit-level tags.
 
-def script(hit, tags=[]):
+def script(annotator, hit, tags=[]):
     # Tags should be a list of (kw_tag, hit_tag) pairs
     for kw_tag, hit_tag in tags:
         l = []

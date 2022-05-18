@@ -5,7 +5,7 @@
 ################################################################################
 
 import os.path, argparse
-import importlib.machinery
+import importlib.machinery, importlib.util
 from conman.importers import *
 from conman.exporters import *
 from conman.mergers import *
@@ -85,9 +85,9 @@ class Launcher():
             self.path_save = self.path_out
             
     def _initialize_from_workflow(self):
-        # 1. Read default section
+        # 1. Read setup section
         for key in ['importer', 'other_importer', 'annotator', 'exporter']:
-            value = self.workflow.get('DEFAULT', key, fallback='')
+            value = self.workflow.get('setup', key, fallback='')
             if value:
                 if key == 'exporter':
                     obj = Exporter.create(value)
@@ -141,7 +141,7 @@ class Launcher():
                 value = self.workflow.get('advanced', 'PO_script_file', fallback='')
                 if value:
                     name = os.path.splitext(os.path.basename(value))[0]
-                    script_module = importlib.machinery.SourceFileLoader(name, value)
+                    script_module = load_module(name, value)
                     importer.script = script_module.script
         # 3. Read exporter section
         if self.exporter:
@@ -210,7 +210,7 @@ class Launcher():
             if value:
                 # Load the module
                 name = os.path.splitext(os.path.basename(value))[0]
-                script_module = importlib.machinery.SourceFileLoader(name, value)
+                script_module = load_module(name, value)
                 # Update the class method
                 Annotator.script = script_module.script
         # 6. Load the concordances if there are no importers or exporters
@@ -289,6 +289,14 @@ def main(path_in, path_out, path_other='', path_workflow='', save=False):
             cfg.read_file(f)
         launcher.workflow = cfg
     launcher.launch()
+    
+def load_module(module_name, path):
+    """Load arbitrary Python source file"""
+    loader = importlib.machinery.SourceFileLoader(module_name, path)
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
    
 def fix_escape_characters(s):
     """
@@ -307,10 +315,7 @@ if __name__ == '__main__':
         'arguments and the workflow configuration file.'
         )
     parser.add_argument('infile', help='Input file to load or import.')
-    parser.add_argument('outfile', help='Output file to save or export.',
-        nargs='?', 
-        default='out.cnc'
-    )
+    parser.add_argument('outfile', help='Output file to save or export.')
     parser.add_argument('-m', '--merge', nargs=1, default=[''],
         help='Concordance to merge with input file.')
     
