@@ -91,6 +91,13 @@ class KeywordTagAnnotator(Annotator):
                     l.append(kw.tags[kw_tag])
                 else:
                     l.append('')
-            hit.tags[hit_tag] = '_'.join(l)
+            try:
+                hit.tags[hit_tag] = '_'.join(l)
+            except:
+                print(hit)
+                print(hit.tags)
+                print(l)
+                print(hit.kws)
+                raise
         return hit
         

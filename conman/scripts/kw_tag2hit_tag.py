@@ -8,6 +8,9 @@ def script(annotator, hit, tags=[]):
     for kw_tag, hit_tag in tags:
         l = []
         for kw in hit.kws:
-            l.append(kw.tags.get(kw_tag))
+            if kw_tag in kw.tags:
+                l.append(kw.tags[kw_tag])
+            else:
+                l.append(''))
         hit.tags[hit_tag] = '_'.join(l)
     return hit
