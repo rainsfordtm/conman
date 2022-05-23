@@ -152,6 +152,9 @@ class Launcher():
                     value = fix_escape_characters(value)
                 if value:
                     setattr(self.exporter, key, value)
+            value = self.workflow.getint('exporter', 'split_hits', fallback=0)
+            if value:
+                self.exporter.split_hits = value
             if isinstance(self.exporter, TokenListExporter):
                 value = self.workflow.get('exporter', 'TL_hit_end_token', fallback='')
                 if value:

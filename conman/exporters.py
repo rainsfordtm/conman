@@ -17,6 +17,10 @@ class Exporter():
         Format string used to format each keyword. Takes a single positional
         argument, which is evaluated as a token instance. Default is '{0}'.
         
+    split_hits (int):
+        Splits the output into smaller files containing maximum split_hits
+        hits.
+        
     tok_delimiter (str):
         String used to delimit the tokens. Default is ' '.
         
@@ -28,8 +32,10 @@ class Exporter():
     Methods:
     --------
     
-    export(self, cnc, path, [encoding]):
-        Exports concordance cnc to path, one hit per line.
+    export(self, cnc, path):
+        Base method for exporting a concordance by calling the 
+        exporter-specific _export method, having first split the concordance
+        if necessary.
     """
     
     def __init__(self):
@@ -38,6 +44,7 @@ class Exporter():
         """
         self.encoding = 'utf-8'
         self.kw_fmt = '{0}'
+        self.split_hits = 0
         self.tok_fmt = '{0}'
         self.tok_delimiter = ' '
         
@@ -59,6 +66,30 @@ class Exporter():
         
     def export(self, cnc, path):
         """
+        Base method for exporting a concordance by calling the 
+        exporter-specific _export method, having first split the concordance
+        if necessary.
+        
+        Parameters:
+            cnc (concordance.Concordance):  Concordance to export
+            path (str):                     File name
+            encoding (str):                 Character encoding
+        """
+        if self.split_hits:
+            cncs = self._splitter(cnc)
+            split_path = os.path.splitext(path)
+            paths = [
+                '{}_{}{}'.format(split_path[0], str(i), split_path[1])
+                for i in range(len(cncs))
+            ]
+            for cnc, path in zip(cncs, paths):
+                self._export(cnc, path)
+        else:
+            self._export(cnc, path)
+        
+        
+    def _export(self, cnc, path):
+        """
         Exports concordance cnc to path in a tabular format.
         
         Parameters:
@@ -74,6 +105,26 @@ class Exporter():
                     tok_fmt=self.tok_fmt,
                     kw_fmt=self.kw_fmt))
                 f.write('\n')
+                
+    def _splitter(self, cnc):
+        """
+        Method to split the concordance into a list of a concordances containing
+        max self.split_hits hits.
+        
+        Parameters:
+            cnc (concordance.Concordance):  Concordance to export
+            
+        Returns:
+            _splitter(self, cnc):
+                A list of concordance containing max self._split_hits hits.
+        """
+        if not self.split_hits: return [cnc]
+        l = []
+        for i in range((len(cnc) // self.split_hits) + 1):
+            start_ix = i * self.split_hits
+            end_ix = min((i + 1) * self.split_hits, len(cnc))
+            l.append(cnc[start_ix:end_ix])
+        return l
 
 class TokenListExporter(Exporter):
     """
@@ -84,11 +135,6 @@ class TokenListExporter(Exporter):
     hit_end_token (str):
         Character used as a dummy token to delimit the hits (essential).
         Default is '', i.e. an empty line.
-    
-    Methods:
-    --------
-    export(self, cnc, path, [encoding]):
-        Exports concordance cnc to path, one token per line.
     """
     
     def __init__(self):
@@ -98,7 +144,7 @@ class TokenListExporter(Exporter):
         Exporter.__init__(self)
         self.hit_end_token = ''
         
-    def export(self, cnc, path):
+    def _export(self, cnc, path):
         """
         Exports concordance cnc to path in a one-token-per-line format.
         
@@ -162,9 +208,6 @@ class TableExporter(Exporter):
     hit_to_list(self, hit):
         Converts a hit to a list ready for export.
     
-    export(self, path, [encoding]):
-        Exports concordance cnc to path in a tabular format.
-    
     """
     
     SPECIAL_FIELDS = ['KEYWORDS', 'LCX', 'RCX', 'TOKENS', 'REF', 'UUID']
@@ -192,7 +235,7 @@ class TableExporter(Exporter):
         for key in cnc[0].tags:
             self.fields.append(key)
         
-    def export(self, cnc, path):
+    def _export(self, cnc, path):
         """
         Exports concordance cnc to path in a tabular format.
         
@@ -266,10 +309,6 @@ class ConllExporter():
     
     Methods:
     --------
-    export(self, cnc, path, [add_ref]): 
-        Exports a concordance as a Conll file suitable for dependency parsing.
-        If add_refs is True, adds hit.uuid and hit.ref as comments.
-    
     get_feats(self, tok):
         Returns a string for the feats column of the Conll table.
         
@@ -291,7 +330,7 @@ class ConllExporter():
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
         
-    def export(self, cnc, path, add_refs = True):
+    def _export(self, cnc, path, add_refs = True):
         """
         Exports a concordance as a Conll file suitable for dependency parsing.
         If add_refs is True, adds hit.uuid and hit.ref as comments.
