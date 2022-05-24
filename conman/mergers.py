@@ -108,6 +108,9 @@ class ConcordanceMerger():
         """
         self.check_settings()
         for i, other_hit in enumerate(other_cnc):
+            # Here a counter for very large merges
+            if len(other_cnc) > 1000 and i // 1000 == i / 1000 and i > 0:
+                print('Merging hit {} of {}'.format(str(i), str(len(other_cnc))))
             hit = self.match_hit(cnc, other_hit, i)
             if not hit:
                 if self.add_hits:

@@ -245,6 +245,7 @@ class Launcher():
         else:
             self._initialize_from_path()
         # 2. Importing
+        print('Loading/importing concordance...')
         if not self.cnc:
             if self.importer:
                 self.cnc = self.importer.parse(self.path_in)
@@ -256,12 +257,15 @@ class Launcher():
             raise ConfigError('Cannot load or import the concordance to merge.')
         # 3. Merging
         if self.other_cnc:
+            print('Merging concordances...')
             if not self.merger: self.merger = ConcordanceMerger()
             self.cnc = self.merger.merge(self.cnc, self.other_cnc)
         # 4. Annotating
         if self.annotator:
+            print('Annotating concordance...')
             self.cnc = self.annotator.annotate(self.cnc)
         # 5. Exporting and saving
+        print('Saving results.')
         if self.path_save:
             self.cnc.save(self.path_save)
         if self.exporter and self.path_out:

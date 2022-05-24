@@ -59,7 +59,10 @@ class Annotator():
             annotate(self, cnc, **kwargs) :
                 An updated concordance.
         """
-        for hit in cnc:
+        for i, hit in enumerate(cnc):
+            # counter for very large cncs
+            if len(cnc) > 1000 and i // 1000 == i / 1000 and i > 0:
+                print('Annotating hit {} of {}'.format(str(i), str(len(cnc))))
             hit = self.script(hit, **self.kwargs)
         return cnc
         
