@@ -28,6 +28,10 @@ class ConcordanceMerger():
     token_merger (mergers.TokenMerger) :
         Provides a TokenMerger to add token-level data from other_cnc to cnc.
         If None provided, tokens are left unchanged. Default is None.
+    cnc (concordance.Concordance):
+        Concordance to merge into
+    other_cnc (concordance.Concordance):
+        Concordance to merge from.
     
     Methods:
     --------
@@ -50,6 +54,7 @@ class ConcordanceMerger():
         self.update_tags = False
         self.match_by = ''
         self.token_merger = None
+        self.cnc, self.other_cnc = None, None
         
     def check_settings(self):
         """
@@ -59,62 +64,56 @@ class ConcordanceMerger():
         if self.del_hits and not self.match_by == 'uuid':
             print("WARNING: Merger not set to match by UUID. Hits will not be deleted.")
         
-    def match_hit(self, cnc, other_hit, ix):
+    def match_hit(self, other_hit, ix):
         """
         Finds the hit in cnc which corresponds to other_hit. Returns
         None if nothing can be found.
         
         Parameters:
-            cnc (concordance.Concordance):      The concordance to be modified.
             other_hit (concordance.Hit):        The hit to be matched.
             ix (int):                           The index of other_hit.
             
         Returns:
-            match_hit(self, cnc, other_hit):
+            match_hit(self, other_hit):
                 The corresponding hit in self.cnc, or None if not found.
         """
         if self.match_by == 'uuid':
-            l = cnc.get_uuids()
-            return cnc[l.index(other_hit.uuid)] if other_hit.uuid in l else None
-        l = [(hit.ref, i) for i, hit in enumerate(cnc)]
+            l = self.cnc.get_uuids()
+            return self.cnc[l.index(other_hit.uuid)] if other_hit.uuid in l else None
         if self.match_by == 'ref':
+            l = [hit.ref for hit in self.cnc]
             matches = list(filter(lambda x: x[0] == other_hit.ref, l))
-            if len(matches) == 0:
-                # No matching reference
-                return None
             if len(matches) == 1:
                 # One matching reference
-                return cnc[matches[0][1]]
-            if len(matches) > 1:
-                # More than one matching reference; reset l so it only contains 
-                # matching references
-                l = matches
+                return self.cnc[matches[0][1]]
+            else:
+                # None or more than one matching reference; return None
+                return None
         # Assume match by list index
-        matches = list(filter(lambda x: x[1] == ix, l))
-        return cnc[matches[0][1]] if matches else None
+        return self.cnc[ix] if ix < len(self.cnc) else None
 
-    def merge(self, cnc, other_cnc):
+    def merge(self):
         """
-        Modifies the concordance cnc by adding data from concordance
-        other_cnc.
+        Modifies the concordance self.cnc by adding data from concordance
+        self.other_cnc.
         
         Parameters:
-        cnc (concordance.Concordance):          The concordance to be modified.
-        other_cnc (concordance.Concordance):    The concord containing the new data.
         
         Returns:
-            merge(self, cnc, other_cnc):
+            merge(self):
                 A modified cnc concordance.
         """
         self.check_settings()
-        for i, other_hit in enumerate(other_cnc):
+        # Optimization: if we're matching by position in list, just use a 
+        # stack to prevent endless calls to self.match_hit.
+        for i, other_hit in enumerate(self.other_cnc):
             # Here a counter for very large merges
-            if len(other_cnc) > 1000 and i // 1000 == i / 1000 and i > 0:
-                print('Merging hit {} of {}'.format(str(i), str(len(other_cnc))))
-            hit = self.match_hit(cnc, other_hit, i)
+            if len(self.other_cnc) > 1000 and i // 1000 == i / 1000 and i > 0:
+                print('Merging hit {} of {}'.format(str(i), str(len(self.other_cnc))))
+            hit = self.match_hit(other_hit, i)
             if not hit:
                 if self.add_hits:
-                    cnc.append(other_hit)
+                    self.cnc.append(other_hit)
                 continue
             if self.update_tags:
                 hit.tags.update(other_hit.tags)
@@ -129,11 +128,11 @@ class ConcordanceMerger():
         # MUST check use_uuid because if the cncs use different UUIDs it will
         # delete every hit in the first cnc.
         if self.del_hits and self.match_by == 'uuid':
-            l = other_cnc.get_uuids()
-            cnc = Concordance(list(
-                filter(lambda x: x.uuid in l, cnc)
+            l = self.other_cnc.get_uuids()
+            self.cnc = Concordance(list(
+                filter(lambda x: x.uuid in l, self.cnc)
             ))
-        return cnc
+        return self.cnc
         
 class TokenMerger():
     """

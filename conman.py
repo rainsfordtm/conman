@@ -259,7 +259,9 @@ class Launcher():
         if self.other_cnc:
             print('Merging concordances...')
             if not self.merger: self.merger = ConcordanceMerger()
-            self.cnc = self.merger.merge(self.cnc, self.other_cnc)
+            self.merger.cnc = self.cnc
+            self.merger.other_cnc = self.other_cnc
+            self.cnc = self.merger.merge()
         # 4. Annotating
         if self.annotator:
             print('Annotating concordance...')
