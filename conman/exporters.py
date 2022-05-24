@@ -57,6 +57,7 @@ class Exporter():
         EXPORTER_TYPE_TO_CLASS_MAP = {
           'Exporter':  Exporter,
           'TokenListExporter': TokenListExporter,
+          'LGermExporter': LGermExporter,
           'TableExporter': TableExporter,
           'ConllExporter': ConllExporter
         }
@@ -151,7 +152,6 @@ class TokenListExporter(Exporter):
         Parameters:
             cnc (concordance.Concordance):  Concordance to export
             path (str):                     File name
-            encoding (str):                 Character encoding
         """
         with open(path, 'w', encoding=self.encoding, errors='replace') as f:
             for hit in cnc:
@@ -161,7 +161,35 @@ class TokenListExporter(Exporter):
                     tok_fmt=self.tok_fmt,
                     kw_fmt=self.kw_fmt))
                 f.write('\n' + self.hit_end_token + '\n')
-                    
+                
+class LGermExporter(TokenListExporter):
+    """
+    Subclass of TokenListExporter designed to fix the vagaries of LGerM,
+    in particular (i) splitting the export file by default and (ii) 
+    removing punctuation which causes it to crash (e.g. "/")
+    
+    Ignores some global defaults. In particular, 
+    """
+    
+    def __init__(self):
+        TokenListExporter.__init__(self)
+        self.encoding = 'latin1'
+        self.split_hits = 5500
+    
+    def _export(self, cnc, path):
+        """
+        Exports concordance cnc to path in a one-token-per-line format,
+        ignoring tok_fmt and 
+        
+        Parameters:
+            cnc (concordance.Concordance):  Concordance to export
+            path (str):                     File name
+        """
+        with open(path, 'w', encoding=self.encoding, errors='replace') as f:
+            for hit in cnc:
+                for tok in hit:
+                    f.write(str(lgermsafe(tok)) + '\n')
+                f.write(self.hit_end_token + '\n')
 
 class TableExporter(Exporter):
     """
@@ -446,3 +474,10 @@ def get_exporter_from_path(path):
     if ext == '.txt': return Exporter()
     if ext in ['.conll', '.conllu']: return ConllExporter()
     raise ParseError('No default exporter for file extension "{}".'.format(ext))
+    
+def lgermsafe(s):
+    """
+    Removes anything from a string which is likely to upset the LGerm lemmatizer.
+    """
+    s = s.replace('/', '.')
+    return s
