@@ -61,7 +61,7 @@ class Annotator():
         """
         for i, hit in enumerate(cnc):
             # counter for very large cncs
-            if len(cnc) > 1000 and i // 1000 == i / 1000 and i > 0:
+            if len(cnc) > 10000 and i // 10000 == i / 10000 and i > 0:
                 print('Annotating hit {} of {}'.format(str(i), str(len(cnc))))
             hit = self.script(hit, **self.kwargs)
         return cnc

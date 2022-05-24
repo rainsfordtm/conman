@@ -267,14 +267,15 @@ class Launcher():
             print('Annotating concordance...')
             self.cnc = self.annotator.annotate(self.cnc)
         # 5. Exporting and saving
-        print('Saving results.')
+        print('Saving/exporting results.')
         if self.path_save:
             self.cnc.save(self.path_save)
         if self.exporter and self.path_out:
-            print(self.exporter.kw_fmt)
+            #print(self.exporter.kw_fmt)
             self.exporter.export(self.cnc, self.path_out)
         if not self.path_save and not self.exporter:
             raise ConfigError('Cannot save or export the result.')
+        print('Done!')
 
 def main(path_in, path_out, path_other='', path_workflow='', save=False):
     """

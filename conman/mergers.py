@@ -108,7 +108,7 @@ class ConcordanceMerger():
         # stack to prevent endless calls to self.match_hit.
         for i, other_hit in enumerate(self.other_cnc):
             # Here a counter for very large merges
-            if len(self.other_cnc) > 1000 and i // 1000 == i / 1000 and i > 0:
+            if len(self.other_cnc) > 10000 and i // 10000 == i / 10000 and i > 0:
                 print('Merging hit {} of {}'.format(str(i), str(len(self.other_cnc))))
             hit = self.match_hit(other_hit, i)
             if not hit:
