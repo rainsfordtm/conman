@@ -297,6 +297,10 @@ class BaseTreeImporter(Importer):
         be evaluated as "True". Defaults ['yes', 'y', 't', 'true'], not 
         case-sensitive.
         
+    separate_by_keyword_true_value (bool):
+        If True, different keyword_true_values will be treated as separate
+        matches within the same tree.
+        
     Methods:
     --------
     is_keyword(self, elem):
@@ -311,9 +315,9 @@ class BaseTreeImporter(Importer):
     parse(self, path):
         Parses a Basetree XML file using treetools.
         
-    stree_to_hit(self, stree):
-        Converts a treetools.basetree.StringTree object to a concordance.Hit
-        object.
+    stree_to_hits(self, stree):
+        Converts a treetools.basetree.StringTree object to a list of
+        concordance.Hit objects.
         
     """
     def __init__(self):
@@ -327,9 +331,8 @@ class BaseTreeImporter(Importer):
     def is_keyword(self, elem):
         """
         Returns True if the passed leaf node from a BaseTree is marked as a
-        keyword. Uses attribute given in self.keyword_attr and values 
-        in self.keyword_true_values. If keyword_attr is not found, returns
-        False.
+        keyword. Uses attribute given in self.keyword_attr and looks for
+        the value in self.keyword_true_values.
         
         Parameters:
             elem (xml.dom.minidom.Element) :
@@ -344,8 +347,9 @@ class BaseTreeImporter(Importer):
             return False
         if s.lower() in self.keyword_true_values:
             return True
-        return False
-        
+        else:
+            return False
+            
     def leaf_to_token(self, bst, elem):
         """
         Converts a leaf node from a BaseTree to concordance.Token object.
@@ -383,22 +387,22 @@ class BaseTreeImporter(Importer):
         """
         forest = treetools.basetree.parse_file(path)
         for stree in forest:
-            hit = self.stree_to_hit(stree)
-            self.concordance.append(hit)
+            hits = self.stree_to_hits(stree)
+            self.concordance.extend(hits)
         return self.concordance
         
-    def stree_to_hit(self, stree):
+    def stree_to_hits(self, stree):
         """
-        Converts a treetools.basetree.StringTree object to a concordance.Hit
-        object.
+        Converts a treetools.basetree.StringTree object to a list of
+        concordance.Hit objects.
         
         Parameters:
             stree (treetools.basetree.StringTree):
-                A StringTree containing the hit
+                A StringTree containing the hit.
             
         Returns:
-            stree_to_hit(self, stree):
-                A Hit object.
+            stree_to_hits(self, stree):
+                A list of Hit objects.
         """
         l, kws = [], []
         bst = stree.to_base_tree()
@@ -408,14 +412,29 @@ class BaseTreeImporter(Importer):
             l.append(self.leaf_to_token(bst, leaf))
             if self.is_keyword(leaf): kws.append(l[-1])
         tree_id = stree.get_id()
-        # On the off-chance that tree id is a UUID, use it, otherwise generate
-        # one.
-        uuid = get_uuid(tree_id) 
-        hit = Hit(l, kws, uuid)
-        # Use tree_id for the ref whatever.
-        hit.ref = tree_id
-        hit.tags = self.parse_ref(hit.ref)
-        return hit
+        # 
+        if self.separate_by_keyword_true_value:
+            # 1. Get possible true values of keyword_attr 
+            values = list(
+                set([kw.tags[self.keyword_attr] for kw in kws]) & set(self.keyword_true_values)
+            )
+            # 2. Make a list of separate kws lists.
+            l_kws = []
+            for value in values:
+                l_kws.append(
+                    list(filter(lambda x: x.tags[self.keyword_attr] == value, kws))
+                )
+        else:
+            l_kws = [kws]
+        # Iterate over l_kws to generate a list of hits from the tree.
+        hits = []
+        for kws in l_kws:
+            hit = Hit(l, kws)
+            # Use tree_id for the ref whatever.
+            hit.ref = tree_id
+            hit.tags = self.parse_ref(hit.ref)
+            hits.append(hit)
+        return hits
         
 class PennOutImporter(BaseTreeImporter):
     """
@@ -463,6 +482,8 @@ class PennOutImporter(BaseTreeImporter):
         self.dump_xml = ''
         self.keyword_node_regex = r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*'
         self.script = conman.scripts.pennout2cnc.script
+        # Reset self.keyword_true_values to match integers from 1 to 100
+        self.keyword_true_values = [str(i) for i in range(100)]
         
     def parse(self, path):
         """
@@ -492,7 +513,7 @@ class PennOutImporter(BaseTreeImporter):
             )
         # 5. Add each tree in the forest to the concordance
         for stree in forest:
-            hit = self.stree_to_hit(stree)
+            hit = self.stree_to_hits(stree)
             self.concordance.append(hit)
         # 6. Dump the XML if a path is set
         if self.dump_xml:

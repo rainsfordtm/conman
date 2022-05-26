@@ -57,22 +57,19 @@ def script(transformer, tree,
     ################################
     # Get the comment
     comment = get_keynode_comment()
-    # Find keyword node number using keyword_node_regex
-    m = re.match(keyword_node_regex, comment)
-    keyword_node = m.groupdict()['keyword_node']
-    print(keyword_node_regex)
-    print(comment)
-    print(keyword_node)
     # Add the keyword attr to all branches
     tree.add_branch_attr(keyword_attr)
-    # Find the keyword in the tree
-    keyword_branch = tree.find_nodes('cs_id', keyword_node, regex=False)[0]
-    # Set the attribute to True on the keyword branch
-    keyword_branch.setAttribute(keyword_attr, 'True')
-    # Get all descendents
-    branches = keyword_branch.getElementsByTagName('branch')
-    for branch in branches:
-        branch.setAttribute(keyword_attr, 'True')
+    # Find keyword node numbers using keyword_node_regex
+    for i, m in enumerate(re.finditer(keyword_node_regex, comment))
+        keyword_node = m.groupdict()['keyword_node']
+        # Find the keyword in the tree
+        keyword_branch = tree.find_nodes('cs_id', keyword_node, regex=False)[0]
+        # Set the attribute to str(i + 1) on the keyword branch
+        keyword_branch.setAttribute(keyword_attr, str(i + 1))
+        # Get all descendents
+        branches = keyword_branch.getElementsByTagName('branch')
+        for branch in branches:
+            branch.setAttribute(keyword_attr, str(i + 1))
     
     ###############################
     # 2. Remove all code nodes
