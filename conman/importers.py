@@ -413,8 +413,7 @@ class BaseTreeImporter(Importer):
             l.append(self.leaf_to_token(bst, leaf))
             if self.is_keyword(leaf): kws.append(l[-1])
         tree_id = stree.get_id()
-        # 
-        if self.separate_by_keyword_true_value:
+        if self.separate_by_keyword_true_value and kws:
             # 1. Get possible true values of keyword_attr 
             values = list(
                 set([kw.tags[self.keyword_attr] for kw in kws]) & set(self.keyword_true_values)
@@ -436,6 +435,11 @@ class BaseTreeImporter(Importer):
             hit.ref = tree_id.split('|')[0]
             hit.tags = self.parse_ref(hit.ref)
             hits.append(hit)
+        if not hits:
+            print(l)
+            print(l_kws)
+            print(self.keyword_node_regex)
+            raise ParseError
         return hits
         
 class PennOutImporter(BaseTreeImporter):
