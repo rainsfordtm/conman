@@ -456,8 +456,8 @@ class PennOutImporter(BaseTreeImporter):
         Regex used to identify the node number of the keyword node from
         the comment above the tree. The matching node must be identified
         by the named group 'keyword_node'.
-        Default is r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*', i.e. the first
-        number in the comment (typically the dominating IP).
+        Default is r':\s*[0-9]+\s', i.e. the first node after the dominating
+        node.
         
     script(transformer, keyword_node_regex=self.keyword_node_regex):
         Function containing instructions used to transform each BaseTree
@@ -471,7 +471,11 @@ class PennOutImporter(BaseTreeImporter):
     Methods:
     --------
     
-    parse(self, path, encoding = 'utf-8'):
+    update_regex_from_remark(self, path):
+        Reads keyword_node_regex from a remark in the out file and updates
+        self.keyword_node_regex.
+    
+    parse(self, path):
         Parses a Penn .out file.
    
     """
@@ -482,12 +486,39 @@ class PennOutImporter(BaseTreeImporter):
         """
         BaseTreeImporter.__init__(self)
         self.dump_xml = ''
-        self.keyword_node_regex = r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*'
+        self.keyword_node_regex = r':\s*(?P<keyword_node>[0-9]+)\s'
         self.script = conman.scripts.pennout2cnc.script
         # Reset self.keyword_true_values to match integers from 1 to 100
         # and self.separate_by_keyword_true_value
         self.keyword_true_values = [str(i) for i in range(100)]
         self.separate_by_keyword_true_value = True
+        
+    def update_regex_from_remark(self, path):
+        """
+        Updates self.keyword_node_regex from the remark at the beginning of
+        the file.
+        
+        Parameters:
+            path (str) :        Path to the .out file.
+            
+        """
+        with open(path, 'r', encoding=self.encoding) as f:
+            s, in_remark = '', False
+            for line in f:
+                if in_remark:
+                    # Remark is over with next string ending :
+                    if re.match('^[A-z].*: .*', line):
+                        break
+                    else:
+                        # replace CR with space
+                        s += line[:-1] + ' '
+                elif re.match('^remark: .*', line):
+                    s += line[7:-1] + ' '
+                    in_remark = True
+        m = re.search(r'PO_keyword_node_regex=(.*\(?P<keyword_node>[^s]+\)[^\s]*)', s)
+        if m:
+            self.keyword_node_regex = m.group(1)
+        
         
     def parse(self, path):
         """
@@ -500,6 +531,8 @@ class PennOutImporter(BaseTreeImporter):
             parse(self, path):
                 A concordance object.
         """
+        # 0. Update self.keyword_node_regex from the remark
+        self.update_regex_from_remark(path)
         # 1. Call syn_importer on the .out file. to create a BaseForest.
         forest = treetools.syn_importer.build_forest(
             path, 'penn-psd-out', encoding=self.encoding, errors='replace'
