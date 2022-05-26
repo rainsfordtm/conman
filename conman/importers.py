@@ -327,6 +327,7 @@ class BaseTreeImporter(Importer):
         Importer.__init__(self)
         self.keyword_attr = 'KEYWORDS'
         self.keyword_true_values = ['yes', 'y', 't', 'true']
+        self.separate_by_keyword_true_value = False
         
     def is_keyword(self, elem):
         """
@@ -430,8 +431,9 @@ class BaseTreeImporter(Importer):
         hits = []
         for kws in l_kws:
             hit = Hit(l, kws)
-            # Use tree_id for the ref whatever.
-            hit.ref = tree_id
+            # Use tree_id for the ref whatever -- this format is needed for the
+            # pennout2cnc script.
+            hit.ref = tree_id.split('|')[0]
             hit.tags = self.parse_ref(hit.ref)
             hits.append(hit)
         return hits
@@ -483,7 +485,9 @@ class PennOutImporter(BaseTreeImporter):
         self.keyword_node_regex = r'[^0-9]*(?P<keyword_node>[0-9]+)[^0-9]+.*'
         self.script = conman.scripts.pennout2cnc.script
         # Reset self.keyword_true_values to match integers from 1 to 100
+        # and self.separate_by_keyword_true_value
         self.keyword_true_values = [str(i) for i in range(100)]
+        self.separate_by_keyword_true_value = True
         
     def parse(self, path):
         """
@@ -513,8 +517,8 @@ class PennOutImporter(BaseTreeImporter):
             )
         # 5. Add each tree in the forest to the concordance
         for stree in forest:
-            hit = self.stree_to_hits(stree)
-            self.concordance.append(hit)
+            hits = self.stree_to_hits(stree)
+            self.concordance.extend(hits)
         # 6. Dump the XML if a path is set
         if self.dump_xml:
             with open(self.dump_xml, 'w') as f:

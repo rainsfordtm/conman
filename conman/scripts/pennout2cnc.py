@@ -60,7 +60,7 @@ def script(transformer, tree,
     # Add the keyword attr to all branches
     tree.add_branch_attr(keyword_attr)
     # Find keyword node numbers using keyword_node_regex
-    for i, m in enumerate(re.finditer(keyword_node_regex, comment))
+    for i, m in enumerate(re.finditer(keyword_node_regex, comment)):
         keyword_node = m.groupdict()['keyword_node']
         # Find the keyword in the tree
         keyword_branch = tree.find_nodes('cs_id', keyword_node, regex=False)[0]
@@ -86,7 +86,9 @@ def script(transformer, tree,
     #####################################################################
     tree.sort()
     node = tree.leaves[-1]
-    tree.trunk.parentNode.setAttribute('id', node.getAttribute('value'))
+    old_id = tree.trunk.parentNode.getAttribute('id')
+    new_id = node.getAttribute('value') + '|' + old_id
+    tree.trunk.parentNode.setAttribute('id', new_id)
     tree.del_node_deep(node.parentNode)
     
     ####################################################################
