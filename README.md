@@ -27,7 +27,7 @@ your regex should identify the string "16". It must also *name* the group contai
 16 as "keyword_node" using the symbolic group name syntax from the [Python 3 re library](https://docs.python.org/3/library/re.html).
 The correct regex in this case is:
 ```
-\s[0-9]+\sVX,
+\s(?P<keyword_node>[0-9]+)\sVX,
 ```
 The regex can either be set using the PO\_keyword\_node\_regex setting in the importer section of the
 workflow file or by including "PO\_keyword\_node\_regex=\<regex\>" (no whitespace!) in the remark section of the
