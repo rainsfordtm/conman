@@ -43,7 +43,11 @@ def script(transformer, tree,
             return nodes[0] if nodes else None
         else:
             nodes = ic.getElementsByTagName('leaf')
-            tree.order_nodes(nodes)
+            try:
+                tree.order_nodes(nodes)
+            except:
+                print(tree.trunk.toprettyxml())
+                raise
             return nodes[0] if nodes else None
         
     def is_head(leaf, ic):
@@ -70,21 +74,31 @@ def script(transformer, tree,
         branches = keyword_branch.getElementsByTagName('branch')
         for branch in branches:
             branch.setAttribute(keyword_attr, str(i + 1))
-    
+            
     ###############################
     # 2. Remove all code nodes
     ###############################
     nodes = tree.find_nodes('cat', 'CODE', regex=False)
     while nodes:
         tree.del_node_deep(nodes.pop(0))
-    
+    # Very occasionally, CODE nodes replace a terminal. One case of the code
+    # "Latin Prayer omitted" which is tagged as NP-PRN. So make sure all
+    # branches left without terminals are also deleted to prevent .sort()
+    # failing below.
+    tree.restructure(terminal_branches=False)
+        
     ####################################################################
     # 3. Deal with the reference node
     # It's the final leaf in the tree
     # Updates the tree ID.
     # Then the node is deleted.
     #####################################################################
-    tree.sort()
+    try:
+        tree.sort()
+    except:
+        print('When error occurs, tree looks like this:')
+        print(tree.toprettyxml())
+        raise
     node = tree.leaves[-1]
     old_id = tree.trunk.parentNode.getAttribute('id')
     new_id = node.getAttribute('value') + '|' + old_id
@@ -135,16 +149,21 @@ def script(transformer, tree,
                 leaf.setAttribute('conll_HEAD', str(head.getAttribute('order')))
             
     ###################################################################
-    # 7. Use the word-lemma regex to split word from lemmas
+    # 7. Use the word-lemma regex to split the tokens.
     ###################################################################
-    tree.add_leaf_attr('lemma')
     for leaf in tree.leaves:
         m = re.match(word_lemma_regex, leaf.getAttribute('value'))
-        if m and 'lemma' in m.groupdict():
-            leaf.setAttribute('lemma', m.groupdict()['lemma'])
-        if m and 'word' in m.groupdict():
-            leaf.setAttribute('value', m.groupdict()['word'])
-     
+        if m:
+            d = m.groupdict()
+            for key in d:
+                if key == 'word':
+                    leaf.setAttribute('value', d['word'])
+                else:
+                    if not key in tree.leaf_attrs:
+                        tree.add_leaf_attr(key)
+                    if key not in ['order', 'relation', 'value', 'id']:
+                        # can't update core tree attributes.
+                        leaf.setAttribute(key, d[key])
     return tree
     
     

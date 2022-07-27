@@ -44,7 +44,12 @@ class Transformer():
             old_id = stree.get_id()
             tree = stree.to_base_tree()
             # Self passed explicitly because it's a FUNCTION not a METHOD.
-            tree = self.script(self, tree, **kwargs)
+            try:
+                tree = self.script(self, tree, **kwargs)
+            except:
+                print('Before tree was passed to script, it looked like this:')
+                print(stree)
+                raise
             try:
                 forest[i] = tree.to_string_tree()
             except:
