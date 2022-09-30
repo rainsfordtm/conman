@@ -96,7 +96,7 @@ class BfmTokenizer(Tokenizer):
         parts_per_tok = [len(re.findall(r'_', x)) for x in l]
         parts = min(parts_per_tok) # The minimum number of underscores in a token
         # Step 3: Generate regex to identify a token
-        r = '[^_\s]+_' * parts + "[^_\s',\.]+'?|[,\.]"
+        r = '[^_\s]+_' * parts + "[^_\s']*[^_\s',\.]'?|[,\.]"
         regex = re.compile(r)
         # Step 4: Tokenize
         toks = []
