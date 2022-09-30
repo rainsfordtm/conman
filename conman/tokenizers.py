@@ -71,34 +71,14 @@ class BfmTokenizer(Tokenizer):
             tokenize(self, s):
               A list of tokens
         """
-        split = [' '] # Split at these characters, no regex
-        split_after_regex = [re.compile(r".*'$")]
-        split_before_regex = [re.compile(x) for x in [r'\.\s+.*', r',\s+.*']]
-        l, buff = [], ''
-        while s:
-            char = s[0]
-            s = s[1:] if len(s) > 1 else ''
-            if char in split and buff:
-                # split at single character, ignore the character
-                l.append(buff)
-                buff, char = '', ''
-            if buff:
-                for regex in split_after_regex:
-                    if regex.match(buff): # buffer is a token, store the char.
-                        l.append(buff)
-                        buff = char
-                        char = ''
-                        break # out of for loop
-                for regex in split_before_regex:
-                    if regex.match(s): # string to come matches regex
-                        buff += char
-                        l.append(buff)
-                        buff, char = '', ''
-            if char: # char not dealt with above
-                buff += char
-        if buff:
-            l.append(buff)
-        return l
+        # 
+        regex = re.compile(r"\s+|(?<=')(?![_\s])|(?=[,\.][_\s])")
+        # Split (i) at whitespace,
+        # (ii) before a comma or full stop, provided it's followed by _ or whitespace
+        # (iii) after an apostrophe, provided it's not followed by _ or whitespace
+        return regex.split(s)
+        
+
                     
             
         
