@@ -76,8 +76,11 @@ class BfmTokenizer(Tokenizer):
         # Split (i) at whitespace,
         # (ii) before a comma or full stop, provided it's followed by _ or whitespace
         # (iii) after an apostrophe, provided it's not followed by _ or whitespace
-        return regex.split(s)
-        
+        l = regex.split(s)
+        # Remove empty tokens
+        while '' in l:
+            l.remove('')
+        return l
 
                     
             
