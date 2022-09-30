@@ -92,16 +92,17 @@ class BfmTokenizer(Tokenizer):
         # Step 0: sanity check: if s is an empty string or contains only
         # whitespace, return an empty list
         if not s or s.isspace(): return []
-        # Step 1: All whitespace is always a token boundary, so split here
+        # Step 1: Identify how many underscores each token contains
         l = re.split(r'\s+', s)
         l = remove_empty(l)
-        # Step 2: Work out how many underscores the token should contain
         parts_per_tok = [len(re.findall(r'_', x)) for x in l]
         parts = min(parts_per_tok) # The minimum number of underscores in a token
-        # Step 3: Generate regex to identify a token
-        r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!][(']?|[,.)]|,!"
+        # Step 2: Generate regex to identify a token from the number of
+        # parts before the underscore plus a sophisticated regex to identify
+        # the end of the token.
+        r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!][(']?|[,.)!]|,!"
         regex = re.compile(r)
-        # Step 4: Tokenize
+        # Step 3: Tokenize using re.match on the string.
         toks = []
         s = s.lstrip().rstrip() # Strip trailing and preceding whitespace.
         while s:
