@@ -76,7 +76,8 @@ class BfmTokenizer(Tokenizer):
         split_before_regex = [re.compile(x) for x in [r'\.\s+.*', r',\s+.*']]
         l, buff = [], ''
         while s:
-            char = s.pop(0)
+            char = s[0]
+            s = s[1:] if len(s) > 1 else ''
             if char in split and buff:
                 # split at single character, ignore the character
                 l.append(buff)
