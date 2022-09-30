@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import re
+
 class Tokenizer():
     """
     Parent class used to tokenize strings in hits. Divides by whitespace.
@@ -69,22 +71,29 @@ class BfmTokenizer(Tokenizer):
             tokenize(self, s):
               A list of tokens
         """
-        split = [' ']
-        split_after = ["'"]
-        split_before = ['.', ',']
+        split = [' '] # Split at these characters, no regex
+        split_after_regex = [re.compile(r".*'$")]
+        split_before_regex = [re.compile(x) for x in [r'\.\s+.*', r',\s+.*']]
         l, buff = [], ''
-        for char in s:
+        while s:
+            char = s.pop(0)
             if char in split and buff:
+                # split at single character, ignore the character
                 l.append(buff)
-                buff = ''
-            elif char in split_after and buff:
-                buff += char
-                l.append(buff)
-                buff = ''
-            elif char in split_before and buff:
-                l.append(buff)
-                buff = char
-            elif char not in split:
+                buff, char = '', ''
+            if buff:
+                for regex in split_after_regex:
+                    if regex.match(buff): # buffer is a token, store the char.
+                        l.append(buff)
+                        buff = char
+                        char = ''
+                        break # out of for loop
+                for regex in split_before_regex:
+                    if regex.match(s): # string to come matches regex
+                        buff += char
+                        l.append(buff)
+                        buff, char = '', ''
+            if char: # char not dealt with above
                 buff += char
         if buff:
             l.append(buff)
