@@ -2,6 +2,18 @@
 
 import re
 
+class Error(Exception):
+    """
+    Parent class for errors defined in this module.
+    """
+    pass
+
+class ParseError(Error):
+    """
+    Raised where a parse method fails.
+    """
+    pass
+
 class Tokenizer():
     """
     Parent class used to tokenize strings in hits. Divides by whitespace.
@@ -71,16 +83,33 @@ class BfmTokenizer(Tokenizer):
             tokenize(self, s):
               A list of tokens
         """
-        # 
-        regex = re.compile(r"\s+|(?<=')(?![_\s])|(?=[,\.][_\s])")
-        # Split (i) at whitespace,
-        # (ii) before a comma or full stop, provided it's followed by _ or whitespace
-        # (iii) after an apostrophe, provided it's not followed by _ or whitespace
-        l = regex.split(s)
-        # Remove empty tokens
-        while '' in l:
-            l.remove('')
-        return l
+        def remove_empty(l):
+            while '' in l:
+                l.remove('')
+            return l
+        # Tokenizing from the BFM is hard because whitespace is occasionally
+        # suppressed, but tags can also be added.
+        # Step 1: All whitespace is always a token boundary, so split here
+        l = re.split(r'\s+', s)
+        l = remove_empty(l)
+        # Step 2: Work out how many underscores the token should contain
+        parts_per_tok = [len(re.findall(r'_', x)) for x in l]
+        parts = min(parts_per_tok) # The minimum number of underscores in a token
+        # Step 3: Generate regex to identify a token
+        r = '[^_\s]+_' * parts + "[^_\s',\.]+'?|[,\.]"
+        regex = re.compile(r)
+        # Step 4: Tokenize
+        toks = []
+        s = s.lstrip().rstrip() # Strip trailing and preceding whitespace.
+        while s:
+            m = regex.match(s)
+            if not m:
+                raise ParseError("Can't parse '{}' with '{}'".format(s, r))
+            toks.append(m.group(0))
+            s = s[len(toks[-1]):].lstrip() # remove whitespace
+        return toks
+
+        
 
                     
             
