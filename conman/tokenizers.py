@@ -89,6 +89,9 @@ class BfmTokenizer(Tokenizer):
             return l
         # Tokenizing from the BFM is hard because whitespace is occasionally
         # suppressed, but tags can also be added.
+        # Step 0: sanity check: if s is an empty string or contains only
+        # whitespace, return an empty list
+        if not s or s.isspace(): return []
         # Step 1: All whitespace is always a token boundary, so split here
         l = re.split(r'\s+', s)
         l = remove_empty(l)
@@ -96,16 +99,19 @@ class BfmTokenizer(Tokenizer):
         parts_per_tok = [len(re.findall(r'_', x)) for x in l]
         parts = min(parts_per_tok) # The minimum number of underscores in a token
         # Step 3: Generate regex to identify a token
-        r = '[^_\s]+_' * parts + "[^_\s']*[^_\s',\.]'?|[,\.]"
+        r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!][(']?|[,.)]|,!"
         regex = re.compile(r)
         # Step 4: Tokenize
         toks = []
         s = s.lstrip().rstrip() # Strip trailing and preceding whitespace.
         while s:
             m = regex.match(s)
-            if not m:
-                raise ParseError("Can't parse '{}' with '{}'".format(s, r))
-            toks.append(m.group(0))
+            if not m: 
+                print("Warning: Can't tokenize {}".format(s, r))
+                print("Last token: {}".format(toks[-1] if toks else ''))
+                s = s[s.index(' ') + 1:] # start again from next whitespace
+            else:
+                toks.append(m.group(0))
             s = s[len(toks[-1]):].lstrip() # remove whitespace
         return toks
 

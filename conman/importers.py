@@ -231,7 +231,11 @@ class Importer():
             tokenize(self, s):
               A list of tokens
         """
-        return self.tokenizer.tokenize(s)
+        try:
+            return self.tokenizer.tokenize(s)
+        except:
+            print(s)
+            raise
         
 class TokenListImporter(Importer):
     """
