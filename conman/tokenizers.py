@@ -119,7 +119,9 @@ class BfmTokenizer(Tokenizer):
             if not m: 
                 print("Warning: Can't tokenize {}".format(s, r))
                 print("Last token: {}".format(toks[-1] if toks else ''))
-                s = s[s.index(' ') + 1:] # start again from next whitespace
+                # start again from next whitespace or end, if it's the last
+                # token.
+                s = s[s.index(' ') + 1:] if ' ' in s else ''
             else:
                 toks.append(m.group(0))
             s = s[len(toks[-1]):].lstrip() # remove whitespace
