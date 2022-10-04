@@ -103,7 +103,7 @@ class BfmTokenizer(Tokenizer):
         if parts > 0:
             # Used if every token contains at least one underscore, i.e.
             # underscores are special characters.
-            r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!][(']?|[,.)!]|,!"
+            r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
         else:
             # Used if one token does not contain an underscore, i.e. 
             # underscores (probably) aren't special characters.
