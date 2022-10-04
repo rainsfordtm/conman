@@ -198,10 +198,16 @@ class Importer():
         """
         m = re.match(regex, s)
         if not m or m and not 'word' in m.groupdict():
-            raise ParseError("Can't identify the token in '{}', regex '{}'".format(s, regex))
-        tok = Token(m.groupdict()['word'])
-        tok.tags = dict([(key, value) for key, value in m.groupdict().items()])
-        tok.tags.pop('word')
+            # New behaviour: this is demoted to a warning, since corpora
+            # aren't perfect and these errors must be able to occur without
+            # causing a crash.
+            print("Warning: Can't identify the token in '{}', regex '{}'".format(s, regex))
+            tok = Token(s)
+            tok.tags = {}
+        else: # Successful parse
+            tok = Token(m.groupdict()['word'])
+            tok.tags = dict([(key, value) for key, value in m.groupdict().items()])
+            tok.tags.pop('word')
         return tok
         
     def parse_ref(self, ref):

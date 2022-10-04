@@ -100,7 +100,16 @@ class BfmTokenizer(Tokenizer):
         # Step 2: Generate regex to identify a token from the number of
         # parts before the underscore plus a sophisticated regex to identify
         # the end of the token.
-        r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!][(']?|[,.)!]|,!"
+        if parts > 0:
+            # Used if every token contains at least one underscore, i.e.
+            # underscores are special characters.
+            r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!][(']?|[,.)!]|,!"
+        else:
+            # Used if one token does not contain an underscore, i.e. 
+            # underscores (probably) aren't special characters.
+            # Necessary because there are occasional tokens containing
+            # spaces in the BFM :-(
+            r = "[^\s'(]*[^\s'(),.!][(']?|[,.)!]|,!"
         regex = re.compile(r)
         # Step 3: Tokenize using re.match on the string.
         toks = []
