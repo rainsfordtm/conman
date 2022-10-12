@@ -334,6 +334,8 @@ class ConllExporter(Exporter):
     phead (str)    : key in tok.tags whose value should be mapped to the PHEAD column
     pdeprel (str)  : key in tok.tags whose value should be mapped to the PDEPREL column
     feats (list)   : list of keys in tok.tags whose values should be mapped to the FEATS column
+    split_hit (bool): if True, splits a hit at a punctuation mark and marks ENDHIT 
+                      at the end of the final hit. 
     
     Methods:
     --------
@@ -358,6 +360,7 @@ class ConllExporter(Exporter):
         self.phead = 'conll_PHEAD'
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
+        self.split_hit = False
         
     def _export(self, cnc, path, add_refs = True):
         """
@@ -388,10 +391,20 @@ class ConllExporter(Exporter):
             hit_to_string(self, hit):
                 Returns a string representing the Conll table for the hit.
         """
-        s = ''
+        s, ix_corr = '', 0
         for ix, tok in enumerate(hit):
-            s += '\t'.join(self.tok_to_list(tok, ix + 1))
+            s += '\t'.join(self.tok_to_list(tok, ix - ix_corr + 1))
+            if self.split_hit and tok in ['.', ',', ';', ':', '?', '!']:
+                s += '\n'
+                ix_corr = ix + 1
             s += '\n'
+            if self.split_hit:
+                s += '\t'.join([
+                    str(ix - ix_corr + 1), #1
+                    str(tok), #2
+                    ['_', '_'. '_', '_', '_', 0, 'ROOT', '_', '_'] 
+                ])
+                s += '\n'
         return s
         
     def get_feats(self, tok):
