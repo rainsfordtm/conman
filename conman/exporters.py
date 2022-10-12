@@ -358,7 +358,7 @@ class ConllExporter():
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
         
-    def _export(self, cnc, path, add_refs = True):
+    def export(self, cnc, path, add_refs = True):
         """
         Exports a concordance as a Conll file suitable for dependency parsing.
         If add_refs is True, adds hit.uuid and hit.ref as comments.
