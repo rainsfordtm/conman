@@ -319,7 +319,7 @@ class TableExporter(Exporter):
                 l.append(hit.tags[field] if field in hit.tags else '')
         return l
         
-class ConllExporter():
+class ConllExporter(Exporter):
     """
     Exports the concordance to a Conll file.
     
@@ -358,7 +358,7 @@ class ConllExporter():
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
         
-    def export(self, cnc, path, add_refs = True):
+    def _export(self, cnc, path, add_refs = True):
         """
         Exports a concordance as a Conll file suitable for dependency parsing.
         If add_refs is True, adds hit.uuid and hit.ref as comments.
