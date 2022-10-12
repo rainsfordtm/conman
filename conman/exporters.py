@@ -349,6 +349,7 @@ class ConllExporter(Exporter):
         """
         Constructs all attributes needed for an instance of the class.
         """
+        Exporter.__init__(self)
         self.lemma = 'conll_LEMMA'
         self.cpostag = 'conll_CPOSTAG'
         self.postag = 'conll_POSTAG'
