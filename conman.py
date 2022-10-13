@@ -114,6 +114,9 @@ class Launcher():
                 value = self.workflow.get(section, 'TL_hit_end_token', fallback='')
                 if value:
                     importer.hit_end_token = value
+                value = self.workflow.get(section, 'TL_comment_string', fallback='')
+                if value:
+                    importer.comment_string = value
             if isinstance(importer, TableImporter):
                 value = self.workflow.get(section, 'TI_dialect', fallback='')
                 if value:

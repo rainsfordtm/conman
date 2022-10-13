@@ -92,6 +92,7 @@ class Importer():
         IMPORTER_TYPE_TO_CLASS_MAP = {
           'Importer':  Importer,
           'TokenListImporter': TokenListImporter,
+          'ConllImporter': ConllImporter,
           'TableImporter': TableImporter,
           'PennOutImporter': PennOutImporter,
           'BaseTreeImporter': BaseTreeImporter
@@ -251,7 +252,11 @@ class TokenListImporter(Importer):
     -----------
     hit_end_token (str):
         Character used as a dummy token to delimit the hits (essential).
-        Default is '', i.e. an empty line.
+        Default is '', which is interpreted as an empty line. Otherwise,
+        empty lines are ignored until hit_end_token is encountered.
+    comment_string (str):
+        String used at the start of a line to indicate a comment. Default is
+        '', i.e. no comments
     
     Methods:
     --------
@@ -283,14 +288,48 @@ class TokenListImporter(Importer):
         with open(path, 'r', encoding=self.encoding, errors='replace') as f:
             l = []
             for line in f:
-                tok = self.parse_token(line[:-1], self.lcx_regex)
-                if tok != self.hit_end_token:
-                    l.append(tok)
+                if self.comment_string and line.startswith(self.comment_string):
+                    # ignore comments
+                    continue
+                if line[:-1]:
+                    tok = self.parse_token(line[:-1], self.lcx_regex)
                 else:
+                    tok = Token('')
+                if tok and tok != self.hit_end_token: 
+                    # not an empty line, not the hit_end_token
+                    l.append(tok)
+                elif tok == self.hit_end_token:
+                    # could be an empty line if it's also the hit_end_token
                     hit = Hit(l)
                     self.concordance.append(hit)
                     l = []
-        return self.concordance 
+        return self.concordance
+        
+class ConllImporter(TokenListImporter):
+    """
+    Class to import Conll files. Uses TokenListImporter but resets 
+    self.lcx_regex when parse is called to ensure it's correct for a 
+    ten-column .conllu file.
+    """
+    
+    def parse(self, path):
+        """
+        Wrapper for TokenListImporter.parse that just resets self.lcx_regex.
+        """
+        self.lcx_regex = ''.join([
+            r'(?P<conll_ID>[0-9]+)\t',
+            r'(?P<word>[^\t]+)\t',
+            r'(?P<conll_LEMMA>[^\t]+)\t',
+            r'(?P<conll_CPOSTAG>[^\t]+)\t',
+            r'(?P<conll_POSTAG>[^\t]+)\t',
+            r'(?P<conll_FEATS>[^\t]+)\t',
+            r'(?P<conll_HEAD>[^\t]+)\t',
+            r'(?P<conll_DEPREL>[^\t]+)\t',
+            r'(?P<conll_PHEAD>[^\t]+)\t',
+            r'(?P<conll_PDEPREL>[^\t]+).*'
+        ])
+        return TokenListImporter.parse(self, path)
+        
 
 class BaseTreeImporter(Importer):
     """
