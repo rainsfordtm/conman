@@ -182,7 +182,7 @@ class Launcher():
                     self.exporter.feats = [x.strip() for x in value.split(',')]
                 value = self.workflow.get('exporter', 'CE_split_hit', fallback='')
                 if value:
-                    exporter.split_hit = True if value.lower() == 'true' else False
+                    self.exporter.split_hit = True if value.lower() == 'true' else False
         # 4. Read merger section
         if self.path_other:
             self.merger = ConcordanceMerger()
