@@ -402,7 +402,7 @@ class ConllExporter(Exporter):
                 s += '\t'.join([
                     str(ix - ix_corr + 1), #1
                     str(tok), #2
-                    ['_', '_'. '_', '_', '_', 0, 'ROOT', '_', '_'] 
+                    ['_', '_', '_', '_', '_', 0, 'ROOT', '_', '_'] 
                 ])
                 s += '\n'
         return s
