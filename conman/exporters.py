@@ -360,7 +360,7 @@ class ConllExporter(Exporter):
         self.phead = 'conll_PHEAD'
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
-        self.split_hits = False
+        self.split_hit = False
         
     def _export(self, cnc, path, add_refs = True):
         """
@@ -394,11 +394,11 @@ class ConllExporter(Exporter):
         s, ix_corr = '', 0
         for ix, tok in enumerate(hit):
             s += '\t'.join(self.tok_to_list(tok, ix - ix_corr + 1))
-            if self.split_hits and tok in ['.', ',', ';', ':', '?', '!']:
+            if self.split_hit and tok in ['.', ',', ';', ':', '?', '!']:
                 s += '\n'
                 ix_corr = ix + 1
             s += '\n'
-        if self.split_hits:
+        if self.split_hit:
             s += '\t'.join([
                 str(ix - ix_corr + 2), #1
                 'ENDHIT', #2
