@@ -129,10 +129,10 @@ class ConcordanceMerger():
         # delete every hit in the first cnc.
         if self.del_hits and self.match_by == 'uuid':
             # Debug code
-            s1 = set(self.cnc.get_uuids())
-            s2 = set(self.other_cnc.get_uuids())
-            print('Deleting UUIDS...')
-            print(list(s1 - s2))
+            #s1 = set(self.cnc.get_uuids())
+            #s2 = set(self.other_cnc.get_uuids())
+            #print('Deleting UUIDS...')
+            #print(list(s1 - s2))
             l = self.other_cnc.get_uuids()
             self.cnc = Concordance(list(
                 filter(lambda x: x.uuid in l, self.cnc)
