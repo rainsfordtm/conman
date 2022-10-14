@@ -402,7 +402,7 @@ class ConllExporter(Exporter):
             s += '\t'.join([
                 str(ix - ix_corr + 2), #1
                 'ENDHIT', #2
-                '_', '_', '_', '_', '_', 'ROOT', '_', '_' 
+                '_', '_', '_', '_', '0', 'root', '_', '_' 
             ])
             s += '\n'
         return s
@@ -447,7 +447,7 @@ class ConllExporter(Exporter):
         # 5. postag (tok.tags[self.postag] or '_')
         # 6. feats (self.get_feats(tok))
         # 7. head (tok.tags[self.head] or 0)
-        # 8. deprel (tok.tags[self.deprel] or 'ROOT')
+        # 8. deprel (tok.tags[self.deprel] or 'root')
         # 9. phead (tok.tags[self.phead] or '_')
         # 10. pdeprel (tok.tags[self.pdeprel] or '_')
         
@@ -458,8 +458,8 @@ class ConllExporter(Exporter):
             tok.tags[self.cpostag] if self.cpostag in tok.tags else '_',  # 4. cpostag
             tok.tags[self.postag] if self.postag in tok.tags else '_',  # 5. postag
             self.get_feats(tok) or '_',                                  # 6. feats
-            tok.tags[self.head] if self.head in tok.tags else '_',    # 7. head
-            tok.tags[self.deprel] if self.deprel in tok.tags else 'ROOT', # 8. deprel
+            str(tok.tags[self.head]) if self.head in tok.tags else '0',    # 7. head
+            tok.tags[self.deprel] if self.deprel in tok.tags else 'root', # 8. deprel
             tok.tags[self.phead] if self.phead in tok.tags else '_',  # 9. phead
             tok.tags[self.pdeprel] if self.pdeprel in tok.tags else '_',  # 10. pdeprel
         ]
