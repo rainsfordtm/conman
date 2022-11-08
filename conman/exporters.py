@@ -260,6 +260,7 @@ class TableExporter(Exporter):
         # export.
         # Default name plus all tags in self.tags
         self.fields = ['UUID', 'REF', 'LCX', 'KEYWORDS', 'RCX']
+        if not cnc: return # don't look for cnc[0] if the concordance is empty
         for key in cnc[0].tags:
             self.fields.append(key)
         

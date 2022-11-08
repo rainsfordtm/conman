@@ -270,6 +270,7 @@ class TokenListImporter(Importer):
         """
         Importer.__init__(self)
         self.hit_end_token = ''
+        self.comment_string = '#'
         
     def parse(self, path):
         """
