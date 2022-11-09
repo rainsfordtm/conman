@@ -46,10 +46,13 @@ def script(annotator, hit):
     # 2. Detect PP_complement
     l = []
     for arg in args:
-        if arg.tags['conll_DEPREL'] == 'obl':
+        if arg.tags['conll_DEPREL'] in ['obl', 'iobj']:
             l.append(arg)
     if l:
-        hit.tags['pp_head'] = '|'.join(l)
+        hit.tags['pp_head'] = '|'.join(list(filter(
+            sort=lambda x: x.keys['conll_DEPREL'] == 'case',
+            l
+        )))
         hit.tags['pp'] = '|'.join([' '.join(get_descendents(x)) for x in l])
     
     # 3. 
