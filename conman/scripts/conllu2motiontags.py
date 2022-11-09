@@ -22,6 +22,20 @@ def script(annotator, hit):
             if int(tok.tags['conll_HEAD']) == int(parent['conll_ID']):
                 l.append(tok)
         return l
+        
+    def get_descendents(parent):
+        """
+        Returns all descendent toks of parent.
+        """
+        l, newl = [], [parent]
+        while newl:
+            toks = newl
+            newl = []
+            for tok in toks:
+                newl += get_children(tok)
+            l += newl
+        l.sort(key=lambda x: int(x.tags['conll_ID']))
+        return l
     
     # Main procedure
     kw = get_kw(hit)
@@ -36,6 +50,9 @@ def script(annotator, hit):
             l.append(arg)
     if l:
         hit.tags['pp_head'] = '|'.join(l)
+        hit.tags['pp'] = '|'.join([' '.join(get_descendents(x)) for x in l])
+    
+    # 3. 
         
         
     
