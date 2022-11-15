@@ -117,6 +117,10 @@ class Launcher():
                 value = self.workflow.get(section, 'TL_comment_string', fallback='')
                 if value:
                     importer.comment_string = value
+            if isinstance(importer, ConllImporter):
+                value = self.workflow.get(section, 'CI_head_as_kw', fallback='')
+                if value:
+                    importer.head_is_kw = True if value.lower() == 'true' else False
             if isinstance(importer, TableImporter):
                 value = self.workflow.get(section, 'TI_dialect', fallback='')
                 if value:

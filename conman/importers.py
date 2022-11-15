@@ -311,7 +311,23 @@ class ConllImporter(TokenListImporter):
     Class to import Conll files. Uses TokenListImporter but resets 
     self.lcx_regex when parse is called to ensure it's correct for a 
     ten-column .conllu file.
+    
+    Attributes:
+    -----------
+    head_is_kw (boolean):
+        If set to True, it turns the first sentence root element in a 
+        parsed structure into the keyword. If False, no keywords are
+        identified. Default is True.
+        
+    Methods:
+    --------
+    head_to_kw(self):
+        If 
     """
+    
+    def __init__(self):
+        TokenListImporter.__init__(self)
+        self.head_is_kw = True
     
     def parse(self, path):
         """
@@ -329,8 +345,24 @@ class ConllImporter(TokenListImporter):
             r'(?P<conll_PHEAD>[^\t]+)\t',
             r'(?P<conll_PDEPREL>[^\t]+).*'
         ])
-        return TokenListImporter.parse(self, path)
+        # Run parse from the parent class
+        TokenListImporter.parse(self, path)
+        # Turn heads into kws if necessary
+        if self.head_is_kw: self.head_to_kw()
+        # Return concordance
+        return self.concordance
         
+    def head_to_kw(self):
+        """
+        Promotes the first token for which conll_HEAD is 0 to a keyword,
+        allowing the hit to be treated as a concordance with left and
+        right context.
+        """
+        for hit in self.concordance:
+            for tok in hit:
+                if str(tok.tags['conll_HEAD']) == '0':
+                    hit.kws = [tok]
+                    continue
 
 class BaseTreeImporter(Importer):
     """
