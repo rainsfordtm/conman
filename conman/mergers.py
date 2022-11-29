@@ -35,7 +35,7 @@ class TokenListMerger():
         self._cnc_map, self._other_cnc_map = [], []
         self._cnc_list, self._other_cnc_list = [], []
         
-    def _build_maps():
+    def _build_maps(self):
         # Builds (other_)cnc_map and (other_)cnc_list objects
         # First, turn the concordance into a list of tokens.
         for cnc, l, mp in [
@@ -44,11 +44,11 @@ class TokenListMerger():
         ]:
             k = 0
             for j, hit in enumerate(cnc):
-                l += [(i + k, str(tok)) for tok in enumerate(hit)]
+                l += [(i + k, str(tok)) for i, tok in enumerate(hit)]
                 mp += [(j, i) for i in range(len(hit))]
                 k += len(hit)
                 
-    def _align():
+    def _align(self):
         # Sets up and runs the aligner. cnc_list and other_cnc_list must be set.
         self.aligner = tta.aligner.Aligner(self._cnc_list, self._other_cnc_list)
         self.aligner.align()

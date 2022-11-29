@@ -54,6 +54,15 @@ class Importer():
     tokenizer (tokenizers.Tokenizer):
         Tokenizer use to parse multi-word fields (typically left- and
         right context).
+        
+    _on_token_parse_error (str):
+        Internal attribute set by descendent class to instruct parser how
+        to deal with token strings that it cannot parse with the regex.
+        Possible values are:
+            - 'drop':   the token is given as an empty string and a warning is printed. 
+            - 'keep':   the whole string becomes a word and a warning is printed.
+            - 'raise':  raises a ParseError.
+        Default is 'warn'.
     
     Methods:
     --------
@@ -111,7 +120,22 @@ class Importer():
             r'(?P<word>.*)', r'(?P<word>.*)', r'(?P<word>.*)' 
         self.ref_regex = ''
         self.tokenizer = Tokenizer()
+        self._on_token_parse_error = 'warn'
         
+    def _handle_token_parse_error(self, s, regex):
+        # What to do when a string is encountered that the regex can't
+        # process
+        msg = "Can't identify the token in '{}', regex '{}'".format(s, regex)
+        if self._on_token_parse_error == 'raise':
+            raise ParseError(msg)
+        else:
+            print(msg)
+        if self._on_token_parse_error == 'keep':
+            tok = Token(s)
+        else:
+            tok = Token('')
+        return tok
+            
     def get_tokens(self, s, special_field):
         """
         Converts a string into a list of tokens, using the tokenizer and 
@@ -128,11 +152,14 @@ class Importer():
         """
         l = self.tokenize(s)
         if special_field in ['LCX', 'TOKENS']:
-            return [self.parse_token(item, self.lcx_regex) for item in l]
+            result = [self.parse_token(item, self.lcx_regex) for item in l]
         if special_field == 'KEYWORDS':
-            return [self.parse_token(item, self.keywds_regex) for item in l]
+            result = [self.parse_token(item, self.keywds_regex) for item in l]
         if special_field == 'RCX':
-            return [self.parse_token(item, self.rcx_regex) for item in l]
+            result = [self.parse_token(item, self.rcx_regex) for item in l]
+        while Token('') in result:
+            result.remove(Token(''))
+        return result
             
     def parse(self, path, delimiter = '\n'):
         """
@@ -199,11 +226,7 @@ class Importer():
         """
         m = re.match(regex, s)
         if not m or m and not 'word' in m.groupdict():
-            # New behaviour: this is demoted to a warning, since corpora
-            # aren't perfect and these errors must be able to occur without
-            # causing a crash.
-            print("Warning: Can't identify the token in '{}', regex '{}'".format(s, regex))
-            tok = Token(s)
+            tok = self._handle_token_parse_error(s, regex)
             tok.tags = {}
         else: # Successful parse
             tok = Token(m.groupdict()['word'])
@@ -328,6 +351,8 @@ class ConllImporter(TokenListImporter):
     def __init__(self):
         TokenListImporter.__init__(self)
         self.head_is_kw = True
+        # Raise Parse Error if a token can't be dealt with.
+        self._on_token_parse_error = 'drop'
     
     def parse(self, path):
         """
@@ -360,9 +385,13 @@ class ConllImporter(TokenListImporter):
         """
         for hit in self.concordance:
             for tok in hit:
-                if str(tok.tags['conll_HEAD']) == '0':
-                    hit.kws = [tok]
-                    continue
+                try: 
+                    if str(tok.tags['conll_HEAD']) == '0':
+                        hit.kws = [tok]
+                        continue
+                except:
+                    print(tok, tok.tags)
+                    raise
 
 class BaseTreeImporter(Importer):
     """

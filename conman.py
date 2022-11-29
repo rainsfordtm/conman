@@ -346,7 +346,7 @@ if __name__ == '__main__':
     parser.add_argument('outfile', help='Output file to save or export.')
     parser.add_argument('-m', '--merge', nargs=1, default=[''],
         help='Concordance to merge with input file.')
-    parser.add_argument('--merge-by-token', action='store_true',
+    parser.add_argument('--merge_by_token', action='store_true',
         help='Merger will ignore the hit boundaries in the second concordance ' + \
         'and simply match the tokens, updating token tags.'
     )
@@ -364,6 +364,6 @@ if __name__ == '__main__':
     merge = args.pop('merge')[0] if 'merge' in args else ''
     workflow = args.pop('workflow')[0] if 'workflow' in args else ''
     main(args.pop('infile'), args.pop('outfile'), merge,
-        workflow, args.pop('save'), args.pop('merge-by-token'))
+        workflow, args.pop('save'), args.pop('merge_by_token'))
     
 
