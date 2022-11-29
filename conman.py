@@ -38,6 +38,7 @@ class Launcher():
     other_cnc (concordance.Concordance):    The other concordance to merge.
     other_importer (importers.Importer):    Importer for other_cnc.
     merger (mergers.ConcordanceMerger):     Merger for cnc and other_cnc.
+    merge_by_token (boolean):               Triggers use of TokenListMerger.
     annotator (annotators.Annotator):       Annotator for cnc (used after merge).
     path_in (str):                          Path to the base concordance.
     path_out (str):                         Path to the output file.
@@ -63,6 +64,7 @@ class Launcher():
         self.importer, self.other_importer = None, None
         self.exporter = None
         self.merger = None
+        self.merge_by_token = False
         self.annotator = None
         self.workflow = None
         
@@ -78,7 +80,7 @@ class Launcher():
             else:
                 self.other_importer = get_importer_from_path(self.path_other)
         if self.other_cnc or self.other_importer:
-            self.merger = ConcordanceMerger()
+            self.merger = TokenListMerger() if self.merge_by_token else ConcordanceMerger()
         if os.path.splitext(self.path_out)[1] not in CONCORDANCE_EXTS:
             self.exporter = get_exporter_from_path(self.path_out)
         else:
@@ -191,8 +193,11 @@ class Launcher():
                 if value:
                     self.exporter.split_hit = True if value.lower() == 'true' else False
         # 4. Read merger section
-        if self.path_other:
-            self.merger = ConcordanceMerger()
+        if self.path_other and self.merge_by_token:
+            self.merger = TokenListMerger()
+            # Ignore the merger section, only applies to ConcordanceMerger()
+        elif self.path_other:
+            self.merger = ConcordanceMerger()  
             for key in ['add_hits', 'del_hits']:
                 value = self.workflow.get('merger', key, fallback='')
             if value.lower() == 'true':
@@ -268,7 +273,8 @@ class Launcher():
         # 3. Merging
         if self.other_cnc:
             print('Merging concordances...')
-            if not self.merger: self.merger = ConcordanceMerger()
+            if not self.merger:
+                self.merger = TokenListMerger() if self.merge_by_token else ConcordanceMerger()  
             self.merger.cnc = self.cnc
             self.merger.other_cnc = self.other_cnc
             self.cnc = self.merger.merge()
@@ -287,7 +293,8 @@ class Launcher():
             raise ConfigError('Cannot save or export the result.')
         print('Done!')
 
-def main(path_in, path_out, path_other='', path_workflow='', save=False):
+def main(path_in, path_out, path_other='', path_workflow='', 
+    save=False, merge_by_token=False):
     """
     Builds and runs a Launcher object.
     
@@ -308,6 +315,7 @@ def main(path_in, path_out, path_other='', path_workflow='', save=False):
         with open(path_workflow, 'r') as f:
             cfg.read_file(f)
         launcher.workflow = cfg
+    launcher.merge_by_token = merge_by_token
     launcher.launch()
     
 def load_module(module_name, path):
@@ -338,7 +346,10 @@ if __name__ == '__main__':
     parser.add_argument('outfile', help='Output file to save or export.')
     parser.add_argument('-m', '--merge', nargs=1, default=[''],
         help='Concordance to merge with input file.')
-    
+    parser.add_argument('--merge-by-token', action='store_true',
+        help='Merger will ignore the hit boundaries in the second concordance ' + \
+        'and simply match the tokens, updating token tags.'
+    )
     parser.add_argument('-w', '--workflow', nargs=1, default=[''],
         help='Workflow configuration file.')
     
@@ -353,6 +364,6 @@ if __name__ == '__main__':
     merge = args.pop('merge')[0] if 'merge' in args else ''
     workflow = args.pop('workflow')[0] if 'workflow' in args else ''
     main(args.pop('infile'), args.pop('outfile'), merge,
-        workflow, args.pop('save'))
+        workflow, args.pop('save'), args.pop('merge-by-token'))
     
 

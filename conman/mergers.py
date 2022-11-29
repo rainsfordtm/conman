@@ -1,6 +1,83 @@
 #!/usr/bin/python3
 
 from conman.concordance import Concordance
+import tta.aligner
+
+class TokenListMerger():
+    """
+    Class used to merge two concordance.Concordance objects at the level of
+    the Token rather than at the level of the Hit, i.e. it ignores the Hits
+    in other_cnc. The two concordances must contain (more or less) the same
+    tokens in the same order.
+    
+    Attributes:
+    -----------
+    aligner (tta.aligner.Aligner):
+        The aligner object
+    cnc (concordance.Concordance):
+        Concordance to merge into
+    other_cnc (concordance.Concordance):
+        Concordance to merge from.
+        
+    Methods:
+    --------
+    merge(self, cnc, other_cnc):
+        Modifies the concordance cnc by adding data from concordance
+        other_cnc.
+    """
+    
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        self.aligner = None
+        self.cnc, self.other_cnc = None, None
+        self._cnc_map, self._other_cnc_map = [], []
+        self._cnc_list, self._other_cnc_list = [], []
+        
+    def _build_maps():
+        # Builds (other_)cnc_map and (other_)cnc_list objects
+        # First, turn the concordance into a list of tokens.
+        for cnc, l, mp in [
+            (self.cnc, self._cnc_list, self._cnc_map),
+            (self.other_cnc, self._other_cnc_list, self._other_cnc_map)
+        ]:
+            k = 0
+            for j, hit in enumerate(cnc):
+                l += [(i + k, str(tok)) for tok in enumerate(hit)]
+                mp += [(j, i) for i in range(len(hit))]
+                k += len(hit)
+                
+    def _align():
+        # Sets up and runs the aligner. cnc_list and other_cnc_list must be set.
+        self.aligner = tta.aligner.Aligner(self._cnc_list, self._other_cnc_list)
+        self.aligner.align()
+        
+    def merge(self):
+        """
+        Modifies the concordance self.cnc by adding token-level data only from
+        concordance self.other_cnc.
+        
+        Parameters:
+        
+        Returns:
+            merge(self):
+                A modified cnc concordance.
+        """
+        self._build_maps()
+        self._align()
+        # The .aligned attribute of the aligner is a list of tuples:
+        # - First item: token in main text
+        # - Second item: list of matching tokens in second text
+        # - Third item: comments on mismatches (which we're going to ignore here).
+        for cnc_ix, other_cnc_ixs, x in self.aligner.aligned:
+            if other_cnc_ixs: # matches some token in text b
+                cnc_address = self._cnc_map[cnc_ix]
+                other_cnc_address = self._other_cnc_map[other_cnc_ixs[0]]
+                self.cnc[cnc_address[0]][cnc_address[1]].tags.update(
+                    self.other_cnc[other_cnc_address[0]][other_cnc_address[1]].tags
+                )
+        return self.cnc
 
 class ConcordanceMerger():
     """
