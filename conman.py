@@ -181,7 +181,7 @@ class Launcher():
             if isinstance(self.exporter, ConllExporter):
                 for key in [
                     'CE_lemma', 'CE_cpostag', 'CE_postag', 'CE_head',
-                    'CE_deprel', 'CE_phead', 'CE_pdeprel'
+                    'CE_deprel', 'CE_phead', 'CE_pdeprel', 'CE_hit_end_token'
                 ]:
                     value = self.workflow.get('exporter', key, fallback='')
                     if value:

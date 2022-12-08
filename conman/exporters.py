@@ -336,7 +336,9 @@ class ConllExporter(Exporter):
     pdeprel (str)  : key in tok.tags whose value should be mapped to the PDEPREL column
     feats (list)   : list of keys in tok.tags whose values should be mapped to the FEATS column
     split_hit (bool): if True, splits a hit at a punctuation mark and add self.hit_end_token
-    				or the string "ENDHIT" to the final sentence in the hit.
+    				or the string in self.hit_end_token to the final sentence in the hit.
+    hit_end_token (str): Character used as a dummy token to delimit the hits (essential).
+                    Default is 'ENDHIT'.
     
     Methods:
     --------
@@ -362,6 +364,7 @@ class ConllExporter(Exporter):
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
         self.split_hit = False
+        self.hit_end_token = 'ENDHIT'
         
     def _export(self, cnc, path, add_refs = True):
         """
@@ -400,10 +403,9 @@ class ConllExporter(Exporter):
                 ix_corr = ix + 1
             s += '\n'
         if self.split_hit:
-            endhit = self.hit_end_token if self.hit_end_token else 'ENDHIT' 
             s += '\t'.join([
                 str(ix - ix_corr + 2), #1
-                endhit, #2
+                self.hit_end_token, #2
                 '_', '_', '_', '_', '0', 'root', '_', '_' 
             ])
             s += '\n'
