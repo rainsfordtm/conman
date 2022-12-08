@@ -400,7 +400,7 @@ class ConllExporter(Exporter):
                 ix_corr = ix + 1
             s += '\n'
         if self.split_hit:
-        	endhit = self.hit_end_token if self.hit_end_token else 'ENDHIT' 
+            endhit = self.hit_end_token if self.hit_end_token else 'ENDHIT' 
             s += '\t'.join([
                 str(ix - ix_corr + 2), #1
                 endhit, #2
