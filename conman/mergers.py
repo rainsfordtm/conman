@@ -3,7 +3,53 @@
 from conman.concordance import Concordance
 import tta.aligner
 
-class TokenListMerger():
+class Merger():
+    """
+    Parent class to merge two concordances.
+    
+    Attributes:
+    -----------
+    cnc (concordance.Concordance):
+        Concordance to merge into
+    other_cnc (concordance.Concordance):
+        Concordance to merge from.
+        
+    Method:
+    -------
+    merge:
+        Return self.cnc unmodified and prints a warning. The parent class
+        cannot do any merging.
+    """
+    
+    @classmethod
+    def create(cls, merger_type):
+        """
+        Creates an instance of merger_type and returns it.
+        """
+        
+        MERGER_TYPE_TO_CLASS_MAP = {
+          'TextMerger': TextMerger,
+          'ConcordanceMerger': ConcordanceMerger
+        }
+        if merger_type not in MERGER_TYPE_TO_CLASS_MAP:
+              raise ValueError('Bad merger type {}'.format(merger_type))
+        return IMPORTER_TYPE_TO_CLASS_MAP[importer_type]()
+        
+    def __init__(self):
+        """
+        Initializes base attributes for all instances of the class.
+        """
+        self.cnc, self.other_cnc = None, None
+        
+    def merge(self):
+        """
+        Dummy method in parent class, does nothing except return self.cnc
+        and print a warning.
+        """
+        print('WARNING: Merger parent class does nothing, select a subclass.')
+        return self.cnc
+
+class TextMerger(Merger):
     """
     Class used to merge two concordance.Concordance objects at the level of
     the Token rather than at the level of the Hit, i.e. it ignores the Hits
@@ -18,7 +64,11 @@ class TokenListMerger():
         Concordance to merge into
     other_cnc (concordance.Concordance):
         Concordance to merge from.
-        
+    threshold (int):
+        The threshold to pass to the aligner. Default is 20 (aligner default).
+    ratio (float):
+        The minimum similarity ratio. Default is .95 (i.e. basically identical).
+    
     Methods:
     --------
     merge(self, cnc, other_cnc):
@@ -30,8 +80,10 @@ class TokenListMerger():
         """
         Constructs all attributes needed for an instance of the class.
         """
+        Merger.__init__(self)
         self.aligner = None
         self.cnc, self.other_cnc = None, None
+        self.threshold, self.ratio = 20, .95
         self._cnc_map, self._other_cnc_map = [], []
         self._cnc_list, self._other_cnc_list = [], []
         
@@ -50,7 +102,17 @@ class TokenListMerger():
                 
     def _align(self):
         # Sets up and runs the aligner. cnc_list and other_cnc_list must be set.
-        self.aligner = tta.aligner.Aligner(self._cnc_list, self._other_cnc_list)
+        self.aligner = tta.aligner.Aligner(
+            self._cnc_list, self._other_cnc_list,
+            threshold=self.threshold,
+            ratio=self.ratio
+        )
+        try:
+            self.aligner.ratio_check()
+        except tta.aligner.AlignerError:
+            print('Text A:' + ' '.join([x[1] for x in self._cnc_list[:100]]))
+            print('Text B:' + ' '.join([x[1] for x in self._other_cnc_list[:100]]))
+            raise
         self.aligner.align()
         
     def merge(self):
@@ -79,7 +141,7 @@ class TokenListMerger():
                 )
         return self.cnc
 
-class ConcordanceMerger():
+class ConcordanceMerger(Merger):
     """
     Class used to merge two concordance.Concordance objects. Matching
     hits are identified using hit.uuid, hit.ref or order of hits and this
@@ -127,11 +189,11 @@ class ConcordanceMerger():
         """
         Constructs all attributes needed for an instance of the class.
         """
+        Merger.__init__(self)
         self.add_hits, self.del_hits = False, False
         self.update_tags = False
         self.match_by = ''
         self.token_merger = None
-        self.cnc, self.other_cnc = None, None
         
     def check_settings(self):
         """
@@ -243,35 +305,8 @@ class TokenMerger():
         """
         Constructs all attributes needed for an instance of the class.
         """
-        # self.aligner = None # DISABLED
         self.id_tag = ''
         self.update_tags = False
-        
-    #########################################################################
-    # Private methods needed to implement the aligner
-    #########################################################################
-        
-    def _initialize_aligner(self, hit, other_hit):
-        # Re-run the aligner ensuring that the ID is the index of each
-        # token in the hit. Otherwise match_token doesn't work.
-        self.aligner.a_list = [(i, tok) for i, tok in enumerate(hit)]
-        self.aligner.b_list = [(i, tok) for i, tok in enumerate(other_hit)]
-        self.aligner.threshold = 3 # Short matches, lower threshold for pass1
-        try:
-            self.aligner.align()
-        except:
-            print(self.aligner.a_list)
-            print(self.aligner.b_list)
-            print(self.aligner.aligned)
-        
-    def _match_token_aligner(self, hit, other_tok, ix):
-        # Uses the aligner to find the token.
-        if not self.aligner.aligned:
-            self.aligner.align()
-        for alignment in self.aligner.aligned:
-            if ix in alignment[1]:
-                return hit[alignment[0]]
-        return None
         
     def match_token(self, hit, other_tok, ix):
         """
@@ -292,9 +327,6 @@ class TokenMerger():
             other_id = other_tok.tags[self.id_tag]
             l = list(filter(lambda x: x.tags.get(self.id_tag) == other_id, hit))
             return l[0] if l else None
-        # Otherwise, use aligner if one is set. DISABLED
-        # if self.aligner:
-        #    return self._match_token_aligner(hit, other_tok, ix)
         # Otherwise, use the index
         return hit[ix] if ix < len(hit) else None
         
@@ -310,8 +342,6 @@ class TokenMerger():
             merge(self, hit, other_hit):
                 A concordance.Hit object combining data from hit and other_hit.
         """
-        # if self.aligner:
-        #     self._initialize_aligner(hit, other_hit) DISABLED
         for i, other_tok in enumerate(other_hit):
             tok = self.match_token(hit, other_tok, i)
             if not tok:
@@ -327,8 +357,3 @@ class TokenMerger():
                 tok.tags.update(d)
         return hit
             
-        
-    
-
-
-        

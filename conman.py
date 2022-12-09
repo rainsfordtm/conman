@@ -37,8 +37,7 @@ class Launcher():
     importer (importers.Importer):          Importer for the base concordance.
     other_cnc (concordance.Concordance):    The other concordance to merge.
     other_importer (importers.Importer):    Importer for other_cnc.
-    merger (mergers.ConcordanceMerger):     Merger for cnc and other_cnc.
-    merge_by_token (boolean):               Triggers use of TokenListMerger.
+    merger (mergers.Merger):                Merger for cnc and other_cnc.
     annotator (annotators.Annotator):       Annotator for cnc (used after merge).
     path_in (str):                          Path to the base concordance.
     path_out (str):                         Path to the output file.
@@ -64,7 +63,6 @@ class Launcher():
         self.importer, self.other_importer = None, None
         self.exporter = None
         self.merger = None
-        self.merge_by_token = False
         self.annotator = None
         self.workflow = None
         
@@ -80,7 +78,7 @@ class Launcher():
             else:
                 self.other_importer = get_importer_from_path(self.path_other)
         if self.other_cnc or self.other_importer:
-            self.merger = TokenListMerger() if self.merge_by_token else ConcordanceMerger()
+            self.merger = ConcordanceMerger()
         if os.path.splitext(self.path_out)[1] not in CONCORDANCE_EXTS:
             self.exporter = get_exporter_from_path(self.path_out)
         else:
@@ -88,13 +86,15 @@ class Launcher():
             
     def _initialize_from_workflow(self):
         # 1. Read setup section
-        for key in ['importer', 'other_importer', 'annotator', 'exporter']:
+        for key in ['importer', 'other_importer', 'annotator', 'exporter', 'merger']:
             value = self.workflow.get('setup', key, fallback='')
             if value:
                 if key == 'exporter':
                     obj = Exporter.create(value)
                 elif key == 'annotator':
                     obj = Annotator.create(value)
+                elif key == 'merger':
+                    obj = Merger.create(value)
                 else:
                     obj = Importer.create(value)
                 setattr(self, key, obj)
@@ -193,28 +193,31 @@ class Launcher():
                 if value:
                     self.exporter.split_hit = True if value.lower() == 'true' else False
         # 4. Read merger section
-        if self.path_other and self.merge_by_token:
-            self.merger = TokenListMerger()
-            # Ignore the merger section, only applies to ConcordanceMerger()
-        elif self.path_other:
-            self.merger = ConcordanceMerger()  
-            for key in ['add_hits', 'del_hits']:
-                value = self.workflow.get('merger', key, fallback='')
-            if value.lower() == 'true':
-                setattr(self.merger, key, True)
-            value = self.workflow.get('merger', 'match_by', fallback='')
-            if value in ['uuid', 'ref']: self.merger.match_by = value
-            value = self.workflow.get('merger', 'update_hit_tags', fallback='')
-            if value.lower() == 'true': self.merger.update_tags = True
-            value = self.workflow.get('merger', 'merge_tokens', fallback='')
-            if value.lower() == 'true':
-                self.merger.token_merger = TokenMerger()
-                value = self.workflow.get('merger', 'update_token_tags', fallback='')
+        if self.path_other:
+            if isinstance(self.merger, ConcordanceMerger):
+                for key in ['CM_add_hits', 'CM_del_hits']:
+                    value = self.workflow.get('merger', key, fallback='')
                 if value.lower() == 'true':
-                    self.merger.token_merger.update_tags = True
-                value = self.workflow.get('merger', 'tok_id_tag', fallback='')
-                if value:
-                    self.merger.token_merger.id_tag = value
+                    setattr(self.merger, key, True)
+                value = self.workflow.get('merger', 'CM_match_by', fallback='')
+                if value in ['uuid', 'ref']: self.merger.match_by = value
+                value = self.workflow.get('merger', 'CM_update_hit_tags', fallback='')
+                if value.lower() == 'true': self.merger.update_tags = True
+                value = self.workflow.get('merger', 'CM_merge_tokens', fallback='')
+                if value.lower() == 'true':
+                    self.merger.token_merger = TokenMerger()
+                    value = self.workflow.get('merger', 'CM_update_token_tags', fallback='')
+                    if value.lower() == 'true':
+                        self.merger.token_merger.update_tags = True
+                    value = self.workflow.get('merger', 'CM_tok_id_tag', fallback='')
+                    if value:
+                        self.merger.token_merger.id_tag = value
+            if isinstance(self.merger, TextMerger):
+                for key in ['TM_threshold', 'TM_ratio']:
+                    value = self.workflow.get('merger', key, fallback='')
+                    if value:
+                        num_value = float(value)
+                        setattr(self.merger, key, value)
         # 5. Manage annotator settings (i.e. changing the script)
         if self.annotator:
             for key in self.workflow.options('annotator'):
@@ -274,7 +277,7 @@ class Launcher():
         if self.other_cnc:
             print('Merging concordances...')
             if not self.merger:
-                self.merger = TokenListMerger() if self.merge_by_token else ConcordanceMerger()  
+                self.merger = ConcordanceMerger()  
             self.merger.cnc = self.cnc
             self.merger.other_cnc = self.other_cnc
             self.cnc = self.merger.merge()
@@ -294,7 +297,7 @@ class Launcher():
         print('Done!')
 
 def main(path_in, path_out, path_other='', path_workflow='', 
-    save=False, merge_by_token=False):
+    save=False):
     """
     Builds and runs a Launcher object.
     
@@ -315,7 +318,6 @@ def main(path_in, path_out, path_other='', path_workflow='',
         with open(path_workflow, 'r') as f:
             cfg.read_file(f)
         launcher.workflow = cfg
-    launcher.merge_by_token = merge_by_token
     launcher.launch()
     
 def load_module(module_name, path):
@@ -346,10 +348,6 @@ if __name__ == '__main__':
     parser.add_argument('outfile', help='Output file to save or export.')
     parser.add_argument('-m', '--merge', nargs=1, default=[''],
         help='Concordance to merge with input file.')
-    parser.add_argument('--merge_by_token', action='store_true',
-        help='Merger will ignore the hit boundaries in the second concordance ' + \
-        'and simply match the tokens, updating token tags.'
-    )
     parser.add_argument('-w', '--workflow', nargs=1, default=[''],
         help='Workflow configuration file.')
     
@@ -364,6 +362,6 @@ if __name__ == '__main__':
     merge = args.pop('merge')[0] if 'merge' in args else ''
     workflow = args.pop('workflow')[0] if 'workflow' in args else ''
     main(args.pop('infile'), args.pop('outfile'), merge,
-        workflow, args.pop('save'), args.pop('merge_by_token'))
+        workflow, args.pop('save'))
     
 
