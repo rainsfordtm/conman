@@ -109,7 +109,7 @@ class BfmTokenizer(Tokenizer):
             # underscores (probably) aren't special characters.
             # Necessary because there are occasional tokens containing
             # spaces in the BFM :-(
-            r = "[^\s'(]*[^\s'(),.!][(']?|[,.)!]|,!"
+            r = "[^\s'(]*[^\s'(),.!]'?|[,.()!]|,!"
         regex = re.compile(r)
         # Step 3: Tokenize using re.match on the string.
         toks = []
