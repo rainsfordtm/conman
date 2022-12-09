@@ -217,7 +217,10 @@ class Launcher():
                     value = self.workflow.get('merger', key, fallback='')
                     if value:
                         num_value = float(value)
-                        setattr(self.merger, key, value)
+                        setattr(self.merger, key[3:], value)
+                value = self.workflow.get('merger', 'TM_hit_end_token', fallback='')
+                if value:
+                    self.merger.hit_end_token = value
         # 5. Manage annotator settings (i.e. changing the script)
         if self.annotator:
             for key in self.workflow.options('annotator'):

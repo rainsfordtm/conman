@@ -2,6 +2,7 @@
 
 from conman.concordance import Concordance
 import tta.aligner
+import difflib # needed to change the SequenceMatcher when aligning short seqs
 
 class Merger():
     """
@@ -68,6 +69,11 @@ class TextMerger(Merger):
         The threshold to pass to the aligner. Default is 20 (aligner default).
     ratio (float):
         The minimum similarity ratio. Default is .95 (i.e. basically identical).
+    hit_end_token (string):
+        A dummy token used to mark the end of each original hit in other_cnc.
+        Used to segment the texts before calling the aligner. Actual hit
+        divisions in other_cnc are still ignored. Default is '', i.e. no
+        hit_end_tokens.
     
     Methods:
     --------
@@ -84,15 +90,16 @@ class TextMerger(Merger):
         self.aligner = None
         self.cnc, self.other_cnc = None, None
         self.threshold, self.ratio = 20, .95
+        self.hit_end_token = ''
         self._cnc_map, self._other_cnc_map = [], []
         self._cnc_list, self._other_cnc_list = [], []
         
-    def _build_maps(self):
+    def _build_maps(self, cnc_chunk, other_cnc_chunk):
         # Builds (other_)cnc_map and (other_)cnc_list objects
         # First, turn the concordance into a list of tokens.
         for cnc, l, mp in [
-            (self.cnc, self._cnc_list, self._cnc_map),
-            (self.other_cnc, self._other_cnc_list, self._other_cnc_map)
+            (cnc_chunk, self._cnc_list, self._cnc_map),
+            (other_cnc_chunk, self._other_cnc_list, self._other_cnc_map)
         ]:
             k = 0
             for j, hit in enumerate(cnc):
@@ -107,6 +114,11 @@ class TextMerger(Merger):
             threshold=self.threshold,
             ratio=self.ratio
         )
+        if self.hit_end_token:
+            # Switches off two-pass parsing for short sequences.
+            self.aligner.sequence_matcher = difflib.SequenceMatcher(
+                None, self.aligner.a, self.aligner.b, None
+            )
         try:
             self.aligner.ratio_check()
         except tta.aligner.AlignerError:
@@ -114,6 +126,35 @@ class TextMerger(Merger):
             print('Text B:' + ' '.join([x[1] for x in self._other_cnc_list[:100]]))
             raise
         self.aligner.align()
+        
+    def _chunk(self, cnc):
+        # Splits a concordance into chunks using self.hit_end_token
+        chunks, hit = [], Hit()
+        while cnc:
+            l = cnc.pop(0)
+            for tok in l:
+                if str(tok) == self.hit_end_token:
+                    chunks.append(hit)
+                    hit = []
+                else:
+                    hit.append(tok)
+        return chunks
+        
+    def _merge_chunk(self, cnc_chunk, other_cnc_chunk):
+        self._build_maps(cnc_chunk, other_cnc_chunk)
+        self._align()
+        # The .aligned attribute of the aligner is a list of tuples:
+        # - First item: token in main text
+        # - Second item: list of matching tokens in second text
+        # - Third item: comments on mismatches (which we're going to ignore here).
+        for cnc_ix, other_cnc_ixs, x in self.aligner.aligned:
+            if other_cnc_ixs: # matches some token in text b
+                cnc_address = self._cnc_map[cnc_ix]
+                other_cnc_address = self._other_cnc_map[other_cnc_ixs[0]]
+                cnc_chunk[cnc_address[0]][cnc_address[1]].tags.update(
+                    other_cnc_chunk[other_cnc_address[0]][other_cnc_address[1]].tags
+                )
+        return cnc_chunk
         
     def merge(self):
         """
@@ -126,21 +167,19 @@ class TextMerger(Merger):
             merge(self):
                 A modified cnc concordance.
         """
-        self._build_maps()
-        self._align()
-        # The .aligned attribute of the aligner is a list of tuples:
-        # - First item: token in main text
-        # - Second item: list of matching tokens in second text
-        # - Third item: comments on mismatches (which we're going to ignore here).
-        for cnc_ix, other_cnc_ixs, x in self.aligner.aligned:
-            if other_cnc_ixs: # matches some token in text b
-                cnc_address = self._cnc_map[cnc_ix]
-                other_cnc_address = self._other_cnc_map[other_cnc_ixs[0]]
-                self.cnc[cnc_address[0]][cnc_address[1]].tags.update(
-                    self.other_cnc[other_cnc_address[0]][other_cnc_address[1]].tags
-                )
+        other_cnc_chunks = self._chunk(self.other_cnc)
+        if len(other_cnc_chunks) != len(self.cnc):
+            # Not the same number of hits; can't use chunking. Run on
+            # whole concordance
+            self.cnc = self._merge_chunk(self.cnc, self.other_cnc)
+        else:
+            for i, hit in enumerate(self.cnc):
+                other_cnc_chunk = other_cnc_chunks.pop(0)
+                cnc_chunk = self._merge_chunk([hit], other_cnc_chunk)
+                # Update the hit in self.cnc
+                self.cnc[i] = cnc_chunk[0]
         return self.cnc
-
+        
 class ConcordanceMerger(Merger):
     """
     Class used to merge two concordance.Concordance objects. Matching
