@@ -33,7 +33,7 @@ class Merger():
         }
         if merger_type not in MERGER_TYPE_TO_CLASS_MAP:
               raise ValueError('Bad merger type {}'.format(merger_type))
-        return IMPORTER_TYPE_TO_CLASS_MAP[importer_type]()
+        return MERGER_TYPE_TO_CLASS_MAP[merger_type]()
         
     def __init__(self):
         """
