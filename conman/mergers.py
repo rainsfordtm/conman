@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from conman.concordance import Concordance
+from conman.concordance import Concordance, Hit
 import tta.aligner
 import difflib # needed to change the SequenceMatcher when aligning short seqs
 
@@ -96,7 +96,10 @@ class TextMerger(Merger):
         
     def _build_maps(self, cnc_chunk, other_cnc_chunk):
         # Builds (other_)cnc_map and (other_)cnc_list objects
-        # First, turn the concordance into a list of tokens.
+        # First, reset the maps, in case we're calling this multiple times
+        self._cnc_map, self._other_cnc_map = [], []
+        self._cnc_list, self._other_cnc_list = [], []
+        # Now, turn the concordance into a list of tokens.
         for cnc, l, mp in [
             (cnc_chunk, self._cnc_list, self._cnc_map),
             (other_cnc_chunk, self._other_cnc_list, self._other_cnc_map)
@@ -116,7 +119,7 @@ class TextMerger(Merger):
         )
         if self.hit_end_token:
             # Switches off two-pass parsing for short sequences.
-            self.aligner.sequence_matcher = difflib.SequenceMatcher(
+            self.aligner.sequence_matcher = tta.aligner.OnePassSequenceMatcher(
                 None, self.aligner.a, self.aligner.b, None
             )
         try:
@@ -125,7 +128,11 @@ class TextMerger(Merger):
             print('Text A:' + ' '.join([x[1] for x in self._cnc_list[:100]]))
             print('Text B:' + ' '.join([x[1] for x in self._other_cnc_list[:100]]))
             raise
-        self.aligner.align()
+        if self.hit_end_token:
+            # Turn off aligner messages if it's being run 1000s of times
+            self.aligner.align(verbose=False)
+        else:
+            self.aligner.align(verbose=True)
         
     def _chunk(self, cnc):
         # Splits a concordance into chunks using self.hit_end_token
@@ -135,7 +142,7 @@ class TextMerger(Merger):
             for tok in l:
                 if str(tok) == self.hit_end_token:
                     chunks.append(hit)
-                    hit = []
+                    hit = Hit()
                 else:
                     hit.append(tok)
         return chunks
@@ -175,7 +182,7 @@ class TextMerger(Merger):
         else:
             for i, hit in enumerate(self.cnc):
                 other_cnc_chunk = other_cnc_chunks.pop(0)
-                cnc_chunk = self._merge_chunk([hit], other_cnc_chunk)
+                cnc_chunk = self._merge_chunk([hit], [other_cnc_chunk])
                 # Update the hit in self.cnc
                 self.cnc[i] = cnc_chunk[0]
         return self.cnc

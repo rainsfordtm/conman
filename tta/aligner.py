@@ -103,6 +103,18 @@ class SequenceMatcher(difflib.SequenceMatcher):
                     oc[3] + b_ix, oc[4] + b_ix
                 ))
         return ocs
+        
+class OnePassSequenceMatcher(SequenceMatcher):
+    """
+    Gets rid of pass1, applying pass2 to the whole sequence of text.
+    """
+    
+    def pass1(self, threshold=20):
+        self.aligners = [(
+            0, 0,
+            difflib.SequenceMatcher(None, self.a, self.b, None)
+        )]
+
 
 class Aligner():
     
@@ -137,7 +149,7 @@ class Aligner():
         self.threshold=threshold
         self.ratio=ratio
         
-    def align(self):
+    def align(self, verbose=True):
         
         def get_ixs(a):
             # 2. Generate first ix list
@@ -171,13 +183,16 @@ class Aligner():
         sm = self.string_matcher.string_matcher
         # Group op_codes by a_item
         
-        print('Running diff (may take a while)...')
-        print('Pass 1')
+        if verbose:
+            print('Running diff (may take a while)...')
+            print('Pass 1')
         self.sequence_matcher.pass1(self.threshold)
-        print('Pass 2')
+        if verbose:
+            print('Pass 2')
         ocs = self.sequence_matcher.get_opcodes(self.threshold)
         
-        print('Mapping opcodes on to tokens')
+        if verbose:
+            print('Mapping opcodes on to tokens')
         oc_by_aix = [[a_ixs.pop(0), []]]
         while a_ixs:
             next_ix = a_ixs.pop(0)
@@ -201,13 +216,14 @@ class Aligner():
         #with open('b.txt', 'w') as f:
         #    f.write(self.b)
         
-        print('Iterating over {} a_tokens to match up to b_tokens'.format(len(oc_by_aix)))           
+        if verbose:
+            print('Iterating over {} a_tokens to match up to b_tokens'.format(len(oc_by_aix)))           
         # Iterate over tokens to assign matches
         self.aligned = []
         b_tokens = self.b_list[:]
         b_token = b_tokens.pop(0)
         for i, oc_ix in enumerate(oc_by_aix):
-            if i % 1000 == 0: print('{} of {} tokens complete'.format(i, len(oc_by_aix)))
+            if verbose and i % 1000 == 0: print('{} of {} tokens complete'.format(i, len(oc_by_aix)))
             # Set up variables 
             a_token = self.a_list[i]
             ocs = oc_ix[1]

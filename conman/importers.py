@@ -327,6 +327,12 @@ class TokenListImporter(Importer):
                     hit = Hit(l)
                     self.concordance.append(hit)
                     l = []
+            # If there are no hit end tokens, we basically get a concordance
+            # with a single hit. So we need to store whatever's left in l.
+            if l:
+                hit = Hit(l)
+                self.concordance.append(hit)
+                l = []
         return self.concordance
         
 class ConllImporter(TokenListImporter):
