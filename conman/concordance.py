@@ -137,6 +137,9 @@ class Hit(collections.UserList):
         Pointer to the concordance in which the hit is contained. Default is
         None.
         
+    core_cx (list) :
+        List of tokens forming part of the core context of the keyword.
+        
     kws (list) :
         List of the keyword tokens.
         
@@ -177,6 +180,7 @@ class Hit(collections.UserList):
     LCX = 1
     RCX = 2
     KEYWORDS = 3
+    CORE_CX = 4
     
     def __init__(self, l = [], kws = [], uuid = None):
         """
@@ -191,6 +195,7 @@ class Hit(collections.UserList):
         l = [make_token(s) for s in l]
         collections.UserList.__init__(self, l)
         self.kws = kws
+        self.core_cx = []
         self.concordance, self.tags, self.ref = None, {}, ''
         self._uuid = make_uuid(uuid) if uuid else uuid4()
         
@@ -251,6 +256,8 @@ class Hit(collections.UserList):
             return [tok for tok in self.data]
         if tok_constant == self.KEYWORDS:
             return [tok for tok in self.kws]
+        if tok_constant == self.CORE_CX:
+            return [tok for tok in self.CORE_CX]
         if not self.kws:
             # No context possible if there are no keywords
             return []
@@ -318,7 +325,7 @@ class Hit(collections.UserList):
                 return tok_fmt.format(tok)
             except:
                 return str(tok)
-        
+                
     def to_string(self, 
             tok_constant = 0,
             delimiter = ' ', 

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import csv, os.path
+import csv, os.path, re
 
 class Exporter():
     """
@@ -12,6 +12,12 @@ class Exporter():
     -----------
     encoding (str):
         Name of codec to use to write the exported file. Default is utf-8.
+        
+    core_cx_delim (regex):
+        Regex defining tokens which act as delimiters on the core context
+        around the hit. If set, only the core context will be exported,
+        although the full context will be maintained in the concordance itself.
+        Default is '', i.e. no core context applied
 
     kw_fmt(str):
         Format string used to format each keyword. Takes a single positional
@@ -36,6 +42,10 @@ class Exporter():
         Base method for exporting a concordance by calling the 
         exporter-specific _export method, having first split the concordance
         if necessary.
+        
+    set_core_context(self, cnc):
+        Marks the CORE_CX attribute on tokens surrounding the hit that are
+        required to be exported.
     """
     
     def __init__(self):
@@ -44,6 +54,7 @@ class Exporter():
         """
         self.encoding = 'utf-8'
         self.kw_fmt = '{0}'
+        self.core_cx_delim = []
         self.split_hits = 0
         self.tok_fmt = '{0}'
         self.tok_delimiter = ' '
@@ -76,6 +87,7 @@ class Exporter():
             path (str):                     File name
             encoding (str):                 Character encoding
         """
+        if self.core_cx_delim: cnc = self.set_core_context(cnc)
         if self.split_hits:
             cncs = self._splitter(cnc)
             split_path = os.path.splitext(path)
@@ -87,7 +99,40 @@ class Exporter():
                 self._export(cnc, path)
         else:
             self._export(cnc, path)
+            
+    def set_core_context(self, cnc):
+        """
+        Marks tokens surrounding the keyword with the tag CORE_CX=True. Core
+        context is defined as every token to the left and right of the
+        keywords up to one of the tokens given in the core_cx_delimiters
+        argument.
         
+        Parameters:
+            cnc (concordance.Concordance):
+                Concordance to process before export.
+        """
+        if not self.core_cx_delim: return cnc   # Can't do anything
+        delim_regex = re.compile(self.core_cx_delim)
+        for hit in cnc:
+            # Reset 'CORE_CX' attribute
+            for tok in hit: tok.tags['CORE_CX'] = False
+            # If no kws, do nothing
+            if not hit.kws: return hit
+            # Set flag
+            core = False
+            # Iterate forwards, then backwards over the tokens
+            for seq in [hit, reversed(hit)]:
+                for tok in seq:
+                    # If tok is a delimiter, set core to False (end of seq)
+                    if delim_regex.fullmatch(tok): core = False
+                    # ...provided it's not a kw, for which core is always True.
+                    if hit.is_kw(tok): core = True
+                    # Set core_cx attr.
+                    # If it's False, set it to value of core
+                    if not tok['core_cx']:
+                        tok['core_cx'] = core
+                    # Otherwise do nothing, i.e. do not reset True to False.
+        return cnc
         
     def _export(self, cnc, path):
         """
@@ -335,8 +380,6 @@ class ConllExporter(Exporter):
     phead (str)    : key in tok.tags whose value should be mapped to the PHEAD column
     pdeprel (str)  : key in tok.tags whose value should be mapped to the PDEPREL column
     feats (list)   : list of keys in tok.tags whose values should be mapped to the FEATS column
-    split_hit (bool): if True, splits a hit at a punctuation mark and add self.hit_end_token
-    				or the string in self.hit_end_token to the final sentence in the hit.
     hit_end_token (str): Character used as a dummy token to delimit the hits (essential).
                     Default is 'ENDHIT'.
     
@@ -363,7 +406,6 @@ class ConllExporter(Exporter):
         self.phead = 'conll_PHEAD'
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
-        self.split_hit = False
         self.hit_end_token = 'ENDHIT'
         
     def _export(self, cnc, path, add_refs = True):

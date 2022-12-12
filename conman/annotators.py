@@ -22,6 +22,9 @@ class Annotator():
     annotate(self, cnc, **kwargs):
         Adds annotation to the concordance using the script function.
         
+    annotate_hit(self, hit):
+        Run before script on each hit in the concordance.
+        
     script(self, hit, **kwargs):
         Returns updated hit.
     """
@@ -45,15 +48,13 @@ class Annotator():
     
     def annotate(self, cnc):
         """
-        annotate(self, cnc, **kwargs):
-            Applies the transformations given in self.script to each hit in
-            the concordance.
+        Calls self.annotate_hit on each hit in the concordance.
             
         Parameters:
             cnc (conman.concordance.Concordance):
                 The concordance to be annotated.
             **kwargs:
-                **kwargs to be passed to self.script.
+                **kwargs to be passed to self.annotate_hit.
                 
         Returns:
             annotate(self, cnc, **kwargs) :
@@ -63,8 +64,19 @@ class Annotator():
             # counter for very large cncs
             if len(cnc) > 10000 and i // 10000 == i / 10000 and i > 0:
                 print('Annotating hit {} of {}'.format(str(i), str(len(cnc))))
-            hit = self.script(hit, **self.kwargs)
+            hit = self.annotate_hit(hit)
         return cnc
+        
+    def annotate_hit(self, hit):
+        """
+        Calls self.script on each hit in the concordance. The default 
+        method does nothing else.
+        
+        Parameters:
+            hit (conman.concordance.Hit):
+                The Hit to be annotated.
+        """
+        return self.script(hit, **self.kwargs)
         
     def script(self, hit, **kwargs):
         """
@@ -79,6 +91,50 @@ class Annotator():
         """
         return hit
         
+class CoreContextAnnotator(Annotator):
+    """
+    Annotator which populates the CORE_CX list of a hit from the list of 
+    tokens returned by the script.
+    """
+    
+    def annotate_hit(self, hit):
+        l = self.script(hit, **self.kwargs)
+        l = list(l) # in case script has returned a hit object
+        hit.core_cx = l
+        return hit
+        
+    def script(self, hit, **kwargs):
+        # If no kws, return empty list.
+        if not hit.kws: return []
+        # Set flag
+            core = False
+        # Iterate forwards, then backwards over the tokens
+        passes = []
+        for seq in [hit, reversed(hit)]:
+            l = []
+            for tok in seq:
+                # If tok is a delimiter, set core to False (end of seq)
+                if tok in delimiters:
+                    # not in core...
+                    core = False
+                # ...provided it's not a kw, for which core is always True.
+                for kw in hit.kws:
+                    if kw is tok:
+                        core = True
+                l.append(core)
+            passes.append(l)
+        # Reverse the second pass in place
+        passes[1].reverse()
+        # Merge into a single list of boolean values
+        bools = []
+        for pass1, pass2 in zip(passes[0], passes[1]):
+            bools.append(True) if pass1 or pass2 else l.append(False)
+        # Make token list
+        l = []
+        for tok, val in zip(list(hit), l):
+            if val: l.append(tok)
+        return l
+
 class KeywordTagAnnotator(Annotator):
     """
     Annotator providing a script method to project tags from the keywords up
