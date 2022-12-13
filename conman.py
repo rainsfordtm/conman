@@ -197,7 +197,7 @@ class Launcher():
         # 4. Read merger section
         if self.path_other:
             if isinstance(self.merger, ConcordanceMerger):
-                for key in ['CM_add_hits', 'CM_del_hits', 'CM_core_cx']:
+                for key in ['CM_add_hits', 'CM_del_hits']:
                     value = self.workflow.get('merger', key, fallback='')
                     if value.lower() == 'true':
                         setattr(self.merger, key[3:], True)
@@ -211,6 +211,9 @@ class Launcher():
                     value = self.workflow.get('merger', 'CM_update_token_tags', fallback='')
                     if value.lower() == 'true':
                         self.merger.token_merger.update_tags = True
+                    value = self.workflow.get('merger', 'CM_core_cx', fallback='')
+                    if value.lower() == 'true':
+                        self.merger.token_merger.core_cx = True
                     value = self.workflow.get('merger', 'CM_tok_id_tag', fallback='')
                     if value:
                         self.merger.token_merger.id_tag = value
