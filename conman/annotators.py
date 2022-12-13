@@ -37,6 +37,7 @@ class Annotator():
         
         ANNOTATOR_TYPE_TO_CLASS_MAP = {
           'Annotator':  Annotator,
+          'CoreContextAnnotator': CoreContextAnnotator,
           'KeywordTagAnnotator': KeywordTagAnnotator
         }
         if annotator_type not in ANNOTATOR_TYPE_TO_CLASS_MAP:

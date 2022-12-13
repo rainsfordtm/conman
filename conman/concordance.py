@@ -139,6 +139,9 @@ class Hit(collections.UserList):
         
     core_cx (list) :
         List of tokens forming part of the core context of the keyword.
+        The core context includes the keywords and immediately surrounding
+        context; its precise extent is determined by the script used in the
+        CoreContextAnnotator which creates it.
         
     kws (list) :
         List of the keyword tokens.

@@ -1,6 +1,18 @@
 #!/usr/bin/python3
 
-import csv, os.path, re
+import csv, os.path
+
+class Error(Exception):
+    """
+    Parent class for errors defined in this module.
+    """
+    pass
+
+class ExportError(Error):
+    """
+    Raised where some aspect of the export fails.
+    """
+    pass
 
 class Exporter():
     """
@@ -13,11 +25,11 @@ class Exporter():
     encoding (str):
         Name of codec to use to write the exported file. Default is utf-8.
         
-    core_cx_delim (regex):
-        Regex defining tokens which act as delimiters on the core context
-        around the hit. If set, only the core context will be exported,
-        although the full context will be maintained in the concordance itself.
-        Default is '', i.e. no core context applied
+    core_cx (bool):
+        If True, exports only the keywords and the core context surrounding
+        each Hit. Core context must first be identified by running a 
+        CoreContextAnnotator, otherwise this will trigger an ExportError.
+        Default is False.
 
     kw_fmt(str):
         Format string used to format each keyword. Takes a single positional
@@ -43,9 +55,9 @@ class Exporter():
         exporter-specific _export method, having first split the concordance
         if necessary.
         
-    set_core_context(self, cnc):
-        Marks the CORE_CX attribute on tokens surrounding the hit that are
-        required to be exported.
+    get_tokens(self, hit):
+        Returns the tokens in the hit as a list while taking account of the 
+        core context setting.
     """
     
     def __init__(self):
@@ -54,7 +66,7 @@ class Exporter():
         """
         self.encoding = 'utf-8'
         self.kw_fmt = '{0}'
-        self.core_cx_delim = []
+        self.core_cx = False
         self.split_hits = 0
         self.tok_fmt = '{0}'
         self.tok_delimiter = ' '
@@ -87,7 +99,6 @@ class Exporter():
             path (str):                     File name
             encoding (str):                 Character encoding
         """
-        if self.core_cx_delim: cnc = self.set_core_context(cnc)
         if self.split_hits:
             cncs = self._splitter(cnc)
             split_path = os.path.splitext(path)
@@ -100,40 +111,25 @@ class Exporter():
         else:
             self._export(cnc, path)
             
-    def set_core_context(self, cnc):
+    def get_tokens(self, hit):
         """
-        Marks tokens surrounding the keyword with the tag CORE_CX=True. Core
-        context is defined as every token to the left and right of the
-        keywords up to one of the tokens given in the core_cx_delimiters
-        argument.
+        Returns the tokens in the hit relevant for the export, taking account
+        of core context setting. Raises ExportError if nothing found.
         
         Parameters:
-            cnc (concordance.Concordance):
-                Concordance to process before export.
+            hit (concordance.Hit):  Hit to export
+            
+        Returns:
+            List of tokens. 
         """
-        if not self.core_cx_delim: return cnc   # Can't do anything
-        delim_regex = re.compile(self.core_cx_delim)
-        for hit in cnc:
-            # Reset 'CORE_CX' attribute
-            for tok in hit: tok.tags['CORE_CX'] = False
-            # If no kws, do nothing
-            if not hit.kws: return hit
-            # Set flag
-            core = False
-            # Iterate forwards, then backwards over the tokens
-            for seq in [hit, reversed(hit)]:
-                for tok in seq:
-                    # If tok is a delimiter, set core to False (end of seq)
-                    if delim_regex.fullmatch(tok): core = False
-                    # ...provided it's not a kw, for which core is always True.
-                    if hit.is_kw(tok): core = True
-                    # Set core_cx attr.
-                    # If it's False, set it to value of core
-                    if not tok['core_cx']:
-                        tok['core_cx'] = core
-                    # Otherwise do nothing, i.e. do not reset True to False.
-        return cnc
-        
+        l = hit.get_tokens(hit.CORE_CX if self.core_cx else hit.TOKENS)
+        if not l:
+            raise ExportError(
+                'Nothing to export. Check core context settings\n.' + \
+                'Hit: ' + hit.to_string(hit.TOKENS)
+            )
+        return l
+            
     def _export(self, cnc, path):
         """
         Exports concordance cnc to path in a tabular format.
@@ -145,12 +141,18 @@ class Exporter():
         """
         with open(path, 'w', encoding=self.encoding, errors='replace') as f:
             for hit in cnc:
-                f.write(hit.to_string(
-                    hit.TOKENS,
+                s = hit.to_string(
+                    hit.CORE_CX if self.core_cx else hit.TOKENS,
                     delimiter=self.tok_delimiter,
                     tok_fmt=self.tok_fmt,
-                    kw_fmt=self.kw_fmt))
-                f.write('\n')
+                    kw_fmt=self.kw_fmt
+                )
+                if not s:
+                    raise ExportError(
+                        'Nothing to export. Check core context settings\n.' + \
+                        'Hit: ' + hit.to_string(hit.TOKENS)
+                    )
+                f.write(s + '\n')
                 
     def _splitter(self, cnc):
         """
@@ -200,12 +202,18 @@ class TokenListExporter(Exporter):
         """
         with open(path, 'w', encoding=self.encoding, errors='replace') as f:
             for hit in cnc:
-                f.write(hit.to_string(
-                    hit.TOKENS,
+                s = hit.to_string(
+                    hit.CORE_CX if self.core_cx else hit.TOKENS,
                     delimiter='\n',
                     tok_fmt=self.tok_fmt,
-                    kw_fmt=self.kw_fmt))
-                f.write('\n' + self.hit_end_token + '\n')
+                    kw_fmt=self.kw_fmt
+                )
+                if not s:
+                    raise ExportError(
+                        'Nothing to export. Check core context settings\n.' + \
+                        'Hit: ' + hit.to_string(hit.TOKENS)
+                    )
+                f.write(s + '\n' + self.hit_end_token + '\n')
                 
 class LGermExporter(TokenListExporter):
     """
@@ -232,7 +240,8 @@ class LGermExporter(TokenListExporter):
         """
         with open(path, 'w', encoding=self.encoding, errors='replace') as f:
             for hit in cnc:
-                for tok in hit:
+                toks = self.get_tokens(hit)
+                for tok in toks:
                     f.write(str(lgermsafe(tok)) + '\n')
                 f.write(self.hit_end_token + '\n')
 
@@ -345,7 +354,8 @@ class TableExporter(Exporter):
                     ('KEYWORDS', hit.KEYWORDS),
                     ('LCX', hit.LCX),
                     ('RCX', hit.RCX),
-                    ('TOKENS', hit.TOKENS)
+                    ('TOKENS', hit.TOKENS),
+                    ('CORE_CX', hit.CORE_CX) # not ideal, doesn't split R and L.
                 ]:
                     if field == special_field:
                         l.append(hit.to_string(
@@ -437,16 +447,14 @@ class ConllExporter(Exporter):
             hit_to_string(self, hit):
                 Returns a string representing the Conll table for the hit.
         """
-        s, ix_corr = '', 0
-        for ix, tok in enumerate(hit):
+        s = ''
+        toks = self.get_tokens(hit)
+        for ix, tok in enumerate(toks):
             s += '\t'.join(self.tok_to_list(tok, ix - ix_corr + 1))
-            if self.split_hit and tok in ['.', ',', ';', ':', '?', '!']:
-                s += '\n'
-                ix_corr = ix + 1
             s += '\n'
-        if self.split_hit:
+        if self.hit_end_token:
             s += '\t'.join([
-                str(ix - ix_corr + 2), #1
+                str(ix + 2), #1
                 self.hit_end_token, #2
                 '_', '_', '_', '_', '0', 'root', '_', '_' 
             ])

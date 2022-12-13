@@ -164,6 +164,8 @@ class Launcher():
             value = self.workflow.getint('exporter', 'split_hits', fallback=0)
             if value:
                 self.exporter.split_hits = value
+            value = self.workflow.getint('exporter', 'core_cx', fallback='')
+            self.exporter.core_cx = True if value.lower() == 'true' else False
             if isinstance(self.exporter, TokenListExporter):
                 value = self.workflow.get('exporter', 'TL_hit_end_token', fallback='')
                 if value:
@@ -195,10 +197,10 @@ class Launcher():
         # 4. Read merger section
         if self.path_other:
             if isinstance(self.merger, ConcordanceMerger):
-                for key in ['CM_add_hits', 'CM_del_hits']:
+                for key in ['CM_add_hits', 'CM_del_hits', 'CM_core_cx']:
                     value = self.workflow.get('merger', key, fallback='')
                 if value.lower() == 'true':
-                    setattr(self.merger, key, True)
+                    setattr(self.merger, key[3:], True)
                 value = self.workflow.get('merger', 'CM_match_by', fallback='')
                 if value in ['uuid', 'ref']: self.merger.match_by = value
                 value = self.workflow.get('merger', 'CM_update_hit_tags', fallback='')
@@ -221,6 +223,8 @@ class Launcher():
                 value = self.workflow.get('merger', 'TM_hit_end_token', fallback='')
                 if value:
                     self.merger.hit_end_token = value
+                value = self.workflow.get('merger', 'TM_core_cx', fallback='')
+                self.merger.core_cx = True if value.lower() == 'true' else False
         # 5. Manage annotator settings (i.e. changing the script)
         if self.annotator:
             for key in self.workflow.options('annotator'):

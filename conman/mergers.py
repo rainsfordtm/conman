@@ -61,6 +61,9 @@ class TextMerger(Merger):
     -----------
     aligner (tta.aligner.Aligner):
         The aligner object
+    core_cx (bool):
+        other_hit contains only tokens from the core context of hit.
+        Default is False.
     cnc (concordance.Concordance):
         Concordance to merge into
     other_cnc (concordance.Concordance):
@@ -88,6 +91,7 @@ class TextMerger(Merger):
         """
         Merger.__init__(self)
         self.aligner = None
+        self.core_cx = False
         self.cnc, self.other_cnc = None, None
         self.threshold, self.ratio = 20, .95
         self.hit_end_token = ''
@@ -99,16 +103,19 @@ class TextMerger(Merger):
         # First, reset the maps, in case we're calling this multiple times
         self._cnc_map, self._other_cnc_map = [], []
         self._cnc_list, self._other_cnc_list = [], []
-        # Now, turn the concordance into a list of tokens.
-        for cnc, l, mp in [
-            (cnc_chunk, self._cnc_list, self._cnc_map),
-            (other_cnc_chunk, self._other_cnc_list, self._other_cnc_map)
+        # Now, turn the concordance into a list of tokens, sensitive to 
+        # core_cx setting. Note that for other_cnc, core_cx is always False,
+        # the idea being of course that it contains only toks in the core_cx.
+        for cnc, l, mp, core_cx in [
+            (cnc_chunk, self._cnc_list, self._cnc_map, self.core_cx),
+            (other_cnc_chunk, self._other_cnc_list, self._other_cnc_map, False)
         ]:
             k = 0
             for j, hit in enumerate(cnc):
-                l += [(i + k, str(tok)) for i, tok in enumerate(hit)]
-                mp += [(j, i) for i in range(len(hit))]
-                k += len(hit)
+                toks = hit.get_tokens(hit.CORE_CX if core_cx else hit.TOKENS)
+                l += [(i + k, str(tok)) for i, tok in enumerate(toks)]
+                mp += [(j, i) for i in range(len(toks))]
+                k += len(toks)
                 
     def _align(self):
         # Sets up and runs the aligner. cnc_list and other_cnc_list must be set.
@@ -331,6 +338,9 @@ class TokenMerger():
     
     Attributes:
     -----------
+    core_cx (bool):
+        other_hit contains only tokens from the core context of hit.
+        Default is False.
     id_tag (str):
         Tag containing ID for the token. Must be unique within the hit.
         Default is ''.
@@ -347,12 +357,13 @@ class TokenMerger():
         Modifies the Hit hit by adding data from Hit other_hit.
     """
     
-    def __init__(self):
+    def __init__(self, core_cx=False):
         """
         Constructs all attributes needed for an instance of the class.
         """
         self.id_tag = ''
         self.update_tags = False
+        self.core_cx = False
         
     def match_token(self, hit, other_tok, ix):
         """
@@ -368,13 +379,16 @@ class TokenMerger():
             match_token(self, hit, other_tok, ix):
                 The corresponding tok in hit, or None if not found.
         """
+        # Extract the core context of hit if running in core context mode
+        # otherwise use all the tokens.
+        toks = hit.get_tokens(hit.CORE_CX if self.core_cx else hit.TOKENS)
         # Use id_tag if one is set, and return None if there's no matching ID.
         if self.id_tag and self.id_tag in other_tok.tags:
             other_id = other_tok.tags[self.id_tag]
-            l = list(filter(lambda x: x.tags.get(self.id_tag) == other_id, hit))
+            l = list(filter(lambda x: x.tags.get(self.id_tag) == other_id, toks))
             return l[0] if l else None
         # Otherwise, use the index
-        return hit[ix] if ix < len(hit) else None
+        return toks[ix] if ix < len(hit) else None
         
     def merge(self, hit, other_hit):
         """
