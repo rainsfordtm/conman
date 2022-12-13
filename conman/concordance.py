@@ -260,7 +260,7 @@ class Hit(collections.UserList):
         if tok_constant == self.KEYWORDS:
             return [tok for tok in self.kws]
         if tok_constant == self.CORE_CX:
-            return [tok for tok in self.CORE_CX]
+            return [tok for tok in self.core_cx]
         if not self.kws:
             # No context possible if there are no keywords
             return []

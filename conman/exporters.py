@@ -450,7 +450,7 @@ class ConllExporter(Exporter):
         s = ''
         toks = self.get_tokens(hit)
         for ix, tok in enumerate(toks):
-            s += '\t'.join(self.tok_to_list(tok, ix - ix_corr + 1))
+            s += '\t'.join(self.tok_to_list(tok, ix + 1))
             s += '\n'
         if self.hit_end_token:
             s += '\t'.join([

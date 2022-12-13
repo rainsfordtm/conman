@@ -164,7 +164,7 @@ class Launcher():
             value = self.workflow.getint('exporter', 'split_hits', fallback=0)
             if value:
                 self.exporter.split_hits = value
-            value = self.workflow.getint('exporter', 'core_cx', fallback='')
+            value = self.workflow.get('exporter', 'core_cx', fallback='')
             self.exporter.core_cx = True if value.lower() == 'true' else False
             if isinstance(self.exporter, TokenListExporter):
                 value = self.workflow.get('exporter', 'TL_hit_end_token', fallback='')
@@ -199,8 +199,8 @@ class Launcher():
             if isinstance(self.merger, ConcordanceMerger):
                 for key in ['CM_add_hits', 'CM_del_hits', 'CM_core_cx']:
                     value = self.workflow.get('merger', key, fallback='')
-                if value.lower() == 'true':
-                    setattr(self.merger, key[3:], True)
+                    if value.lower() == 'true':
+                        setattr(self.merger, key[3:], True)
                 value = self.workflow.get('merger', 'CM_match_by', fallback='')
                 if value in ['uuid', 'ref']: self.merger.match_by = value
                 value = self.workflow.get('merger', 'CM_update_hit_tags', fallback='')

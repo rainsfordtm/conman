@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import re
+
 class Annotator():
     """
     Base class used to add annotation to a hit. The class method "script",
@@ -104,24 +106,25 @@ class CoreContextAnnotator(Annotator):
         hit.core_cx = l
         return hit
         
-    def script(self, hit, **kwargs):
+    def script(self, hit, delim_pattern=''):
         # If no kws, return empty list.
         if not hit.kws: return []
         # Set flag
-            core = False
+        core = False
+        # Compile regex
+        regex = re.compile(delim_pattern)
         # Iterate forwards, then backwards over the tokens
         passes = []
         for seq in [hit, reversed(hit)]:
             l = []
             for tok in seq:
                 # If tok is a delimiter, set core to False (end of seq)
-                if tok in delimiters:
+                if regex.fullmatch(str(tok)):
                     # not in core...
                     core = False
                 # ...provided it's not a kw, for which core is always True.
-                for kw in hit.kws:
-                    if kw is tok:
-                        core = True
+                if hit.is_kw(tok):
+                    core = True
                 l.append(core)
             passes.append(l)
         # Reverse the second pass in place
@@ -129,10 +132,10 @@ class CoreContextAnnotator(Annotator):
         # Merge into a single list of boolean values
         bools = []
         for pass1, pass2 in zip(passes[0], passes[1]):
-            bools.append(True) if pass1 or pass2 else l.append(False)
+            bools.append(True) if pass1 or pass2 else bools.append(False)
         # Make token list
         l = []
-        for tok, val in zip(list(hit), l):
+        for tok, val in zip(list(hit), bools):
             if val: l.append(tok)
         return l
 
