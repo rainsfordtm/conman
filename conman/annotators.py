@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import re
+from lgerm.lgerm import LGermFilterer
 
 class Annotator():
     """
@@ -40,7 +41,8 @@ class Annotator():
         ANNOTATOR_TYPE_TO_CLASS_MAP = {
           'Annotator':  Annotator,
           'CoreContextAnnotator': CoreContextAnnotator,
-          'KeywordTagAnnotator': KeywordTagAnnotator
+          'KeywordTagAnnotator': KeywordTagAnnotator,
+          'LgermFilterAnnotator': LgermFilterAnnotator
         }
         if annotator_type not in ANNOTATOR_TYPE_TO_CLASS_MAP:
               raise ValueError('Bad annotator type {}'.format(annotator_type))
@@ -163,4 +165,37 @@ class KeywordTagAnnotator(Annotator):
                 print(hit.kws)
                 raise
         return hit
+        
+class LgermFilterAnnotator(Annotator):
+    """
+    Annotator which disambiguates LGeRM lemmas encoded as lgerm_out
+    on the tokens. Calls lgerm.lgerm.LgermFilterer.
+    """
+    
+    def script(self, hit, pos_tag='',
+        kw_tag_to_hit=True
+        lower_case=True,
+        prioritize_frequent=True,
+        strip_numbers=True
+    ):
+        # initialize filterer
+        filterer = LgermFilterer()
+        for tok in hit:
+            # Check the necessary information is tagged on the token
+            if not 'lgerm_out' or not pos_tag in tok.tags: continue
+            lemmas = filterer.filter_lemmas(
+                str(tok), tok.tags[pos_tag], tok.tags['lgerm_out'],
+                MAPPING_CATTEX, MAPPING_LGERM
+            )
+            lemmas = filterer.refine_lemmas(
+                lemmas, 
+                lower_case=lower_case,
+                prioritize_frequent=prioritize_frequent,
+                strip_numbers=strip_numbers
+            )
+            tok.tags['lemma_lgerm'] = '|'.join(lemmas)
+        if kw_tag_to_hit:
+            return KeywordTagAnnotator.script(None, hit, tags=['lemma_lgerm'])
+        else:
+            return hit
         
