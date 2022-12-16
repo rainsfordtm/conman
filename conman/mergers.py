@@ -113,9 +113,19 @@ class TextMerger(Merger):
             k = 0
             for j, hit in enumerate(cnc):
                 toks = hit.get_tokens(hit.CORE_CX if core_cx else hit.TOKENS)
-                l += [(i + k, str(tok)) for i, tok in enumerate(toks)]
-                mp += [(j, i) for i in range(len(toks))]
-                k += len(toks)
+                # Set the offset if the core context doesn't start at
+                # the first token by incrementing k
+                if core_cx:
+                    offset = hit.get_ix('start', hit.CORE_CX)
+                else:
+                    offset = 0
+                l += [(i + k + offset, str(tok)) for i, tok in enumerate(toks)]
+                # Map must include an entry for every token in the cnc
+                # even if running in core context mode.
+                mp += [(j, i) for i in range(len(hit))]
+                # Increment k by the full length of the hit, not length of
+                # toks.
+                k += len(hit)
                 
     def _align(self):
         # Sets up and runs the aligner. cnc_list and other_cnc_list must be set.

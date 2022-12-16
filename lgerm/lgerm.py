@@ -170,7 +170,7 @@ class LgermFilterer():
         for d in table:
             l = self.filter_lemmas(
                 d['word'], d['cattex_pos'], d['lgerm_out'],
-                MAPPING_CATTEX, MAPPING_LGERM
+                self.MAPPING_CATTEX, self.MAPPING_LGERM
             )
             d['lgerm_filtered'] = '|'.join(self.refine_lemmas(l))
         # Write the file
@@ -221,10 +221,10 @@ class LgermFilterer():
         if prioritize_frequent:
             # Get the union of the set of frequent lemmas and the set
             # of lemmas
-            st = set(lemmas) & FREQUENT_LEMMAS
+            st = set(lemmas) & self.FREQUENT_LEMMAS
             if st:
                 # add parentheses to infrequent lemmas            
-                st2 = set(lemmas) - FREQUENT_LEMMAS
+                st2 = set(lemmas) - self.FREQUENT_LEMMAS
                 lemmas = strip_numbers(list(st)) + ['(' + x + ')' for x in strip_numbers(list(st2))]
             else:
                 lemmas = strip_numbers(lemmas)

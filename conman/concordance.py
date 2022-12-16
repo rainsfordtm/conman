@@ -244,6 +244,29 @@ class Hit(collections.UserList):
         
     # Other methods
     
+    def get_ix(self, sf, tok_constant=0):
+        """
+        Returns the start and end indices of the subset of tokens
+        specified by tok_constant within the hit.
+        
+        Parameters:
+            tok_constant:   A tok_constant specifying which token list to return.
+            sf (str):       Either 'start' or 'end'
+            
+        Returns:
+            get_ix(sf, tok_constant)
+                The index of the give context within the hit.
+        """
+        toks = self.get_tokens(tok_constant)
+        if sf == 'start':
+            tok_a = toks[0]
+        elif sf == 'end':
+            tok_a = toks[-1]
+        else:
+            raise Error('sf must be "start" or "end"')
+        for i, tok_b in enumerate(self.data):
+            if tok_a is tok_b: return i
+    
     def get_tokens(self, tok_constant = 0):
         """
         Returns the specified tokens as a list.

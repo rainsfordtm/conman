@@ -333,6 +333,8 @@ class TokenListImporter(Importer):
                 hit = Hit(l)
                 self.concordance.append(hit)
                 l = []
+        print(len(self.concordance))
+        print(self.concordance[0][:100])
         return self.concordance
         
 class ConllImporter(TokenListImporter):

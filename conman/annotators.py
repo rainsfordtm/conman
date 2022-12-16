@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import re
-from lgerm.lgerm import LGermFilterer
+from lgerm.lgerm import LgermFilterer
 
 class Annotator():
     """
@@ -173,7 +173,7 @@ class LgermFilterAnnotator(Annotator):
     """
     
     def script(self, hit, pos_tag='',
-        kw_tag_to_hit=True
+        kw_tag_to_hit=True,
         lower_case=True,
         prioritize_frequent=True,
         strip_numbers=True
@@ -182,10 +182,10 @@ class LgermFilterAnnotator(Annotator):
         filterer = LgermFilterer()
         for tok in hit:
             # Check the necessary information is tagged on the token
-            if not 'lgerm_out' or not pos_tag in tok.tags: continue
+            if not 'lgerm_out' in tok.tags or not pos_tag in tok.tags: continue
             lemmas = filterer.filter_lemmas(
                 str(tok), tok.tags[pos_tag], tok.tags['lgerm_out'],
-                MAPPING_CATTEX, MAPPING_LGERM
+                filterer.MAPPING_CATTEX, filterer.MAPPING_LGERM
             )
             lemmas = filterer.refine_lemmas(
                 lemmas, 
@@ -195,7 +195,7 @@ class LgermFilterAnnotator(Annotator):
             )
             tok.tags['lemma_lgerm'] = '|'.join(lemmas)
         if kw_tag_to_hit:
-            return KeywordTagAnnotator.script(None, hit, tags=['lemma_lgerm'])
+            return KeywordTagAnnotator.script(None, hit, tags=[('lemma_lgerm', 'lemma_lgerm'), ('lgerm_out', 'lgerm_out')])
         else:
             return hit
         
