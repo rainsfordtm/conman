@@ -51,9 +51,6 @@ each time it is run.
 	4. Exporter: exports the primary concordance to an output file. If the
 	'-s' file is passed on the command line, it also saves a .cnc file
 	containing the primary concordance.
-	
-	
-	
 
 ### 1.3 Workflow files
 
