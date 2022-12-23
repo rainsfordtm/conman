@@ -115,21 +115,24 @@ def script(transformer, tree,
         for attr in attrs:
             leaf.setAttribute(attr, leaf.parentNode.getAttribute(attr))
     
-    ####################################################################
-    # 5. Create ancestors attribute (records hierarchy)
-    ####################################################################
+    #######################################################################
+    # 5. Create ancestors and ancestors_cs_id attribute (records hierarchy)
+    #######################################################################
     tree.add_leaf_attr('ancestors')
     for leaf in tree.leaves:
-        l = []
+        l1, l2 = [], []
         node = leaf.parentNode.parentNode
         while node is not tree.trunk:
-            l.append(node.getAttribute('cat'))
+            l1.append(node.getAttribute('cat'))
+            l2.append(node.getAttribute('cs_id'))
             node = node.parentNode
-        l.reverse()
-        leaf.setAttribute('ancestors', '|'.join(l))
+        l1.reverse()
+        l2.reverse()
+        leaf.setAttribute('ancestors', '|'.join(l1))
+        leaf.setAttribute('ancestors_cs_id', '|'.join(l2))
             
     ###################################################################
-    # 6. Do some very head identification to preserve structure for CoNLL
+    # 6. Do some very basic head identification to preserve structure for CoNLL
     # Uses the 'order' attribute, so will fail if leaves are removed
     # Head of an IP is the first leaf whose tag is .J, head of anything
     # else is the first word in the constituent.
