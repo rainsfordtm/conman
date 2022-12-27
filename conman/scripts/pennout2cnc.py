@@ -119,6 +119,7 @@ def script(transformer, tree,
     # 5. Create ancestors and ancestors_cs_id attribute (records hierarchy)
     #######################################################################
     tree.add_leaf_attr('ancestors')
+    tree.add_leaf_attr('ancestors_cs_id')
     for leaf in tree.leaves:
         l1, l2 = [], []
         node = leaf.parentNode.parentNode
@@ -130,9 +131,48 @@ def script(transformer, tree,
         l2.reverse()
         leaf.setAttribute('ancestors', '|'.join(l1))
         leaf.setAttribute('ancestors_cs_id', '|'.join(l2))
+        
+    ############################################################################
+    # 6. Create deep_ancestors and deep_ancestors_cs_id (records trace hierarchy
+    ############################################################################
+    tree.add_leaf_attr('deep_ancestors')
+    tree.add_leaf_attr('deep_ancestors_cs_id')
+    tree.add_leaf_attr('deep_ancestor_type')
+    for leaf in tree.leaves:
+        l1, l2, ds_types = [], [], []
+        node = leaf.parentNode.parentNode
+        # Repeat the same iteration, but follow all contacts to build a
+        # ds hierarchy.
+        while node is not tree.trunk and len(ds_types) < 100: # check on l1 to avoid infinite recursion
+            contacts = tree.get_contacts(node)
+            if contacts: # ensures only lowest contact per parse is followed.
+                target = tree.get_target(contacts[0])
+                # target is a leaf; its value is the type of link
+                ds_types.append(target.getAttribute('value'))
+                node = target.parentNode # branching containing *T*, *ICH*
+            else:
+                # NOTE: it is CORRECT that no appending takes place if a 
+                # contact is found. The Penn format decrees that the
+                # constituent with the index has the same status as the 
+                # constituent containing the trace or ICH, so to get a 
+                # true deep hierarchy, in which immediate dominance is
+                # correctly interpreted, it must be skipped.
+                l1.append(node.getAttribute('cat'))
+                l2.append(node.getAttribute('cs_id'))
+                node = node.parentNode
+        l1.reverse()
+        l2.reverse()
+        ds_types.reverse()
+        # Only do anything with this if some kind of contact has been found,
+        # i.e. ds_types has some values. Otherwise it's just the same as
+        # the standard constituency hierarchy.
+        if ds_types:
+            leaf.setAttribute('deep_ancestors', '|'.join(l1))
+            leaf.setAttribute('deep_ancestors_cs_id', '|'.join(l2))
+            leaf.setAttribute('deep_ancestor_type', '|'.join(ds_types))
             
     ###################################################################
-    # 6. Do some very basic head identification to preserve structure for CoNLL
+    # 7. Do some very basic head identification to preserve structure for CoNLL
     # Uses the 'order' attribute, so will fail if leaves are removed
     # Head of an IP is the first leaf whose tag is .J, head of anything
     # else is the first word in the constituent.
@@ -168,8 +208,3 @@ def script(transformer, tree,
                         # can't update core tree attributes.
                         leaf.setAttribute(key, d[key])
     return tree
-    
-    
-    
-    
-    

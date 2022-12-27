@@ -480,6 +480,14 @@ class BaseTree(xml.dom.minidom.Document):
                 l.append(child_node)
         return l
         
+    def get_contacts(self, structure):
+        l = []
+        for child_node in structure.childNodes:
+            if child_node.localName == 'contact':
+                l.append(child_node)
+        return l
+
+        
     def fallen_leaves(self):
         return True if self.get_child_leaves(self) else False 
         
