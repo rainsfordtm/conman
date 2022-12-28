@@ -140,7 +140,11 @@ def script(transformer, tree,
     tree.add_leaf_attr('deep_ancestor_type')
     for leaf in tree.leaves:
         l1, l2, ds_types = [], [], []
-        node = leaf.parentNode.parentNode
+        # Need to start at parent node: sometimes heads appear to be scrambled
+        # without an IP. But we don't want to store this cat as an ancestor,
+        # so set a flag to be cleared after the first non-contact pass.
+        node = leaf.parentNode
+        first_pass = True
         # Repeat the same iteration, but follow all contacts to build a
         # ds hierarchy.
         while node is not tree.trunk: 
@@ -149,7 +153,7 @@ def script(transformer, tree,
                 # trace to be embedded within itself. So these must be ignored
                 # or we end up with infinite recursion.
                 print('WARNING: Ignoring deep structure in tree {}: Infinite recursion.'.format(tree.get_id()))
-                #l1, l2, ds_types = [], [], []
+                l1, l2, ds_types = [], [], []
                 break
             contacts = tree.get_contacts(node)
             if contacts and contacts[0].getAttribute('type') != '=':
@@ -160,6 +164,11 @@ def script(transformer, tree,
                 # target is a leaf; its value is the type of link
                 ds_types.append(target.getAttribute('value'))
                 node = target.parentNode # branching containing *T*, *ICH*
+            elif first_pass:
+                # Clear the "don't add this constituent" tag after the first
+                # pass at which no contacts were found.
+                first_pass = False
+                node = node.parentNode
             else:
                 # NOTE: it is CORRECT that no appending takes place if a 
                 # contact is found. The Penn format decrees that the
