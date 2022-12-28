@@ -143,9 +143,19 @@ def script(transformer, tree,
         node = leaf.parentNode.parentNode
         # Repeat the same iteration, but follow all contacts to build a
         # ds hierarchy.
-        while node is not tree.trunk and len(ds_types) < 100: # check on l1 to avoid infinite recursion
+        while node is not tree.trunk: 
+            if len(ds_types) > 100:
+                # This is necessary. Rare annotation errors can cause an *ICH*
+                # trace to be embedded within itself. So these must be ignored
+                # or we end up with infinite recursion.
+                print('WARNING: Ignoring deep structure in tree {}: Infinite recursion.'.format(tree.get_id()))
+                #l1, l2, ds_types = [], [], []
+                break
             contacts = tree.get_contacts(node)
-            if contacts: # ensures only lowest contact per parse is followed.
+            if contacts and contacts[0].getAttribute('type') != '=':
+                # This is triggered if the node has contacts and the relationship
+                # is not of Penn '=' type, which I'll assume is not relevant for
+                # deep structure, since it indicates equivalency.
                 target = tree.get_target(contacts[0])
                 # target is a leaf; its value is the type of link
                 ds_types.append(target.getAttribute('value'))
@@ -192,7 +202,7 @@ def script(transformer, tree,
                 leaf.setAttribute('conll_HEAD', str(head.getAttribute('order')))
             
     ###################################################################
-    # 7. Use the word-lemma regex to split the tokens.
+    # 8. Use the word-lemma regex to split the tokens.
     ###################################################################
     for leaf in tree.leaves:
         m = re.match(word_lemma_regex, leaf.getAttribute('value'))

@@ -109,6 +109,7 @@ class Parser():
             elif len(l) == 1:
                 self.log += 'Warning: lone index {} in tree.\n'.format(ix)
                 ix += 1
+                # print(self._bn_stack[0])
             elif len(l) > 1 and 'branch' not in [x[2] for x in l]:
                 self.log += 'Warning: index {} without parent in tree.\n'.\
                 format(ix)
@@ -184,23 +185,68 @@ class PennPsd(Parser):
         def write_d():
             nonlocal buff, id_count, id_prefix, found_list
             
-            def fl_populate(l, tag, atype='--'):
+            def fl_populate(penn_tag, elem_tag):
                 nonlocal found_list, d
                 
-                if len(l) > 1 and l[-1]:
-                    try:
-                        int(l[-1])
-                    except ValueError:
-                        pass
-                    else:
-                        found_list.append((d['id'], l[-1], tag, atype))
-                        # Update d
-                        if tag == 'branch':
-                            d['cat'] = l[0]
-                        elif tag == 'leaf':
-                            d['value'] = l[0]
-                        else:
-                            badtagcrash
+                ###############################################################
+                # Decoding Horrible Code. December 2022
+                #
+                # Original fl_populate tried to decide if the LAST segment of
+                # the tag was a digit. If it was, it concludes it's an index.
+                # Otherwise, it does nothing.
+                #
+                # There's a problem here, because in the MCVF corpus, the index
+                # and the SPE tag are sometimes the wrong way round.
+                #
+                # So in the NOT HORRIBLE CODE, fl_populate has become a more
+                # sophisticated Penn Cat parser, which populates the found_list
+                # and sorts out this bug. It now takes a string rather than 
+                # a list as its main argument.
+                ###############################################################
+                
+                # 0. First, run a regex on the Penn tag. Note that fullmatch
+                # is necessary because otherwise some IDs, which might have
+                # a number in the middle of them, will cause endless grief.
+                m = re.fullmatch(r'(.*)([\-=][0-9]+)(-SPE)?', penn_tag)
+                # 1. Is there a match? If not, fl_populate has literally
+                # nothing to do, because no index has been found
+                if not m: return
+                # 2. Rewrite the tag without the index.
+                penn_tag = m.group(1)
+                # If there's no final -SPE tag after the index, m.group(3)
+                # will be None, so need to interpret this as a string
+                # to avoid problems
+                penn_tag += m.group(3) if m.group(3) else ''
+                # 3. Store the index digit(s).
+                penn_index = m.group(2)[1:]
+                # 4. Store the type of relation, i.e. the punctuation
+                # symbol preceding the digit.
+                # A hyphen receives the null value '--'
+                penn_relation = '=' if m.group(2)[0] == '=' else '--'
+                # 5. Update the found_list
+                found_list.append((d['id'], penn_index, elem_tag, penn_relation))
+                # 6. Update the penn_tag stored in d
+                key = 'cat' if elem_tag == 'branch' else 'value'
+                d[key] = penn_tag
+                
+                ###############################################################
+                # Old fl_populate is below
+                ###############################################################
+                
+                #if len(l) > 1 and l[-1]:
+                #    try:
+                #        int(l[-1])
+                #    except ValueError:
+                #        pass
+                #    else:
+                #        found_list.append((d['id'], l[-1], tag, atype))
+                #        # Update d
+                #        if tag == 'branch':
+                #            d['cat'] = l[0]
+                #        elif tag == 'leaf':
+                #            d['value'] = l[0]
+                #        else:
+                #            badtagcrash
             
             tokens = buff.split()
             buff = '' # Initialize cs_id
@@ -234,26 +280,36 @@ class PennPsd(Parser):
                 if node_numbers:
                     d['cs_id'] = cs_id
                 ###############################################################
-                l = tokens[0].rsplit('-', 1)
-                fl_populate(l, 'branch')
-                l = tokens[0].rsplit('=', 1)
-                fl_populate(l, 'branch', '=')
                 
-                # Create extra token for all words
+                ###############################################################
+                # December 2022: Updating the Horrible Code for dealing with
+                # indices
+                ###############################################################
+                # This call to fl_populate deals with tokens[0],
+                # which is the cat tag following an open parenthesis.
+                ###############################################################
+                fl_populate(tokens[0], 'branch')
+                
+                # This bit deals with tokens.
                 if len(tokens) == 2:
                     self._bn_down(d)
                     id_count += 1
                     d = dict(
                         [('id', id_prefix + str(id_count)), 
                         ('value', tokens[1])]
-                    )                    
-                    l = tokens[1].rsplit('-', 1)
-                    if l[-1] and l[-1] in string.digits:
+                    )
+                    # Second call to fl_populate passes the token. Much
+                    # simpler now fl_populate deals with splitting off 
+                    # indices.
+                    fl_populate(tokens[1], 'leaf')
+                    # Old code is commented out below.
+                    #l = tokens[1].rsplit('-', 1)
+                    #if l[-1] and l[-1] in string.digits:
                         # Above condition is necessary to deal with the case 
                         # where a WORD is "-" (or begins "-").  If what follows
                         # the dash is not a digit, then we assume it's not an
                         # index.
-                        fl_populate(l, 'leaf')
+                    #    fl_populate(l, 'leaf')
                     self._bn_up(d)
                     return None
                 else:

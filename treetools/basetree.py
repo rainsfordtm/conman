@@ -486,7 +486,9 @@ class BaseTree(xml.dom.minidom.Document):
             if child_node.localName == 'contact':
                 l.append(child_node)
         return l
-
+        
+    def get_id(self):
+        return self.trunk.parentNode.getAttribute('id')
         
     def fallen_leaves(self):
         return True if self.get_child_leaves(self) else False 
