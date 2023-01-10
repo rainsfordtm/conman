@@ -216,7 +216,7 @@ class ConcordanceMerger(Merger):
     -----------
     add_hits (bool):
         Adds hits to the concordance from the merging concordance. Default
-        is False.
+        is True.
     del_hits (bool):
         Delete hits from the concordance which aren't found in the merging
         concordance. Uses UUIDs and therefore only applies where use_uuid is
