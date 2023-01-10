@@ -14,7 +14,7 @@ def main(infile, outfile, workflow):
     if workflow:
         wf_path = os.path.join(os.getcwd(), workflow)
     else:
-        wf_path = os.path.join(conman_path, 'workflows', 'wf_bfm2conllu.cfg')
+        wf_path = os.path.join(conman_path, 'workflows', 'wf_bfm2tokenlist.cfg')
     print('Calling ConMan')    
     s = ' '.join([conman_call, '-s', '-w', wf_path, infile, outfile])
     print(s)
@@ -25,11 +25,10 @@ if __name__ == '__main__':
         formatter_class=argparse.RawTextHelpFormatter,
         description = \
         'Uses ConMan to import a tab-delimited CSV table exported from the BFM ' + \
-        'and export the core context of each hit in CoNLL format, suitable ' + \
-        'for parsing.'
+        'and export each hit in a one token per line format for the RNN Tagger.'
     )
     parser.add_argument('infile', help='Input .csv file.')
-    parser.add_argument('outfile', help='Output .conllu file.')
+    parser.add_argument('outfile', help='Output .txt file.')
     parser.add_argument('-w', '--workflow', nargs=1, default=[''],
         help='Workflow configuration file.')
     

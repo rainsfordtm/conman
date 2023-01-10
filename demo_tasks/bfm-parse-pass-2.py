@@ -16,6 +16,8 @@ def main(infile, mergefile, outfile, workflow):
     else:
         wf_path = os.path.join(conman_path, 'workflows', 'wf_bfm-merge-conllu.cfg')
     s = ' '.join([conman_call, '-w', wf_path, '-m', mergefile, infile, outfile])
+    print('Calling ConMan')
+    print(s)
     run(s)
 
 if __name__ == '__main__':
@@ -23,10 +25,9 @@ if __name__ == '__main__':
         formatter_class=argparse.RawTextHelpFormatter,
         description = \
         'Uses ConMan to inject parsed conllu into a concordance  ' + \
-        'imported from the the BFM, annotating and displays head and deprel ' + \
-        'for each keyword.'
+        'imported from the the BFM, tagging direct objects.'
     )
-    parser.add_argument('infile', help='Input .csv file.')
+    parser.add_argument('infile', help='Input .cnc file.')
     parser.add_argument('mergefile', help='Input .conllu file.')
     parser.add_argument('outfile', help='Output .csv file.')
     parser.add_argument('-w', '--workflow', nargs=1, default=[''],

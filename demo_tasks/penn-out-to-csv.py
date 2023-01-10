@@ -16,6 +16,8 @@ def main(infile, outfile, workflow):
     else:
         wf_path = os.path.join(conman_path, 'workflows', 'wf_pennout2csv.cfg')
     s = ' '.join([conman_call, '-w', wf_path, infile, outfile])
+    print('Calling conman')
+    print(s)
     run(s)
 
 if __name__ == '__main__':

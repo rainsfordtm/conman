@@ -399,6 +399,7 @@ class TokenMerger():
             return l[0] if l else None
         # Otherwise, use the index
         return toks[ix] if ix < len(hit) else None
+
         
     def merge(self, hit, other_hit):
         """

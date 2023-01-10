@@ -93,6 +93,14 @@ you've extracted is what you really want.
 	Token-level pos and lemma tags on the keyword to a Hit-level tag.
 	+ Export the concordance using the TableExporter.
 	
+Try this out as a demo task!
+```
+# Pass 1
+demo_tasks/bfm-rnn-pass-1.py demo_tasks/bfm-rnn-pass-1.csv out.txt
+# Pass 2
+demo_tasks/bfm-rnn-pass-2.py demo_tasks/bfm-rnn-pass-2.cnc demo_tasks/bfm-rnn-pass-2.txt out.csv
+```
+	
 ## 3.2. The quick parse
 
 You've found all the tokens of the verbs you're looking for in a well-lemmatized
@@ -114,11 +122,21 @@ is present from the Conll annotation.
 	+ Use the ConllImporter as the `other_importer` to import the tagged and
 	lemmatized data as a second concordance.
 	+ Merge the two concordances using the ConcordanceMerger to inject the Conll 
-	tags into the old concordance. Set TI_hit_end_token to recognize the
+	tags into the old concordance. Set `CI_hit_end_token` to recognize the
 	special symbol used to mark the end of the hit.
 	+ Annotate the concordance using your Python script to add a tag to each
 	hit for the presence/absence of a direct object 
 	+ Export the concordance using the TableExporter.
+	
+Try this out as a demo task!
+```
+# Pass 1
+demo_tasks/bfm-parse-pass-1.py demo_tasks/bfm-parse-pass-1.csv out.conllu
+# Pass 2
+demo_tasks/bfm-parse-pass-2.py demo_tasks/bfm-parse-pass-2.cnc demo_tasks/bfm-parse-pass-2.conllu out.csv
+```
+(Observant users will note that the results are rather unsatisfactory, but this
+reflects wrong output from the parser with the sample data rather than an issue with ConMan.)
 	
 ## 3.3 The Penn .out headache
 
@@ -134,6 +152,11 @@ them.
 	identify the keyword node. Set the `lcx_regex` to split off the lemmas from
 	the form of the token.
 	+ Export the data using the TableExporter.
+	
+Try this with the demo task!
+```
+demo_tasks/penn-out-to-csv.py demo_tasks/penn-out-to-csv.out out.csv
+```
 
 # 4. Importers and Exporters
 
