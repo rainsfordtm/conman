@@ -1,0 +1,886 @@
+/*
+PREFACE:  
+Copyright 2010 Beth Randall
+Date:  Sat Jan 07 15:42:46 CET 2023
+
+command file:     mcvf-motion-verbs.q
+output file:      mcvf-motion-verbs.out
+
+remark:  PO_keyword_node_regex=,\s+(?P<keyword_node>[0-9]+)\s+V.* 
+
+definition file:  mcvf-motion-verbs.def
+node:   IP*
+query:  (IP* iDoms  V*) 
+  AND  (V* iDoms 
+   ariua@*|ariuent@*|ariuer@*|ariué@*|ariva@*|arivai@*|arivaimes@*|arivairent@*|arivaissent@*|arivait@*|arivames@*|arivamez@*|arivarent@*|arivasmes@*|arivay@*|arive@*|arivee@*|arivees@*|arivei@*|ariveient@*|ariveit@*|ariveiz@*|arivent@*|ariver@*|ariverat@*|ariverent@*|ariveroient@*|ariveroit@*|ariverons@*|ariveront@*|arives@*|arivet@*|arivexiéz@*|arivez@*|arivier@*|arivierent@*|arivoent@*|arivoie@*|arivoient@*|arivoiient@*|arivoit@*|arivot@*|arivâmes@*|arivé@*|arivée@*|arivéez@*|arivés@*|arivéz@*|arriua@*|arriuant@*|arriuarent@*|arriuast@*|arriue@*|arriuent@*|arriuer@*|arriuera@*|arriuerent@*|arriuerez@*|arriueroit@*|arriuez@*|arriuoient@*|arriuoit@*|arriué@*|arriuée@*|arriuées@*|arriva@*|arrivai@*|arrivaient@*|arrivais@*|arrivait@*|arrivames@*|arrivans@*|arrivant@*|arrivante@*|arrivantes@*|arrivantez@*|arrivants@*|arrivantz@*|arrivanz@*|arrivarent@*|arrivas@*|arrivasme@*|arrivasmes@*|arrivasmez@*|arrivasse@*|arrivassent@*|arrivasses@*|arrivassiez@*|arrivassions@*|arrivast@*|arrivastes@*|arrivat@*|arrivates@*|arrivay@*|arrivaz@*|arrive@*|arrivee@*|arrivees@*|arriveez@*|arrivent@*|arriver@*|arrivera@*|arriverai@*|arriveraie@*|arriveraient@*|arriverais@*|arriverait@*|arriveras@*|arriveray@*|arriveraye@*|arriveren@*|arriverent@*|arriverez@*|arriveriez@*|arriverions@*|arriveriés@*|arriveroent@*|arriveroi@*|arriveroie@*|arriveroient@*|arriveroies@*|arriverois@*|arriveroit@*|arriveron@*|arriverons@*|arriveront@*|arriveroy@*|arriveroye@*|arriveroyent@*|arriveroyes@*|arriveroys@*|arriveroyt@*|arriverunt@*|arriverés@*|arriveréz@*|arrives@*|arrivet@*|arrivez@*|arrivierent@*|arriviez@*|arrivions@*|arrivissions@*|arrivié@*|arriviés@*|arriviéz@*|arrivoent@*|arrivoie@*|arrivoient@*|arrivois@*|arrivoit@*|arrivoiz@*|arrivons@*|arrivoy@*|arrivoye@*|arrivoyent@*|arrivoys@*|arrivoyt@*|arrivâmes@*|arrivât@*|arrivâtes@*|arrivèrent@*|arrivé@*|arrivée@*|arrivées@*|arrivéez@*|arrivés@*|arrivéz@*|arryva@*|arryvarent@*|arryvay@*|arryve@*|arryverent@*|arryvèrent@*|arryvé@*|aryva@*|aryvent@*|aryver@*)  
+*/
+/*
+HEADER:
+source file:  1173-becket-bfm-r.lgermed.psd
+*/
+
+/~*
+Entre@l=_ENTRE_@t=PRE@rl=entre@rt=PRE
+Gravnige@l=_GRANIQUE_@t=NOMcom@rl=Gravigne@rt=NOMpro
+e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo Merc@l=_MERC_@t=NOMcom@rl=Merc@rt=NOMpro
+tart@l=_TARD_@t=ADVgen@rl=tart@rt=ADVgen a@@l=_À_@t=PRE@rl=a@rt=PRE.DETdef
+@l@l=_LE_@t=PROper@rl=à.le@rt=PRE.DETdef
+seir@l=_SOIR_@t=NOMcom@rl=soir@rt=NOMcom
+ariva@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg .@rl=.@rt=PONfrt
+(1173-BECKET-BFM-R,64.1754)
+*~/
+/*
+1 IP-MAT:  1 IP-MAT, 25 VJ, 26 ariva@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg
+*/
+(0  (1 IP-MAT (2 PP (3 P Entre@l=_ENTRE_@t=PRE@rl=entre@rt=PRE)
+		    (5 NP (6 NPRS Gravnige@l=_GRANIQUE_@t=NOMcom@rl=Gravigne@rt=NOMpro) (8 CONJO e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo) (10 NPRS Merc@l=_MERC_@t=NOMcom@rl=Merc@rt=NOMpro)))
+	      (12 ADVP-TMP (13 ADV tart@l=_TARD_@t=ADVgen@rl=tart@rt=ADVgen)
+			   (15 PP (16 P a@@l=_À_@t=PRE@rl=a@rt=PRE.DETdef)
+				  (18 NP (19 D @l@l=_LE_@t=PROper@rl=à.le@rt=PRE.DETdef) (21 NCS seir@l=_SOIR_@t=NOMcom@rl=soir@rt=NOMcom))))
+	      (23 NP-SBJ *con*)
+	      (25 VJ ariva@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg)
+	      (27 PONFP .@rl=.@rt=PONfrt))
+    (29 ID 1173-BECKET-BFM-R,64.1754))
+
+/~*
+Firent@l=_FAIRE_@t=VERcjg@rl=faire@rt=VERcjg
+les@l=_LE_@t=DETdef@rl=le@rt=DETdef porz@l=_PORT1_@t=NOMcom@rl=port@rt=NOMcom
+cergier@l=_CHARGER_CHERCHER_GRÉGIER_COURGIER2_@t=VERinf@rl=cerger@rt=VERinf
+e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo
+guaitier@l=_GUETTER_@t=VERinf@rl=gaitier@rt=VERinf
+e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo
+guarder@l=_GARDER_@t=VERinf@rl=garder@rt=VERinf ,@rl=,@rt=PONfbl
+Que@l=_QUE_@t=CONsub@rl=que@rt=CONsub ,@rl=,@rt=PONfbl
+se@l=_SI3_@t=CONsub@rl=se@rt=CONsub li@l=_LE_@t=DETdef@rl=le@rt=DETdef
+arcevesques@l=_ARCHEVÊQUE_@t=NOMcom@rl=archevêque@rt=NOMcom
+i@l=_Y2_@t=PROadv@rl=i@rt=PROadv
+volsist@l=_VOULOIR_@t=VERcjg@rl=voloir@rt=VERcjg
+ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf ,@rl=,@rt=PONfbl
+Qu'@l=_QUE_@t=CONsub@rl=que@rt=CONsub il@l=_IL_@t=PROper@rl=il@rt=PROper
+li@l=_LE_@t=PROper@rl=il@rt=PROper
+fussent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg
+encontre@l=_ENCONTRE2_@t=ADVgen@rl=encontre@rt=ADVgen ,@rl=,@rt=PONfbl
+prez@l=_PRÉ_PRÊT1_@t=NOMcom@rl=près@rt=ADVgen de@l=_DE_@t=PRE@rl=de@rt=PRE
+lui@l=_LUI_@t=PROper@rl=il@rt=PROper
+desturber@l=_DÉTOURBER_@t=VERinf@rl=détourber@rt=VERinf ,@rl=,@rt=PONfbl
+De@l=_DE_@t=PRE@rl=de@rt=PRE
+destrusser@l=_DÉTROUSSER_@t=VERinf@rl=destrousser@rt=VERinf
+ses@l=_SON4_@t=DETpos@rl=son@rt=DETpos
+hummes@l=_HOMME_@t=NOMcom@rl=homme@rt=NOMcom ,@rl=,@rt=PONfbl
+de@l=_DE_@t=PRE@rl=de@rt=PRE ses@l=_SON4_@t=DETpos@rl=son@rt=DETpos
+coffres@l=_COFFRE_@t=NOMcom@rl=coffre@rt=NOMcom
+cergier@l=_CHARGER_CHERCHER_GRÉGIER_COURGIER2_@t=VERinf@rl=cerger@rt=VERinf
+,@rl=,@rt=PONfbl De@l=_DE_@t=PRE@rl=de@rt=PRE
+prendre@l=_PRENDRE_@t=VERinf@rl=prendre@rt=VERinf
+tuz@l=_TOUT2_@t=DETind@rl=tous@rt=DETind les@l=_LE_@t=DETdef@rl=le@rt=DETdef
+briefs@l=_BREF_@t=NOMcom@rl=bref@rt=NOMcom
+que@l=_QUE_@t=PROrel@rl=que@rt=PROrel il@l=_IL_@t=PROper@rl=il@rt=PROper
+pout@l=_POUVOIR2_@t=VERcjg@rl=pouvoir@rt=VERcjg
+purchacier@l=_POURCHASSER_@t=VERinf@rl=pourchasser@rt=VERinf
+A@l=_À_@t=PRE@rl=a@rt=PRE Rome@l=_ROME_ROME_@t=NOMpro@rl=Rome@rt=NOMpro
+;@rl=;@rt=PONfbl
+(1173-BECKET-BFM-R,143.3589)
+*~/
+/*
+47 IP-INF:  47 IP-INF, 50 VX
+, 51 ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf
+*/
+
+(0  (1 IP-MAT (2 NP-SBJ *con*)
+	      (4 VJ Firent@l=_FAIRE_@t=VERcjg@rl=faire@rt=VERcjg)
+	      (6 IP-INF (7 NP-SBJ *arb*)
+			(9 NP-ACC (10 D les@l=_LE_@t=DETdef@rl=le@rt=DETdef) (12 NCPL porz@l=_PORT1_@t=NOMcom@rl=port@rt=NOMcom))
+			(14 VX (15 VX cergier@l=_CHARGER_CHERCHER_GRÉGIER_COURGIER2_@t=VERinf@rl=cerger@rt=VERinf) (17 CONJO e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo) (19 VX guaitier@l=_GUETTER_@t=VERinf@rl=gaitier@rt=VERinf) (21 CONJO e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo) (23 VX guarder@l=_GARDER_@t=VERinf@rl=garder@rt=VERinf)))
+	      (25 PON ,@rl=,@rt=PONfbl)
+	      (27 CP-ADV (28 CONJS Que@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+			 (30 PON ,@rl=,@rt=PONfbl)
+			 (32 CP-ADV (33 CP-ADV-1 (34 CONJS se@l=_SI3_@t=CONsub@rl=se@rt=CONsub)
+						 (36 IP-SUB (37 NP-SBJ (38 D li@l=_LE_@t=DETdef@rl=le@rt=DETdef) (40 NCS arcevesques@l=_ARCHEVÊQUE_@t=NOMcom@rl=archevêque@rt=NOMcom))
+							    (42 CL-PP-2 (43 CL i@l=_Y2_@t=PROadv@rl=i@rt=PROadv))
+							    (45 MDJ volsist@l=_VOULOIR_@t=VERcjg@rl=voloir@rt=VERcjg)
+							    (47 IP-INF (48 PP *ICH*-2)
+								       (50 VX ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf))))
+				    (52 PON ,@rl=,@rt=PONfbl)
+				    (54 CONJS Qu'@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+				    (56 IP-SUB (57 CP-ADV *ICH*-1)
+					       (59 NP-SBJ (60 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+					       (62 CL-NP-DTV (63 CL li@l=_LE_@t=PROper@rl=il@rt=PROper))
+					       (65 VJ fussent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg)
+					       (67 ADVP (68 ADV encontre@l=_ENCONTRE2_@t=ADVgen@rl=encontre@rt=ADVgen))
+					       (70 PON ,@rl=,@rt=PONfbl)
+					       (72 ADJP-PRD (73 ADJ prez@l=_PRÉ_PRÊT1_@t=NOMcom@rl=près@rt=ADVgen)
+							    (75 PP (76 PP (77 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+									  (79 IP-INF (80 CL-NP-ACC (81 CL lui@l=_LUI_@t=PROper@rl=il@rt=PROper))
+										     (83 VX desturber@l=_DÉTOURBER_@t=VERinf@rl=détourber@rt=VERinf)))
+								   (85 PON ,@rl=,@rt=PONfbl)
+								   (87 CONJP (88 PP (89 P De@l=_DE_@t=PRE@rl=de@rt=PRE)
+										    (91 IP-INF (92 VX destrusser@l=_DÉTROUSSER_@t=VERinf@rl=destrousser@rt=VERinf)
+											       (94 NP-ACC (95 DZ ses@l=_SON4_@t=DETpos@rl=son@rt=DETpos) (97 NCPL hummes@l=_HOMME_@t=NOMcom@rl=homme@rt=NOMcom)))))
+								   (99 PON ,@rl=,@rt=PONfbl)
+								   (101 CONJP (102 PP (103 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+										      (105 IP-INF (106 NP-ACC (107 DZ ses@l=_SON4_@t=DETpos@rl=son@rt=DETpos) (109 NCPL coffres@l=_COFFRE_@t=NOMcom@rl=coffre@rt=NOMcom))
+												  (111 VX cergier@l=_CHARGER_CHERCHER_GRÉGIER_COURGIER2_@t=VERinf@rl=cerger@rt=VERinf))))
+								   (113 PON ,@rl=,@rt=PONfbl)
+								   (115 CONJP (116 PP (117 P De@l=_DE_@t=PRE@rl=de@rt=PRE)
+										      (119 IP-INF (120 VX prendre@l=_PRENDRE_@t=VERinf@rl=prendre@rt=VERinf)
+												  (122 NP-ACC (123 Q tuz@l=_TOUT2_@t=DETind@rl=tous@rt=DETind)
+													      (125 D les@l=_LE_@t=DETdef@rl=le@rt=DETdef)
+													      (127 NCPL briefs@l=_BREF_@t=NOMcom@rl=bref@rt=NOMcom)
+													      (129 CP-REL (130 WNP-3 (131 WPRO que@l=_QUE_@t=PROrel@rl=que@rt=PROrel))
+															  (133 IP-SUB (134 NP-SBJ (135 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+																      (137 MDJ pout@l=_POUVOIR2_@t=VERcjg@rl=pouvoir@rt=VERcjg)
+																      (139 IP-INF (140 NP-ACC *T*-3)
+																		  (142 VX purchacier@l=_POURCHASSER_@t=VERinf@rl=pourchasser@rt=VERinf)
+																		  (144 PP (145 P A@l=_À_@t=PRE@rl=a@rt=PRE)
+																			  (147 NP (148 NPRS Rome@l=_ROME_ROME_@t=NOMpro@rl=Rome@rt=NOMpro)))))))))))))))
+	      (150 PONFP ;@rl=;@rt=PONfbl))
+    (152 ID 1173-BECKET-BFM-R,143.3589))
+
+/~*
+Se@l=_SI3_@t=CONsub@rl=se@rt=CONsub vus@l=_VOUS_@t=PROper@rl=vous@rt=PROper
+i@l=_Y2_@t=PROadv@rl=i@rt=PROadv
+arivez@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERcjg ,@rl=,@rt=PONfbl
+tuz@l=_TOUT2_@t=ADVgen@rl=tous@rt=PROind
+serez@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg
+detrenchiez@l=_DÉTRANCHER_@t=VERppe@rl=détrancher@rt=VERppe
+U@l=_OU1_@t=CONcoo@rl=ou@rt=CONcoo mis@l=_METTRE_@t=VERppe@rl=metre@rt=VERppe
+en@l=_EN1_@t=PRE@rl=en@rt=PRE grant@l=_GRAND_@t=ADJqua@rl=grant@rt=ADJqua
+fermine@l=_FERMINE_@t=NOMcom@rl=fermine@rt=NOMcom
+e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo en@l=_EN1_@t=PRE@rl=en@rt=PRE
+chartre@l=_CHARTE_CHARTRE_@t=NOMcom@rl=charte@rt=NOMcom
+lanciez@l=_LANCER_@t=VERppe@rl=lancier@rt=VERppe .@rl=.@rt=PONfrt
+(1173-BECKET-BFM-R,143.3607)
+*~/
+/*
+6 IP-SUB-SPE:  6 IP-SUB-SPE, 13 VJ
+, 14 arivez@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERcjg
+*/
+
+(0  (1 IP-MAT-SPE (2 IP-MAT-1-SPE (3 CP-ADV-SPE (4 CONJS Se@l=_SI3_@t=CONsub@rl=se@rt=CONsub)
+						(6 IP-SUB-SPE (7 NP-SBJ (8 PRO vus@l=_VOUS_@t=PROper@rl=vous@rt=PROper))
+							      (10 CL-PP (11 CL i@l=_Y2_@t=PROadv@rl=i@rt=PROadv))
+							      (13 VJ arivez@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERcjg)))
+				  (15 PON ,@rl=,@rt=PONfbl)
+				  (17 QP (18 Q tuz@l=_TOUT2_@t=ADVgen@rl=tous@rt=PROind))
+				  (20 NP-SBJ *con*)
+				  (22 EJ serez@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg)
+				  (24 VPP detrenchiez@l=_DÉTRANCHER_@t=VERppe@rl=détrancher@rt=VERppe))
+		  (26 CONJP (27 CONJO U@l=_OU1_@t=CONcoo@rl=ou@rt=CONcoo)
+			    (29 IP-MAT=1-SPE (30 VPP mis@l=_METTRE_@t=VERppe@rl=metre@rt=VERppe)
+					     (32 PP (33 P en@l=_EN1_@t=PRE@rl=en@rt=PRE)
+						    (35 NP (36 ADJ grant@l=_GRAND_@t=ADJqua@rl=grant@rt=ADJqua) (38 NCS fermine@l=_FERMINE_@t=NOMcom@rl=fermine@rt=NOMcom)))))
+		  (40 CONJP (41 CONJO e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+			    (43 IP-MAT=1-SPE (44 PP (45 P en@l=_EN1_@t=PRE@rl=en@rt=PRE)
+						    (47 NP (48 NCS chartre@l=_CHARTE_CHARTRE_@t=NOMcom@rl=charte@rt=NOMcom)))
+					     (50 VPP lanciez@l=_LANCER_@t=VERppe@rl=lancier@rt=VERppe)))
+		  (52 PONFP .@rl=.@rt=PONfrt))
+    (54 ID 1173-BECKET-BFM-R,143.3607))
+
+/~*
+Roberz@l=_ROBERT_@t=NOMpro@rl=Robert@rt=NOMpro
+li@l=_LE_@t=DETdef@rl=le@rt=DETdef
+segretains@l=_SECRÉTAIN_@t=NOMcom@rl=segretain@rt=NOMcom
+rest@l=_RÊTRE_@t=VERcjg@rl=restre@rt=VERcjg a@l=_À_@t=PRE@rl=a@rt=PRE
+Dovre@l=_DOUVRES_@t=NOMpro@rl=Dovre@rt=NOMpro
+arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe .@rl=.@rt=PONfrt
+(1173-BECKET-BFM-R,145.3638)
+*~/
+/*
+1 IP-MAT:  1 IP-MAT, 18 VPP
+, 19 arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe
+*/
+
+(0  (1 IP-MAT (2 NP-SBJ (3 NPRS Roberz@l=_ROBERT_@t=NOMpro@rl=Robert@rt=NOMpro)
+			(5 NP-PRN (6 D li@l=_LE_@t=DETdef@rl=le@rt=DETdef) (8 NCS segretains@l=_SECRÉTAIN_@t=NOMcom@rl=segretain@rt=NOMcom)))
+	      (10 EJ rest@l=_RÊTRE_@t=VERcjg@rl=restre@rt=VERcjg)
+	      (12 PP (13 P a@l=_À_@t=PRE@rl=a@rt=PRE)
+		     (15 NP (16 NPRS Dovre@l=_DOUVRES_@t=NOMpro@rl=Dovre@rt=NOMpro)))
+	      (18 VPP arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe)
+	      (20 PONFP .@rl=.@rt=PONfrt))
+    (22 ID 1173-BECKET-BFM-R,145.3638))
+
+/~*
+a@l=_À_@t=PRE@rl=a@rt=PRE
+Sanwiz@l=_SANGUIS_SANCIR_ENGIS_@t=X@rl=Sanwis@rt=NOMpro
+ariva@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg .@rl=.@rt=PONfrt
+(1173-BECKET-BFM-R,145.3652)
+*~/
+/*
+1 IP-MAT:  1 IP-MAT, 10 VJ, 11 ariva@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg
+*/
+
+(0  (1 IP-MAT (2 PP (3 P a@l=_À_@t=PRE@rl=a@rt=PRE)
+		    (5 NP (6 NPRS Sanwiz@l=_SANGUIS_SANCIR_ENGIS_@t=X@rl=Sanwis@rt=NOMpro)))
+	      (8 NP-SBJ *con*)
+	      (10 VJ ariva@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg)
+	      (12 PONFP .@rl=.@rt=PONfrt))
+    (14 ID 1173-BECKET-BFM-R,145.3652))
+
+/~*
+Mais@l=_MAIS1_@t=CONcoo@rl=mais@rt=CONcoo
+quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub a@@l=_À_@t=PRE@rl=a@rt=PRE.DETdef
+@s@l=_S_@t=NOMcom@rl=<unk>@rt=NOMcom
+treis@l=_TROIS_@t=DETcar@rl=trois@rt=DETcar
+reals@l=_RÉAL_@t=NOMcom@rl=roial@rt=NOMcom
+fu@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg
+mustré@l=_MONTRER_@t=VERppe@rl=montrer@rt=VERppe
+e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo
+nuncié@l=_NONCER_@t=VERppe@rl=noncer@rt=VERppe
+Qu'@l=_QUE_@t=CONsub@rl=que@rt=CONsub il@l=_IL_@t=PROper@rl=il@rt=PROper
+esteit@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg
+arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe ,@rl=,@rt=PONfbl
+mult@l=_MOULT_@t=ADVgen@rl=moult@rt=ADVgen en@l=_EN2_@t=PROadv@rl=en@rt=PROadv
+furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg
+haitié@l=_HAITER_@t=VERppe@rl=haité@rt=ADJqua .@rl=.@rt=PONfrt
+(1173-BECKET-BFM-R,145.3656)
+*~/
+/*
+31 IP-SUB:  31 IP-SUB, 37 VPP
+, 38 arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe
+*/
+
+(0  (1 IP-MAT (2 CONJO Mais@l=_MAIS1_@t=CONcoo@rl=mais@rt=CONcoo)
+	      (4 CP-ADV (5 CONJS quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub)
+			(7 IP-SUB (8 NP-DTV (9 DAT a@@l=_À_@t=PRE@rl=a@rt=PRE.DETdef) (11 D @s@l=_S_@t=NOMcom@rl=<unk>@rt=NOMcom) (13 ADJNUM treis@l=_TROIS_@t=DETcar@rl=trois@rt=DETcar) (15 NCPL reals@l=_RÉAL_@t=NOMcom@rl=roial@rt=NOMcom))
+				  (17 NP-SBJ-1 *proimp*)
+				  (19 EJ fu@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg)
+				  (21 VPP (22 VPP mustré@l=_MONTRER_@t=VERppe@rl=montrer@rt=VERppe) (24 CONJO e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo) (26 VPP nuncié@l=_NONCER_@t=VERppe@rl=noncer@rt=VERppe))
+				  (28 CP-THT=1 (29 CONJS Qu'@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+					       (31 IP-SUB (32 NP-SBJ (33 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+							  (35 EJ esteit@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg)
+							  (37 VPP arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe)))))
+	      (39 PON ,@rl=,@rt=PONfbl)
+	      (41 QP-2 (42 Q mult@l=_MOULT_@t=ADVgen@rl=moult@rt=ADVgen))
+	      (44 NP-SBJ *pro*)
+	      (46 CL-PP (47 CL en@l=_EN2_@t=PROadv@rl=en@rt=PROadv))
+	      (49 VJ furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg)
+	      (51 ADJP-PRD (52 QP *ICH*-2)
+			   (54 ADJ haitié@l=_HAITER_@t=VERppe@rl=haité@rt=ADJqua))
+	      (56 PONFP .@rl=.@rt=PONfrt))
+    (58 ID 1173-BECKET-BFM-R,145.3656))
+/*
+FOOTER
+  source file, hits/tokens/total
+  1173-becket-bfm-r.lgermed.psd	6/6/4759
+*/
+/*
+HEADER:
+source file:  1194-chievres-mcvf-p.lgermed.psd
+*/
+/*
+FOOTER
+  source file, hits/tokens/total
+  1194-chievres-mcvf-p.lgermed.psd	0/0/86
+*/
+/*
+HEADER:
+source file:  1155-eneas2-bfm-r.lgermed.psd
+*/
+
+/~*
+Quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub
+arivai@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg an@l=_EN1_@t=PRE@rl=en@rt=PRE
+cest@l=_CE2_CIST_@t=DETdem@rl=cest@rt=DETdem
+païs@l=_PAYS_@t=NOMcom@rl=päis@rt=NOMcom ,@rl=,@rt=PONfbl
+mes@l=_MON1_@t=DETpos@rl=mon@rt=DETpos
+mesages@l=_MESSAGE1_@t=NOMcom@rl=message@rt=NOMcom
+a@@l=_À_@t=PRE@rl=avoir@rt=VERcjg @l@l=_LE_@t=PROper@rl=le@rt=DETdef
+roi@l=_ROI1_@t=NOMcom@rl=roi@rt=NOMcom
+tramis@l=_TRAMETTRE_TRANSMETTRE_@t=VERppe@rl=tramettre@rt=VERppe
+,@rl=,@rt=PONfbl que@l=_QUE_@t=CONsub@rl=que@rt=PROrel
+me@l=_ME_@t=PROper@rl=je@rt=PROper
+consantist@l=_CONSENTIR_@t=VERcjg@rl=consentir@rt=VERcjg
+an@l=_EN1_@t=PRE@rl=en@rt=PRE sa@l=_SON4_@t=DETpos@rl=son@rt=DETpos
+terre@l=_TERRE1_@t=NOMcom@rl=terre@rt=NOMcom :@rl=:@rt=PONfrt
+(1155-ENEAS2-BFM-R,105.2388)
+*~/
+/*
+5 IP-SUB-SPE:  5 IP-SUB-SPE, 8 VJ
+, 9 arivai@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg
+*/
+
+(0  (1 IP-MAT-SPE (2 CP-ADV-SPE (3 CONJS Quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub)
+				(5 IP-SUB-SPE (6 NP-SBJ *pro*)
+					      (8 VJ arivai@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg)
+					      (10 PP (11 P an@l=_EN1_@t=PRE@rl=en@rt=PRE)
+						     (13 NP (14 D cest@l=_CE2_CIST_@t=DETdem@rl=cest@rt=DETdem) (16 NCS païs@l=_PAYS_@t=NOMcom@rl=päis@rt=NOMcom)))))
+		  (18 PON ,@rl=,@rt=PONfbl)
+		  (20 NP-ACC (21 DZ mes@l=_MON1_@t=DETpos@rl=mon@rt=DETpos) (23 NCPL mesages@l=_MESSAGE1_@t=NOMcom@rl=message@rt=NOMcom))
+		  (25 NP-DTV (26 DAT a@@l=_À_@t=PRE@rl=avoir@rt=VERcjg) (28 D @l@l=_LE_@t=PROper@rl=le@rt=DETdef) (30 NCS roi@l=_ROI1_@t=NOMcom@rl=roi@rt=NOMcom))
+		  (32 NP-SBJ *pro*)
+		  (34 VJ tramis@l=_TRAMETTRE_TRANSMETTRE_@t=VERppe@rl=tramettre@rt=VERppe)
+		  (36 PON ,@rl=,@rt=PONfbl)
+		  (38 CP-THT-SPE (39 CONJS que@l=_QUE_@t=CONsub@rl=que@rt=PROrel)
+				 (41 IP-SUB-SPE (42 NP-SBJ *pro*)
+						(44 CL-NP-ACC (45 CL me@l=_ME_@t=PROper@rl=je@rt=PROper))
+						(47 VJ consantist@l=_CONSENTIR_@t=VERcjg@rl=consentir@rt=VERcjg)
+						(49 PP (50 P an@l=_EN1_@t=PRE@rl=en@rt=PRE)
+						       (52 NP (53 DZ sa@l=_SON4_@t=DETpos@rl=son@rt=DETpos) (55 NCS terre@l=_TERRE1_@t=NOMcom@rl=terre@rt=NOMcom)))))
+		  (57 PONFP :@rl=:@rt=PONfrt))
+    (59 ID 1155-ENEAS2-BFM-R,105.2388))
+/*
+FOOTER
+  source file, hits/tokens/total
+  1155-eneas2-bfm-r.lgermed.psd	1/1/2941
+*/
+/*
+HEADER:
+source file:  1100-roland-mcvf-v.lgermed.psd
+*/
+/*
+FOOTER
+  source file, hits/tokens/total
+  1100-roland-mcvf-v.lgermed.psd	0/0/3976
+*/
+/*
+HEADER:
+source file:  1377-froissart-8-mcvf-p.lgermed.psd
+*/
+
+/~*
+car@l=_CAR_@t=CONcoo@rl=car@rt=CONcoo la@l=_LA_@t=NOMcom@rl=là@rt=ADVgen
+ou@l=_AVOIR1_@t=VERppe@rl=où@rt=PROrel il@l=_IL_@t=PROper@rl=il@rt=PROper
+estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg
+arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe ,@rl=,@rt=PONfbl
+il@l=_IL_@t=PROper@rl=il@rt=PROimp n'@l=_NE1_@t=ADVneg@rl=ne@rt=ADVneg
+i@l=_Y2_@t=PROadv@rl=i@rt=PROadv a@l=_AVOIR1_@t=VERcjg@rl=avoir@rt=VERcjg
+ne@l=_NE1_@t=ADVneg@rl=ne@rt=CONcoo
+port@l=_PORTER1_@t=VERcjg@rl=port@rt=NOMcom
+ne@l=_NE1_@t=ADVneg@rl=ne@rt=CONcoo
+havene@l=_HAVRE_@t=NOMcom@rl=havene@rt=NOMcom
+acoustumé@l=_ACCOUTUMER_@t=VERppe@rl=accoutumer@rt=VERppe
+d'@l=_DE_@t=PRE@rl=de@rt=PRE ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf
+fors@l=_FORS_@t=ADVgen@rl=fors@rt=ADVgen a@l=_À_@t=PRE@rl=a@rt=PRE
+l'@l=_LE_@t=DETdef@rl=le@rt=DETdef
+aventure@l=_AVENTURE_@t=NOMcom@rl=aventure@rt=NOMcom .@rl=.@rt=PONfrt
+(1377-FROISSART-8-MCVF-P,890.2415)
+*~/
+/*
+11 IP-SUB:  11 IP-SUB, 19 VPP
+, 20 arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe
+50 IP-INF:  50 IP-INF, 51 VX
+, 52 ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf
+*/
+
+(0  (1 IP-MAT (2 CONJO car@l=_CAR_@t=CONcoo@rl=car@rt=CONcoo)
+	      (4 ADVP-LOC (5 ADV la@l=_LA_@t=NOMcom@rl=là@rt=ADVgen)
+			  (7 CP-REL (8 WADVP-1 (9 WPRO ou@l=_AVOIR1_@t=VERppe@rl=où@rt=PROrel))
+				    (11 IP-SUB (12 ADVP-LOC *T*-1)
+					       (14 NP-SBJ (15 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+					       (17 EJ estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg)
+					       (19 VPP arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe))))
+	      (21 PON ,@rl=,@rt=PONfbl)
+	      (23 NP-SBJ=2 (24 PROIMP il@l=_IL_@t=PROper@rl=il@rt=PROimp))
+	      (26 NEG n'@l=_NE1_@t=ADVneg@rl=ne@rt=ADVneg)
+	      (28 CL-PP (29 CL i@l=_Y2_@t=PROadv@rl=i@rt=PROadv))
+	      (31 VJ a@l=_AVOIR1_@t=VERcjg@rl=avoir@rt=VERcjg)
+	      (33 NP-2 (34 CONJO ne@l=_NE1_@t=ADVneg@rl=ne@rt=CONcoo)
+		       (36 CODE <lb$$>@rl=clu@rt=ADJqua)
+		       (38 NCS port@l=_PORTER1_@t=VERcjg@rl=port@rt=NOMcom)
+		       (40 CONJO ne@l=_NE1_@t=ADVneg@rl=ne@rt=CONcoo)
+		       (42 NCS havene@l=_HAVRE_@t=NOMcom@rl=havene@rt=NOMcom)
+		       (44 ADJP (45 VPP acoustumé@l=_ACCOUTUMER_@t=VERppe@rl=accoutumer@rt=VERppe)
+				(47 PP (48 P d'@l=_DE_@t=PRE@rl=de@rt=PRE)
+				       (50 IP-INF (51 VX ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf)
+						  (53 PP (54 P fors@l=_FORS_@t=ADVgen@rl=fors@rt=ADVgen)
+							 (56 PP (57 P a@l=_À_@t=PRE@rl=a@rt=PRE)
+								(59 NP (60 D l'@l=_LE_@t=DETdef@rl=le@rt=DETdef) (62 NCS aventure@l=_AVENTURE_@t=NOMcom@rl=aventure@rt=NOMcom))))))))
+	      (64 PONFP .@rl=.@rt=PONfrt))
+    (66 ID 1377-FROISSART-8-MCVF-P,890.2415))
+/*
+FOOTER
+  source file, hits/tokens/total
+  1377-froissart-8-mcvf-p.lgermed.psd	2/1/2582
+*/
+/*
+HEADER:
+source file:  0842-strasbBfm-bfm-p.lgermed.psd
+*/
+/*
+FOOTER
+  source file, hits/tokens/total
+  0842-strasbBfm-bfm-p.lgermed.psd	0/0/6
+*/
+/*
+HEADER:
+source file:  1225-queste-mcvf-p.lgermed.psd
+*/
+
+/~*
+Et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub
+il@l=_IL_@t=PROper@rl=il@rt=PROper i@l=_Y2_@t=PROadv@rl=i@rt=PROadv
+fu@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg
+arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe
+a=tout@l=_ATOUT_@t=PRE@rl=alter@rt=VERcjg
+sa@l=_SON4_@t=DETpos@rl=son@rt=DETpos
+gent@l=_GENT1_@t=NOMcom@rl=gent@rt=NOMcom si@l=_SI4_@t=ADVgen@rl=si@rt=ADVgen
+manda@l=_MANDER_@t=VERcjg@rl=mander@rt=VERcjg
+a@@l=_À_@t=PRE@rl=a@rt=PRE.DETdef @u@l=_OU1_OU2_OÙ_U_@t=X@rl=<unk>@rt=NOMcom
+roi@l=_ROI1_@t=NOMcom@rl=roi@rt=NOMcom
+Crudel@l=_µCRUDEL_@t=NOMpro@rl=Crudel@rt=NOMpro
+que@l=_QUE_@t=CONsub@rl=que@rt=CONsub s'@l=_SE1_@t=PROper@rl=se@rt=CONsub
+il@l=_IL_@t=PROper@rl=il@rt=PROper ne@l=_NE1_@t=ADVneg@rl=ne@rt=ADVneg
+li@l=_LE_@t=PROper@rl=il@rt=PROper
+rendoit@l=_RENDRE_@t=VERcjg@rl=rendre@rt=VERcjg
+Josephé@l=_JOSEPHÉ_@t=NOMpro@rl=Josephe@rt=NOMpro
+il@l=_IL_@t=PROimp@rl=il@rt=PROper li@l=_LE_@t=PROper@rl=il@rt=PROper
+toudroit@l=_TOLIR_@t=VERcjg@rl=tolir@rt=VERcjg
+sa@l=_SON4_@t=DETpos@rl=son@rt=DETpos
+terre@l=_TERRE1_@t=NOMcom@rl=terre@rt=NOMcom
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo le@l=_LE_@t=PROper@rl=il@rt=PROper
+deseriteroit@l=_DÉSHÉRITER_@t=VERcjg@rl=déshériter@rt=VERcjg ,@rl=,@rt=PONfbl
+(1225-QUESTE-MCVF-P,114.2973)
+*~/
+/*
+7 IP-SUB-SPE:  7 IP-SUB-SPE, 16 VPP
+, 17 arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe
+*/
+
+(0  (1 IP-MAT-SPE (2 CONJO Et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+		  (4 CP-ADV-SPE (5 CONJS quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub)
+				(7 IP-SUB-SPE (8 NP-SBJ (9 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+					      (11 CL-PP (12 CL i@l=_Y2_@t=PROadv@rl=i@rt=PROadv))
+					      (14 EJ fu@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg)
+					      (16 VPP arivez@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe)
+					      (18 PP (19 P a=tout@l=_ATOUT_@t=PRE@rl=alter@rt=VERcjg)
+						     (21 NP (22 DZ sa@l=_SON4_@t=DETpos@rl=son@rt=DETpos) (24 NCS gent@l=_GENT1_@t=NOMcom@rl=gent@rt=NOMcom)))))
+		  (26 CODE <lb$$>@rl=clu@rt=ADJqua)
+		  (28 ADVP (29 ADV si@l=_SI4_@t=ADVgen@rl=si@rt=ADVgen))
+		  (31 NP-SBJ *con*)
+		  (33 VJ manda@l=_MANDER_@t=VERcjg@rl=mander@rt=VERcjg)
+		  (35 NP-DTV (36 DAT a@@l=_À_@t=PRE@rl=a@rt=PRE.DETdef)
+			     (38 D @u@l=_OU1_OU2_OÙ_U_@t=X@rl=<unk>@rt=NOMcom)
+			     (40 NCS roi@l=_ROI1_@t=NOMcom@rl=roi@rt=NOMcom)
+			     (42 NP-PRN (43 NPRS Crudel@l=_µCRUDEL_@t=NOMpro@rl=Crudel@rt=NOMpro)))
+		  (45 CP-THT-SPE (46 CONJS que@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+				 (48 IP-SUB-SPE (49 IP-SUB-SPE (50 CP-ADV-SPE (51 CONJS s'@l=_SE1_@t=PROper@rl=se@rt=CONsub)
+									      (53 IP-SUB-SPE (54 NP-SBJ (55 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+											     (57 NEG ne@l=_NE1_@t=ADVneg@rl=ne@rt=ADVneg)
+											     (59 CL-NP-DTV (60 CL li@l=_LE_@t=PROper@rl=il@rt=PROper))
+											     (62 VJ rendoit@l=_RENDRE_@t=VERcjg@rl=rendre@rt=VERcjg)
+											     (64 NP-ACC (65 NPRS Josephé@l=_JOSEPHÉ_@t=NOMpro@rl=Josephe@rt=NOMpro))))
+							       (67 CODE <lb$$>@rl=il@rt=CONsub)
+							       (69 NP-SBJ (70 PRO il@l=_IL_@t=PROimp@rl=il@rt=PROper))
+							       (72 CL-NP-DTV (73 CL li@l=_LE_@t=PROper@rl=il@rt=PROper))
+							       (75 VJ toudroit@l=_TOLIR_@t=VERcjg@rl=tolir@rt=VERcjg)
+							       (77 NP-ACC (78 DZ sa@l=_SON4_@t=DETpos@rl=son@rt=DETpos) (80 NCS terre@l=_TERRE1_@t=NOMcom@rl=terre@rt=NOMcom)))
+						(82 CONJP (83 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+							  (85 IP-SUB-SPE (86 NP-SBJ *con*)
+									 (88 CL-NP-ACC (89 CL le@l=_LE_@t=PROper@rl=il@rt=PROper))
+									 (91 VJ deseriteroit@l=_DÉSHÉRITER_@t=VERcjg@rl=déshériter@rt=VERcjg)))))
+		  (93 PONFP ,@rl=,@rt=PONfbl))
+    (95 ID 1225-QUESTE-MCVF-P,114.2973))
+/*
+FOOTER
+  source file, hits/tokens/total
+  1225-queste-mcvf-p.lgermed.psd	1/1/3369
+*/
+/*
+HEADER:
+source file:  1212-eustace-fisher-penn-r.lgermed.psd
+*/
+
+/~*
+A@l=_À_@t=PRE@rl=a@rt=PRE siglier@l=_CINGLER2_@t=VERinf@rl=siglier@rt=VERinf
+itant@l=_TANT_@t=ADVgen@rl=itant@rt=ADVgen
+estriverent@l=_ESTRIVER_@t=VERcjg@rl=estriver@rt=VERcjg
+Qu'@l=_QUE_@t=CONsub@rl=que@rt=CONsub a@l=_À_@t=PRE@rl=a@rt=PRE
+port@l=_PORT1_PORT2_@t=NOMcom@rl=port@rt=NOMcom d'@l=_DE_@t=PRE@rl=de@rt=PRE
+autre@l=_AUTRE_@t=DETind@rl=autre@rt=DETind
+part@l=_PART1_@t=NOMcom@rl=part@rt=NOMcom
+ariverent@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg
+Si@l=_SI4_@t=ADVgen@rl=si@rt=ADVgen
+comme@l=_COMME_@t=CONsub@rl=comme@rt=CONsub
+Dex@l=_µDEX_@t=NOMpro@rl=dieu@rt=NOMpro le@l=_LE_@t=PROper@rl=il@rt=PROper
+conmanda@l=_COMMANDER_@t=VERcjg@rl=commander@rt=VERcjg .@rl=.@rt=PONfrt
+(1212-EUSTACE-FISHER-PENN-R,27.275)
+*~/
+/*
+23 IP-SUB:  23 IP-SUB, 40 VJ
+, 41 ariverent@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg
+*/
+
+(0  (1 IP-MAT (2 PP (3 P A@l=_À_@t=PRE@rl=a@rt=PRE)
+		    (5 IP-INF (6 VX siglier@l=_CINGLER2_@t=VERinf@rl=siglier@rt=VERinf)))
+	      (8 QP-1 (9 Q itant@l=_TANT_@t=ADVgen@rl=itant@rt=ADVgen))
+	      (11 NP-SBJ *con*)
+	      (13 VJ estriverent@l=_ESTRIVER_@t=VERcjg@rl=estriver@rt=VERcjg)
+	      (15 CODE <P_27>@rl=<unk>i@rt=ADJqua)
+	      (17 NP-MSR (18 QP *ICH*-1)
+			 (20 CP-DEG (21 CONJS Qu'@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+				    (23 IP-SUB (24 PP (25 P a@l=_À_@t=PRE@rl=a@rt=PRE)
+						      (27 NP (28 NCS port@l=_PORT1_PORT2_@t=NOMcom@rl=port@rt=NOMcom)
+							     (30 PP (31 P d'@l=_DE_@t=PRE@rl=de@rt=PRE)
+								    (33 NP (34 ADJ autre@l=_AUTRE_@t=DETind@rl=autre@rt=DETind) (36 NCS part@l=_PART1_@t=NOMcom@rl=part@rt=NOMcom)))))
+					       (38 NP-SBJ *pro*)
+					       (40 VJ ariverent@l=_ARRIVER_@t=VERcjg@rl=arriver@rt=VERcjg)
+					       (42 ADVP (43 ADV Si@l=_SI4_@t=ADVgen@rl=si@rt=ADVgen)
+							(45 CP-CMP (46 WADVP-2 0)
+								   (48 CONJS comme@l=_COMME_@t=CONsub@rl=comme@rt=CONsub)
+								   (50 IP-SUB (51 ADVP *T*-2)
+									      (53 NP-SBJ (54 NPRS Dex@l=_µDEX_@t=NOMpro@rl=dieu@rt=NOMpro))
+									      (56 CL-NP-ACC (57 CL le@l=_LE_@t=PROper@rl=il@rt=PROper))
+									      (59 VJ conmanda@l=_COMMANDER_@t=VERcjg@rl=commander@rt=VERcjg)))))))
+	      (61 PONFP .@rl=.@rt=PONfrt))
+    (63 ID 1212-EUSTACE-FISHER-PENN-R,27.275))
+/*
+FOOTER
+  source file, hits/tokens/total
+  1212-eustace-fisher-penn-r.lgermed.psd	1/1/846
+*/
+/*
+HEADER:
+source file:  122x-eustace-murray-penn-p.lgermed.psd
+*/
+
+/~*
+e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub
+il@l=_IL_@t=PROper@rl=il@rt=PROper
+furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg
+arrivé@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe ,@rl=,@rt=PONfbl
+il@l=_IL_@t=PROper@rl=il@rt=PROper
+demanda@l=_DEMANDER_@t=VERcjg@rl=demander@rt=VERcjg
+loier@l=_LIER_LOUER1_@t=VERinf@rl=loyer@rt=NOMcom
+de@@l=_DE_@t=PRE@rl=de@rt=PRE.DETdef @l@l=_LE_@t=PROper@rl=il@rt=NOMcom
+passer@l=_PASSER1_@t=VERinf@rl=passer@rt=VERinf .@rl=.@rt=PONfrt
+(122X-EUSTACE-MURRAY-PENN-P,16.217)
+*~/
+/*
+7 IP-SUB:  7 IP-SUB, 13 VPP
+, 14 arrivé@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe
+*/
+
+(0  (1 IP-MAT (2 CONJO e@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+	      (4 CP-ADV (5 CONJS quant@l=_QUAND_@t=CONsub@rl=cant@rt=CONsub)
+			(7 IP-SUB (8 NP-SBJ (9 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+				  (11 EJ furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg)
+				  (13 VPP arrivé@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe)))
+	      (15 PON ,@rl=,@rt=PONfbl)
+	      (17 NP-SBJ (18 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+	      (20 VJ demanda@l=_DEMANDER_@t=VERcjg@rl=demander@rt=VERcjg)
+	      (22 NP-ACC (23 NCS loier@l=_LIER_LOUER1_@t=VERinf@rl=loyer@rt=NOMcom)
+			 (25 PP (26 P de@@l=_DE_@t=PRE@rl=de@rt=PRE.DETdef)
+				(28 NP (29 D @l@l=_LE_@t=PROper@rl=il@rt=NOMcom) (31 NCS passer@l=_PASSER1_@t=VERinf@rl=passer@rt=VERinf))))
+	      (33 PONFP .@rl=.@rt=PONfrt))
+    (35 ID 122X-EUSTACE-MURRAY-PENN-P,16.217))
+/*
+FOOTER
+  source file, hits/tokens/total
+  122x-eustace-murray-penn-p.lgermed.psd	1/1/621
+*/
+/*
+HEADER:
+source file:  1128-bestiaire-bfm-r.lgermed.psd
+*/
+
+/~*
+Iloc@l=_ILLUEC_@t=ADVgen@rl=illuec@rt=ADVgen
+vait@l=_ALLER_@t=VERcjg@rl=aller@rt=VERcjg
+ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf ,@rl=,@rt=PONfbl
+Sun@l=_SON4_@t=DETpos@rl=son@rt=DETpos
+cunrei@l=_CONRÉER_@t=VERcjg@rl=conroi@rt=NOMcom
+aprester@l=_APPRÊTER_APRESTER_APRÊTER_@t=VERinf@rl=aprester@rt=VERinf
+.@rl=.@rt=PONfrt
+(1128-BESTIAIRE-BFM-R,71.928)
+*~/
+/*
+10 IP-INF:  10 IP-INF, 13 VX
+, 14 ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf
+*/
+
+(0  (1 IP-MAT (2 ADVP-1 (3 ADV Iloc@l=_ILLUEC_@t=ADVgen@rl=illuec@rt=ADVgen))
+	      (5 NP-SBJ *con*)
+	      (7 VJ vait@l=_ALLER_@t=VERcjg@rl=aller@rt=VERcjg)
+	      (9 IP-INF-PRP (10 IP-INF (11 ADVP-DIR *ICH*-1)
+				       (13 VX ariver@l=_ARRIVER_@t=VERinf@rl=arriver@rt=VERinf))
+			    (15 PON ,@rl=,@rt=PONfbl)
+			    (17 CONJP (18 IP-INF (19 NP-ACC (20 DZ Sun@l=_SON4_@t=DETpos@rl=son@rt=DETpos) (22 NCS cunrei@l=_CONRÉER_@t=VERcjg@rl=conroi@rt=NOMcom))
+						 (24 VX aprester@l=_APPRÊTER_APRESTER_APRÊTER_@t=VERinf@rl=aprester@rt=VERinf))))
+	      (26 PONFP .@rl=.@rt=PONfrt))
+    (28 ID 1128-BESTIAIRE-BFM-R,71.928))
+/*
+FOOTER
+  source file, hits/tokens/total
+  1128-bestiaire-bfm-r.lgermed.psd	1/1/1549
+*/
+/*
+HEADER:
+source file:  1369-froissart-1-mcvf-p.lgermed.psd
+*/
+
+/~*
+mais@l=_MAIS1_@t=CONcoo@rl=mais@rt=ADVgen
+que@l=_QUE_@t=CONsub@rl=que@rt=CONsub il@l=_IL_@t=PROper@rl=il@rt=PROper
+fuissent@l=_FUIR_@t=VERcjg@rl=être@rt=VERcjg
+arivé@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe en@l=_EN1_@t=PRE@rl=en@rt=PRE
+Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro ,@rl=,@rt=PONfbl
+il@l=_IL_@t=PROper@rl=il@rt=PROper
+trouveroient@l=_TROUVER_@t=VERcjg@rl=trouver@rt=VERcjg
+confort@l=_CONFORT_@t=NOMcom@rl=confort@rt=NOMcom
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo
+aide@l=_AIDE1_AIDE2_@t=NOMcom@rl=aide@rt=NOMcom
+assés@l=_ASSEZ_@t=ADVgen@rl=assez@rt=ADVgen
+d@@l=_DE_@t=PRE@rl=de.le@rt=PRE.DETdef
+@es@l=_EN1_LE_@t=PRE.DETdef@rl=ais@rt=NOMcom
+nobles@l=_NOBLE1_@t=NOMcom@rl=noble@rt=ADJqua d'@l=_DE_@t=PRE@rl=de@rt=PRE
+Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo d@@l=_DE_@t=PRE@rl=de.le@rt=PRE.DETdef
+@es@l=_AIS_ES1_@t=NOMcom@rl=ais@rt=NOMcom
+Londriiens@l=_LONDRIEN_@t=NOMcom@rl=londrient@rt=ADJqua .@rl=.@rt=PONfrt
+(1369-FROISSART-1-MCVF-P,55.380)
+*~/
+/*
+7 IP-SUB:  7 IP-SUB, 13 VPP, 14 arivé@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe
+*/
+
+(0  (1 IP-MAT (2 CP-ADV (3 ADV mais@l=_MAIS1_@t=CONcoo@rl=mais@rt=ADVgen)
+			(5 CONJS que@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+			(7 IP-SUB (8 NP-SBJ (9 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+				  (11 EJ fuissent@l=_FUIR_@t=VERcjg@rl=être@rt=VERcjg)
+				  (13 VPP arivé@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe)
+				  (15 PP (16 P en@l=_EN1_@t=PRE@rl=en@rt=PRE)
+					 (18 NP (19 NPRS Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro)))))
+	      (21 PON ,@rl=,@rt=PONfbl)
+	      (23 CODE <lb_n="45"$$>@rl=<unk>@rt=NOMpro)
+	      (25 NP-SBJ (26 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+	      (28 VJ trouveroient@l=_TROUVER_@t=VERcjg@rl=trouver@rt=VERcjg)
+	      (30 NP-ACC (31 NCS confort@l=_CONFORT_@t=NOMcom@rl=confort@rt=NOMcom)
+			 (33 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+			 (35 NCS aide@l=_AIDE1_AIDE2_@t=NOMcom@rl=aide@rt=NOMcom)
+			 (37 QP (38 Q assés@l=_ASSEZ_@t=ADVgen@rl=assez@rt=ADVgen)))
+	      (40 PP (41 PP (42 P d@@l=_DE_@t=PRE@rl=de.le@rt=PRE.DETdef)
+			    (44 NP (45 D @es@l=_EN1_LE_@t=PRE.DETdef@rl=ais@rt=NOMcom)
+				   (47 NCPL nobles@l=_NOBLE1_@t=NOMcom@rl=noble@rt=ADJqua)
+				   (49 CODE <lb$$>@rl=clui@rt=NOMcom)
+				   (51 PP (52 P d'@l=_DE_@t=PRE@rl=de@rt=PRE)
+					  (54 NP (55 NPRS Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro)))))
+		     (57 CONJP (58 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+			       (60 PP (61 P d@@l=_DE_@t=PRE@rl=de.le@rt=PRE.DETdef)
+				      (63 NP (64 D @es@l=_AIS_ES1_@t=NOMcom@rl=ais@rt=NOMcom) (66 NCPL Londriiens@l=_LONDRIEN_@t=NOMcom@rl=londrient@rt=ADJqua)))))
+	      (68 PONFP .@rl=.@rt=PONfrt))
+    (70 ID 1369-FROISSART-1-MCVF-P,55.380))
+
+/~*
+car@l=_CAR_@t=CONsub@rl=car@rt=CONcoo se@l=_SE1_@t=PROper@rl=se@rt=CONsub
+il@l=_IL_@t=PROper@rl=il@rt=PROper
+fuissent@l=_FUIR_@t=VERcjg@rl=être@rt=VERcjg
+arivé@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe a@l=_À_@t=PRE@rl=a@rt=PRE
+Orvelle@l=_ORVEDE_@t=NOMcom@rl=Orvelle@rt=NOMpro ,@rl=,@rt=PONfbl
+il@l=_IL_@t=PROper@rl=il@rt=PROper
+euissent@l=_AVOIR1_@t=VERcjg@rl=avoir@rt=VERcjg
+trouvé@l=_TROUVER_@t=VERppe@rl=trouver@rt=VERppe
+plus@l=_PLUS_@t=ADVgen@rl=plus@rt=ADVgen de@l=_DE_@t=PRE@rl=de@rt=PRE
+vint@l=_VINGT_@t=DETcar@rl=vingt@rt=DETcar
+mille@l=_MILLE1_@t=DETcar@rl=mille@rt=DETcar
+honmes@l=_HOMME_@t=NOMcom@rl=homme@rt=NOMcom ,@rl=,@rt=PONfbl
+qui@l=_QUI1_@t=PROrel@rl=que@rt=PROrel la@l=_LE_@t=PROper@rl=là@rt=ADVgen
+les@l=_LE_@t=PROper@rl=le@rt=DETdef
+atendoient@l=_ATTENDRE1_@t=VERcjg@rl=attendre@rt=VERcjg ,@rl=,@rt=PONfbl
+archiers@l=_ARCHER1_@t=NOMcom@rl=archier@rt=NOMcom
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo
+aultres@l=_AUTRE_@t=PROind@rl=autre@rt=PROind ,@rl=,@rt=PONfbl
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo pour@l=_POUR_@t=PRE@rl=pour@rt=PRE
+euls@l=_EUX_@t=PROper@rl=eux@rt=PROper
+tous@l=_TOUS_TOUT2_@t=PROind@rl=tous@rt=PROind
+ocire@l=_OCCIRE_@t=VERinf@rl=occire@rt=VERinf
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo
+destruire@l=_DÉTRUIRE_@t=VERinf@rl=détruire@rt=VERinf .@rl=.@rt=PONfrt
+(1369-FROISSART-1-MCVF-P,72.742)
+*~/
+/*
+7 IP-SUB:  7 IP-SUB, 13 VPP, 14 arivé@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe
+*/
+
+(0  (1 IP-MAT (2 CONJO car@l=_CAR_@t=CONsub@rl=car@rt=CONcoo)
+	      (4 CP-ADV (5 CONJS se@l=_SE1_@t=PROper@rl=se@rt=CONsub)
+			(7 IP-SUB (8 NP-SBJ (9 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+				  (11 EJ fuissent@l=_FUIR_@t=VERcjg@rl=être@rt=VERcjg)
+				  (13 VPP arivé@l=_ARRIVER_@t=VERppe@rl=ariver@rt=VERppe)
+				  (15 PP (16 P a@l=_À_@t=PRE@rl=a@rt=PRE)
+					 (18 NP (19 NPRS Orvelle@l=_ORVEDE_@t=NOMcom@rl=Orvelle@rt=NOMpro)))))
+	      (21 PON ,@rl=,@rt=PONfbl)
+	      (23 NP-SBJ (24 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+	      (26 CODE <lb$$>@rl=il@rt=PROper)
+	      (28 AJ euissent@l=_AVOIR1_@t=VERcjg@rl=avoir@rt=VERcjg)
+	      (30 VPP trouvé@l=_TROUVER_@t=VERppe@rl=trouver@rt=VERppe)
+	      (32 NP-ACC (33 QR plus@l=_PLUS_@t=ADVgen@rl=plus@rt=ADVgen)
+			 (35 PP (36 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+				(38 NP (39 ADJP (40 ADJNUM vint@l=_VINGT_@t=DETcar@rl=vingt@rt=DETcar) (42 ADJNUM mille@l=_MILLE1_@t=DETcar@rl=mille@rt=DETcar))
+				       (44 NCPL honmes@l=_HOMME_@t=NOMcom@rl=homme@rt=NOMcom)))
+			 (46 PON ,@rl=,@rt=PONfbl)
+			 (48 CP-REL (49 WNP-1 (50 WPRO qui@l=_QUI1_@t=PROrel@rl=que@rt=PROrel))
+				    (52 IP-SUB (53 NP-SBJ *T*-1)
+					       (55 ADVP-LOC (56 ADV la@l=_LE_@t=PROper@rl=là@rt=ADVgen))
+					       (58 CL-NP-ACC (59 CL les@l=_LE_@t=PROper@rl=le@rt=DETdef))
+					       (61 CODE <lb$$>@rl=clui@rt=NOMcom)
+					       (63 VJ atendoient@l=_ATTENDRE1_@t=VERcjg@rl=attendre@rt=VERcjg)))
+			 (65 PON ,@rl=,@rt=PONfbl)
+			 (67 NP-PRN (68 NCPL archiers@l=_ARCHER1_@t=NOMcom@rl=archier@rt=NOMcom) (70 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo) (72 NCPL aultres@l=_AUTRE_@t=PROind@rl=autre@rt=PROind)))
+	      (74 PON ,@rl=,@rt=PONfbl)
+	      (76 FRAG (77 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+		       (79 PP (80 P pour@l=_POUR_@t=PRE@rl=pour@rt=PRE)
+			      (82 IP-INF (83 NP-ACC (84 PRO euls@l=_EUX_@t=PROper@rl=eux@rt=PROper))
+					 (86 QP (87 Q tous@l=_TOUS_TOUT2_@t=PROind@rl=tous@rt=PROind))
+					 (89 VX (90 VX ocire@l=_OCCIRE_@t=VERinf@rl=occire@rt=VERinf) (92 CODE <lb$$>@rl=clu@rt=ADJqua) (94 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo) (96 VX destruire@l=_DÉTRUIRE_@t=VERinf@rl=détruire@rt=VERinf)))))
+	      (98 PONFP .@rl=.@rt=PONfrt))
+    (100 ID 1369-FROISSART-1-MCVF-P,72.742))
+
+/~*
+Et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo ne@l=_NE1_@t=ADVneg@rl=ne@rt=ADVneg
+savoient@l=_SAVOIR1_@t=VERcjg@rl=savoir@rt=VERcjg
+li@l=_LE_@t=DETdef@rl=le@rt=DETdef
+contes@l=_COMPTE_COMTE_CONTE_@t=NOMcom@rl=conte@rt=NOMcom
+de@l=_DE_@t=PRE@rl=de@rt=PRE
+Qent@l=_KENT_QUAND_QUANT_QUÉRIR_@t=X@rl=Kent@rt=NOMpro ,@rl=,@rt=PONfbl
+messires@l=_MESSIRE_@t=NOMcom@rl=seignor@rt=NOMcom
+Rogiers@l=_ROGER_@t=NOMpro@rl=Roger@rt=NOMpro de@l=_DE_@t=PRE@rl=de@rt=PRE
+Mortemer@l=_MORTEMER_@t=NOMpro@rl=Mortemer@rt=NOMpro ,@rl=,@rt=PONfbl
+ne@l=_NE2_@t=CONcoo@rl=ne@rt=CONcoo nuls@l=_NUL_@t=DETind@rl=nul@rt=DETind
+Englois@l=_µENGLOIS_@t=NOMpro@rl=anglois@rt=NOMcom
+qui@l=_QUI1_@t=PROrel@rl=que@rt=PROrel la@l=_LE_@t=PROper@rl=il@rt=PROper
+fuissent@l=_FUIR_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg ,@rl=,@rt=PONfbl
+ou@l=_OÙ_@t=PROrel@rl=où@rt=PROrel il@l=_IL_@t=PROper@rl=il@rt=PROper
+estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg
+arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe ,@rl=,@rt=PONfbl
+fors@l=_FORS_@t=ADVgen@rl=fors@rt=PRE tant@l=_TANT_@t=ADVgen@rl=tant@rt=ADVgen
+que@l=_QUE_@t=CONsub@rl=que@rt=CONsub il@l=_IL_@t=PROper@rl=il@rt=PROper
+disoient@l=_DIRE1_@t=VERcjg@rl=dire@rt=VERcjg
+que@l=_QUE_@t=CONsub@rl=que@rt=CONsub il@l=_IL_@t=PROper@rl=il@rt=PROper
+estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg en@l=_EN1_@t=PRE@rl=en@rt=PRE
+Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro .@rl=.@rt=PONfrt
+(1369-FROISSART-1-MCVF-P,74.781)
+*~/
+/*
+64 IP-SUB:  64 IP-SUB, 74 VPP
+, 75 arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe
+*/
+
+(0  (1 IP-MAT (2 CONJO Et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+	      (4 NEG ne@l=_NE1_@t=ADVneg@rl=ne@rt=ADVneg)
+	      (6 VJ savoient@l=_SAVOIR1_@t=VERcjg@rl=savoir@rt=VERcjg)
+	      (8 NP-SBJ (9 NP (10 D li@l=_LE_@t=DETdef@rl=le@rt=DETdef)
+			      (12 NCS contes@l=_COMPTE_COMTE_CONTE_@t=NOMcom@rl=conte@rt=NOMcom)
+			      (14 PP (15 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+				     (17 NP (18 NPRS Qent@l=_KENT_QUAND_QUANT_QUÉRIR_@t=X@rl=Kent@rt=NOMpro))))
+			(20 PON ,@rl=,@rt=PONfbl)
+			(22 CONJP (23 NP (24 NCS messires@l=_MESSIRE_@t=NOMcom@rl=seignor@rt=NOMcom)
+					 (26 NPRS Rogiers@l=_ROGER_@t=NOMpro@rl=Roger@rt=NOMpro)
+					 (28 CODE <lb$$>@rl=Elbi@rt=NOMpro)
+					 (30 PP (31 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+						(33 NP (34 NPRS Mortemer@l=_MORTEMER_@t=NOMpro@rl=Mortemer@rt=NOMpro)))))
+			(36 PON ,@rl=,@rt=PONfbl)
+			(38 CONJP (39 CONJO ne@l=_NE2_@t=CONcoo@rl=ne@rt=CONcoo)
+				  (41 NP (42 Q nuls@l=_NUL_@t=DETind@rl=nul@rt=DETind)
+					 (44 NCPL Englois@l=_µENGLOIS_@t=NOMpro@rl=anglois@rt=NOMcom)
+					 (46 CP-REL (47 WNP-1 (48 WPRO qui@l=_QUI1_@t=PROrel@rl=que@rt=PROrel))
+						    (50 IP-SUB (51 NP-SBJ *T*-1)
+							       (53 ADVP-LOC (54 ADV la@l=_LE_@t=PROper@rl=il@rt=PROper))
+							       (56 VJ fuissent@l=_FUIR_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg))))))
+	      (58 PON ,@rl=,@rt=PONfbl)
+	      (60 CP-QUE-SUB (61 WADVP-2 (62 WPRO ou@l=_OÙ_@t=PROrel@rl=où@rt=PROrel))
+			     (64 IP-SUB (65 ADVP-LOC *T*-2)
+					(67 NP-SBJ (68 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+					(70 CODE <lb$$>@rl=clu@rt=ADJqua)
+					(72 EJ estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg)
+					(74 VPP arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe)))
+	      (76 PON ,@rl=,@rt=PONfbl)
+	      (78 PP (79 P fors@l=_FORS_@t=ADVgen@rl=fors@rt=PRE)
+		     (81 NP (82 Q tant@l=_TANT_@t=ADVgen@rl=tant@rt=ADVgen)
+			    (84 CP-ADV (85 CONJS que@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+				       (87 IP-SUB (88 NP-SBJ (89 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+						  (91 VJ disoient@l=_DIRE1_@t=VERcjg@rl=dire@rt=VERcjg)
+						  (93 CP-THT (94 CONJS que@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+							     (96 IP-SUB (97 NP-SBJ (98 PRO il@l=_IL_@t=PROper@rl=il@rt=PROper))
+									(100 VJ estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg)
+									(102 CODE <lb$$>@rl=clu@rt=ADJqua)
+									(104 PP (105 P en@l=_EN1_@t=PRE@rl=en@rt=PRE)
+										(107 NP (108 NPRS Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro)))))))))
+	      (110 PONFP .@rl=.@rt=PONfrt))
+    (112 ID 1369-FROISSART-1-MCVF-P,74.781))
+
+/~*
+Si@@l=_SI4_@t=ADVgen@rl=si@rt=ADVgen @tos@l=_TOUT2_@t=ADVgen@rl=tot@rt=NOMcom
+que@l=_QUE_@t=CONsub@rl=que@rt=CONsub les@l=_LE_@t=DETdef@rl=le@rt=DETdef
+nouvelles@l=_NOUVEAU_NOUVELLE_@t=NOMcom@rl=nouvelle@rt=NOMcom
+furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg
+sceues@l=_SAVOIR1_@t=VERcjg@rl=savoir@rt=VERppe
+sus@l=_SOUS_SUS_@t=PRE@rl=sus@rt=PRE le@l=_LE_@t=DETdef@rl=le@rt=DETdef
+pais@l=_PAIX_PAYS_@t=NOMcom@rl=paix@rt=NOMcom
+que@l=_QUE_@t=CONsub@rl=que@rt=CONsub la@l=_LE_@t=DETdef@rl=le@rt=DETdef
+roine@l=_REINE1_@t=NOMcom@rl=reine@rt=NOMcom d'@l=_DE_@t=PRE@rl=de@rt=PRE
+Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo ses@l=_SON4_@t=DETpos@rl=son@rt=DETpos
+fils@l=_FIL_FILS_@t=NOMcom@rl=fils@rt=NOMcom
+estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg
+arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe
+et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo venu@l=_VENIR_@t=VERppe@rl=venir@rt=VERppe
+a@l=_À_@t=PRE@rl=a@rt=PRE belle@l=_BEAU_@t=ADJqua@rl=beau@rt=ADJqua
+compagnie@l=_COMPAGNIE_@t=NOMcom@rl=compagnie@rt=NOMcom
+de@l=_DE_@t=PRE@rl=de@rt=PRE gens@l=_GENS_@t=NOMcom@rl=gens@rt=NOMcom
+d'@l=_DE_@t=PRE@rl=de@rt=PRE armes@l=_ARME_@t=NOMcom@rl=arme@rt=NOMcom
+,@rl=,@rt=PONfbl li@l=_LE_@t=DETdef@rl=le@rt=DETdef
+Londriien@l=_µLONDRIIEN_@t=NOMpro@rl=londrien@rt=ADJqua
+furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg
+trop@l=_TROP_@t=ADVgen@rl=trop@rt=ADVgen
+grandement@l=_GRANDEMENT_@t=ADVgen@rl=grandement@rt=ADVgen
+resjoi@l=_RÉJOUIR_@t=VERppe@rl=resjouir@rt=VERppe de@l=_DE_@t=PRE@rl=de@rt=PRE
+la@l=_LE_@t=DETdef@rl=le@rt=DETdef venue@l=_VENUE_@t=NOMcom@rl=venue@rt=NOMcom
+de@l=_DE_@t=PRE@rl=de@rt=PRE la@l=_LE_@t=DETdef@rl=le@rt=DETdef
+roine@l=_REINE1_@t=NOMcom@rl=reine@rt=NOMcom ,@rl=,@rt=PONfbl
+(1369-FROISSART-1-MCVF-P,80.901)
+*~/
+/*
+40 IP-SUB-3:  40 IP-SUB-3, 63 VPP
+, 64 arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe
+*/
+
+(0  (1 IP-MAT (2 ADVP-TMP (3 ADV Si@@l=_SI4_@t=ADVgen@rl=si@rt=ADVgen)
+			  (5 ADV @tos@l=_TOUT2_@t=ADVgen@rl=tot@rt=NOMcom)
+			  (7 CP-CMP (8 WADVP-1 0)
+				    (10 CONJS que@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+				    (12 IP-SUB (13 ADVP-TMP *T*-1)
+					       (15 NP-SBJ (16 D les@l=_LE_@t=DETdef@rl=le@rt=DETdef)
+							  (18 NCPL nouvelles@l=_NOUVEAU_NOUVELLE_@t=NOMcom@rl=nouvelle@rt=NOMcom)
+							  (20 CP-THT *ICH*-2))
+					       (22 EJ furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg)
+					       (24 VPP sceues@l=_SAVOIR1_@t=VERcjg@rl=savoir@rt=VERppe)
+					       (26 PP (27 P sus@l=_SOUS_SUS_@t=PRE@rl=sus@rt=PRE)
+						      (29 NP (30 D le@l=_LE_@t=DETdef@rl=le@rt=DETdef) (32 NCS pais@l=_PAIX_PAYS_@t=NOMcom@rl=paix@rt=NOMcom)))
+					       (34 CODE <lb$$>@rl=clu@rt=ADJqua)
+					       (36 CP-THT-2 (37 CONJS que@l=_QUE_@t=CONsub@rl=que@rt=CONsub)
+							    (39 IP-SUB (40 IP-SUB-3 (41 NP-SBJ (42 NP (43 D la@l=_LE_@t=DETdef@rl=le@rt=DETdef)
+												      (45 NCS roine@l=_REINE1_@t=NOMcom@rl=reine@rt=NOMcom)
+												      (47 PP (48 P d'@l=_DE_@t=PRE@rl=de@rt=PRE)
+													     (50 NP (51 NPRS Engleterre@l=_ANGLETERRE_@t=NOMpro@rl=Angleterre@rt=NOMpro))))
+											       (53 CONJP (54 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+													 (56 NP (57 DZ ses@l=_SON4_@t=DETpos@rl=son@rt=DETpos) (59 NCS fils@l=_FIL_FILS_@t=NOMcom@rl=fils@rt=NOMcom))))
+										    (61 EJ estoient@l=_ÊTRE1_@t=VERcjg@rl=être@rt=VERcjg)
+										    (63 VPP arivet@l=_ARRIVER_@t=VERppe@rl=arriver@rt=VERppe))
+								       (65 CONJP (66 CONJO et@l=_ET_@t=CONcoo@rl=et@rt=CONcoo)
+										 (68 CODE <lb$$>@rl=clu@rt=ADJqua)
+										 (70 IP-SUB=3 (71 VPP venu@l=_VENIR_@t=VERppe@rl=venir@rt=VERppe)
+											      (73 PP (74 P a@l=_À_@t=PRE@rl=a@rt=PRE)
+												     (76 NP (77 ADJ belle@l=_BEAU_@t=ADJqua@rl=beau@rt=ADJqua)
+													    (79 NCS compagnie@l=_COMPAGNIE_@t=NOMcom@rl=compagnie@rt=NOMcom)
+													    (81 PP (82 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+														   (84 NP (85 NCPL gens@l=_GENS_@t=NOMcom@rl=gens@rt=NOMcom)
+															  (87 PP (88 P d'@l=_DE_@t=PRE@rl=de@rt=PRE)
+																 (90 NP (91 NCPL armes@l=_ARME_@t=NOMcom@rl=arme@rt=NOMcom))))))))))))))
+	      (93 PON ,@rl=,@rt=PONfbl)
+	      (95 NP-SBJ (96 D li@l=_LE_@t=DETdef@rl=le@rt=DETdef) (98 NCPL Londriien@l=_µLONDRIIEN_@t=NOMpro@rl=londrien@rt=ADJqua))
+	      (100 CODE <lb_n="10"$$>@rl=<unk>@rt=NOMpro)
+	      (102 VJ furent@l=_ÊTRE1_@t=VERcjg@rl=estre@rt=VERcjg)
+	      (104 ADJP-PRD (105 ADVP (106 Q trop@l=_TROP_@t=ADVgen@rl=trop@rt=ADVgen) (108 ADV grandement@l=_GRANDEMENT_@t=ADVgen@rl=grandement@rt=ADVgen))
+			    (110 VPP resjoi@l=_RÉJOUIR_@t=VERppe@rl=resjouir@rt=VERppe)
+			    (112 PP (113 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+				    (115 NP (116 D la@l=_LE_@t=DETdef@rl=le@rt=DETdef)
+					    (118 NCS venue@l=_VENUE_@t=NOMcom@rl=venue@rt=NOMcom)
+					    (120 PP (121 P de@l=_DE_@t=PRE@rl=de@rt=PRE)
+						    (123 NP (124 D la@l=_LE_@t=DETdef@rl=le@rt=DETdef) (126 NCS roine@l=_REINE1_@t=NOMcom@rl=reine@rt=NOMcom))))))
+	      (128 PONFP ,@rl=,@rt=PONfbl))
+    (130 ID 1369-FROISSART-1-MCVF-P,80.901))
+/*
+FOOTER
+  source file, hits/tokens/total
+  1369-froissart-1-mcvf-p.lgermed.psd	4/4/2254
+*/
