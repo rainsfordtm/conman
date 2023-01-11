@@ -121,7 +121,8 @@ but unparsed corpus, but now you want to know which of the approximately
 	+ Also save your concordance by passing the `-s` flag on the command line.
 + Next, run the parser on the Conll data.
 + Prepare a short Python script to identify whether or not a direct object
-is present from the Conll annotation.
+is present from the Conll annotation
+    + Check out [demo_tasks/bfm-parse-pass-2-annotator-script.py](demo_tasks/bfm-parse-pass-2-annotator-script.py).
 + Pass  2:
 	+ Reload your original concordance from the .cnc file, i.e. no Importer necessary
 	+ Use the `ConllImporter` as the `other_importer` to import the tagged and
