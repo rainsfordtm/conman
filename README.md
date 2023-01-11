@@ -1,4 +1,6 @@
-# Concordance Manager (ConMan). Concordance management and generation tools for SILPAC H1 WP2. 
+# Concordance Manager (ConMan)
+
+Concordance management and generation tools for SILPAC H1 WP2. 
 © Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, January 2023
 
 [https://sites.google.com/site/rainsfordtm/home](https://sites.google.com/site/rainsfordtm/home)
@@ -21,13 +23,13 @@ The ConMan manages data in the form of a **Concordance**. A concordance is
 defined as a list of **Hits**, i.e. short sections of text corresponding to 
 a particular search criterion. Each Hit consists of a list of **Tokens**.
 
-Within each Hit, the ConMan stores and processes the following information:
-* the tokens in the hit;
-* the keyword or keywords within the hit, as distinct from the context;
-* any number of user-defined annotations attached to the hit as a whole;
-* tokens in the "core context" of the hit (see [section 7][7. Core Context]).
+Within each **Hit**, the ConMan stores and processes the following information:
+* the tokens in the **Hit**;
+* the keyword or keywords within the **Hit**, as distinct from the context;
+* any number of user-defined annotations attached to the **Hit** as a whole;
+* tokens in the "core context" of the **Hit** (see [section 7](#7-core-context)).
 
-For each Token within a hit, the ConMan can store any number of annotations
+For each **Token** within a **Hit**, the ConMan can store any number of annotations
 (part of speech, lemma, dependency parse data in Conll format, etc.)
 
 ### 2.2 Modules
@@ -51,15 +53,15 @@ Workflow files are configuration files which tell the ConMan what to do:
 + which modules should be run;
 + which importers and exporters should be used (see [section 4](#4-importers-and-exporters)) and what parameters
 should be passed to the importer and exporter;
-+ how hits from two concordances should be merged;
++ how **Hits** from two concordances should be merged;
 + which script should be used to annotate the concordance.
 	
 The workflow file is passed using the `-w` argument on the command line, e.g.:
 ```
 ./conman.py -w my_workflow.cfg in_file.csv out_file.csv
 ```
-See `conman/workflows/workflow.cfg` for full documentation of the structure
-of a workflow file.
+See [`conman/workflows/workflow.cfg`](conman/workflows/workflow.cfg) for
+full documentation of the structure of a workflow file.
 
 It is optional but *highly* recommended to use a workflow file. If the ConMan
 is run without a workflow file, it will use the file extensions
