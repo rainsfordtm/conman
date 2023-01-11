@@ -1,8 +1,10 @@
 # Concordance Manager (ConMan)
 
-Concordance management and generation tools for SILPAC H1 WP2. 
+Concordance management and generation tools for SILPAC H1 WP2.
+
 © Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, January 2023
 
+[https://silpac.uni-mannheim.de/](https://silpac.uni-mannheim.de/)
 [https://sites.google.com/site/rainsfordtm/home](https://sites.google.com/site/rainsfordtm/home)
 
 ## 1. Introduction
@@ -182,9 +184,9 @@ encoding. Default is `utf-8`.
 ### 4.2 Importing and exporting Tokens
 
 Every Importer and Exporter has methods for solving the two fundamental
-problems when importing Tokens from a source:
-1. tokenization, i.e. how are Tokens separated from each other?
-2. token-level annotation, i.e. what is the Token itself and what is annotation?
+problems when importing **Tokens** from a source:
+1. tokenization, i.e. how are **Tokens** separated from each other?
+2. token-level annotation, i.e. what is the **Token** itself and what is annotation?
 	
 In the ConMan, problem 1 is generally solved using built-in methods and classes
 while problem 2 is fully user-customizable using a regular expression.
@@ -194,9 +196,9 @@ while problem 2 is fully user-customizable using a regular expression.
 When exporting data from a corpus, it's common for annotation such as 
 part-of-speech annotation or lemmas to be printed alongside the token in the
 output. Here are some formats that I came across while writing the ConMan
-+ BFM via TXM web: customizable, tags separated by underscores, e.g. `de_PRE_|de|`
-+ FRANTEXT: customizable, tags separated by slashes, e.g. `de/PRE/de`
-+ Lemmatized Penn corpora: encoded in the .PSD file as part of the token 
++ **BFM via TXM web**: customizable, tags separated by underscores, e.g. `de_PRE_|de|`
++ **FRANTEXT**: customizable, tags separated by slashes, e.g. `de/PRE/de`
++ **Lemmatized Penn corpora**: encoded in the .psd file as part of the token 
 	itself, various formats, e.g. `de@t=PRE@l=de`.
 	
 The importer should be instructed to parse these forms so that the annotation is
@@ -208,7 +210,7 @@ lcx_regex=(?P<word>[^_]+)_(?P<pos_bfm>[^_]+)_(?P<lemma_bfm>.*) # de_PRE_|de|
 lcx_regex=(?P<word>[^/]+)/(?P<pos_ft>[^/]+)/(?P<lemma_ft>.*) # de/PRE/de
 lcx_regex=(?P<word>[^@]+)@t=(?P<pos>[^@]+)@l=(?P<lemma>.*) # de@t=PRE@l=de
 ```
-Note that the name `word` is reserved for the form of the Token. Everything
+Note that the name `word` is reserved for the form of the token. Everything
 else will be stored as a tag.
 
 The same regex-based technique for splitting tokens is used with the
@@ -225,8 +227,8 @@ and `rcx_regex` parameters respectively.
 
 When exporting from ConMan, you can use the `tok_fmt` parameter in the `exporter`
 section of the workflow file to add
-tags to the surface form of each Token, if you wish. `tok_fmt` takes a
-Python format string with a single position argument, which is the token.
+tags to the surface form of each **Token**, if you wish. `tok_fmt` takes a
+Python format string with a single position argument, which is the **Token** object.
 So, for example, to print `de_PRE_de` instead of just `de`, set `tok_fmt`
 as follows (assuming that your concordance contains imported `pos` and `lemma`
 tags):
@@ -267,19 +269,19 @@ Concordance format that the software is designed to manage.
 By default, the TableImporter requires .csv files to be comma-delimited, UTF-8
 encoded, and with a header row containing the following field names IN 
 CAPITALS:
-+ KEYWORDS: Keyword tokens only
-+ LCX:      Tokens preceding keywords only
-+ RCX:      Tokens following keywords only
-+ REF:      Reference
++ `KEYWORDS`: Keyword tokens only
++ `LCX`:      Tokens preceding keywords only
++ `RCX`:      Tokens following keywords only
++ `REF`:      Reference
 Alternatively, if there are no keywords, a single `TOKENS` field may be passed.
 
 If your .csv file is not set up like this, you need to set the correct
 parameters in the workflow file:
-+ TI_dialect:   excel (default) or tab for tab-delimited files without quotes.
-+ TI_has_header: set to 'false' if no header
-+ TI_fields:	if there's no header, or if your header doesn't contain
-				the fieldnames in the right format, tell ConMan what's in
-				each column with a comma delimited list of fields.
++ `TI_dialect`:   `excel` (default) or `tab` for tab-delimited files without quotes.
++ `TI_has_header`: set to `false` if no header
++ `TI_fields`:	if there's no header, or if your header doesn't contain
+		the fieldnames in the right format, tell ConMan what's in
+		each column with a comma delimited list of fields.
 
 For example, to import a tab-delimited concordance exported from the BFM, 
 we need to the importer up as follows:
@@ -293,29 +295,30 @@ When exporting a table, the same three parameters can be set in the export
 section of the workflow file, i.e. `TE_dialect`, `TE_header`, `TE_fields`.
 `TE_fields` tells the exporter which fields to export and in which order.
 By default, all fields, including the fields annotated in the `tags` dictionary
-of the hit, are exported, with UUID, REF, LCX, KEYWORDS, and RCX preceding all
-tags, which are in alphabetical order.
+of the hit, are exported, with `UUID`, `REF`, `LCX`, `KEYWORDS`, and `RCX`
+preceding all tags, which are in alphabetical order.
 
 ### 4.4 Using the one-token-per-line exporter and importers
 
 In a typical workflow, one-token-per-line formats should only be used if
 you need to call an external tool like a lemmatizer, tagger or parser, because
 they are not designed for storing concordance data. In particular, there
-is no consistent way of representing either Hits or Keywords.
+is no consistent way of representing either **Hits** or keywords.
 
-The one-token-per-line exporters are: TokenListExporter (generic), 
-LGermExporter (for the LGerm lemmatizer), ConllExporter. The one-token-per-line
-importers are: TokenListImporter (generic), ConllImporter.
+The one-token-per-line exporters are: `TokenListExporter` (generic), 
+`LGermExporter` (for the LGerm lemmatizer), `ConllExporter`.
+The one-token-per-line importers are: `TokenListImporter` (generic),
+`ConllImporter`.
 
-#### 4.4.1 Using hit_end_token
+#### 4.4.1 Using `hit_end_token`
 
 All one-token-per-line exporters and importers accept a `hit_end_token` 
 parameter in the workflow file. If provided, the value of `hit_end_token`
-is used as a dummy token to signal the end of a Hit. It is added to exported
+is used as a dummy token to signal the end of a **Hit**. It is added to exported
 data and deleted when data is imported. The `hit_end_token` should be unique
 and not found elsewhere in the corpus.
 
-For example, to ensure that the end of every Hit is marked by the token "?!"
+For example, to ensure that the end of every **Hit** is marked by the token "?!"
 in a CoNLL file, add the following to the workflow file:
 ```
 [importer]
@@ -348,7 +351,7 @@ tok_fmt={0}\t{0.tags[lemma]}
 
 #### 4.4.3 Further parameters
 
-The behaviour of the ConllExporter is highly configurable, and it is possible
+The behaviour of the `ConllExporter` is highly configurable, and it is possible
 to set the name of the tag which should be exported in each column of the
 Conll file with the parameters `CE_lemma`, `CE_cpostag`, etc.
 
@@ -366,7 +369,7 @@ which are enabled by setting `print_indices: true` in the .q file of CorpusSearc
 
 Most users will only have to bother with one or perhaps two parameters:
 + `PO_keyword_node_regex`: identifies one node as the keyword.
-+ `lcx_regex`: to parse the tokens if they contain further annotation (see [section 4.2.1][4.2.1 Token Annotation] above)
++ `lcx_regex`: to parse the tokens if they contain further annotation (see [section 4.2.1](4-2-1-token-annotation) above)
 
 `PO_keyword_node_regex` is a Python regex which identifies a node number
 in each hit and assigns it the symbolic group name `keyword_node`.
@@ -389,21 +392,21 @@ importer section of the workflow file or by including
 
 #### 4.5.2 Advanced use
 
-The PennOutImporter is based on tools I developed before the ConMan and so
+The `PennOutImporter` is based on tools I developed before the ConMan and so
 triggers a multi-stage workflow:
-#. Generic conversion of bracketed tree format to an .xml format (basetree),
-which is managed using the `conman.treetools.basetree` module.
-#. Pre-import script called to prepare the .xml file for import as a 
+1. Generic conversion of bracketed tree format to an .xml format (basetree),
+which is managed using the [`treetools.basetree`](treetools/basetree.py) module.
+2. Pre-import script called to prepare the .xml file for import as a 
 concordance.
-#. Generic import of the .xml file using the BaseTreeImporter.
+3. Generic import of the .xml file using the `BaseTreeImporter`.
 	
 The pre-import script is, by default, the `script()` method of
-`conman.scripts.pennout2cnc.py`. It does the following:
+[`scripts.pennout2cnc.py`](scripts/pennout2cnc.py). It does the following:
 + identifies the keyword(s) by adding an XML attribute `KEYWORD="1"`,
 `KEYWORD="2"` to each keyword in the sentence;
 + deletes the `CODE` nodes (they clutter up the text);
 + identifies the `ID` node and copies it to the id attribute of the
-\<tree\> element node where the BaseTreeImporter will look for it,
+`<tree>` element node where the `BaseTreeImporter` will look for it,
 deleting the `ID` node as a token;
 + creates `ancestors` and `deep_ancestors` XML attributes for each token, which 
 list the cat tags of ancestor constituents in the surface and deep structure
@@ -414,9 +417,9 @@ deep structure respectively, e.g. `ancestors_cs_id="1|6"`.
 + parses the CorpusSearch tokens using the `lcx_regex` parameter, storing all 
 non-word tags as XML attributes, e.g. `lemma="aller"`.
 	
-Except for the KEYWORD attribute, which is used by the BaseTreeImporter to
+Except for the `KEYWORD` attribute, which is used by the `BaseTreeImporter` to
 build the hits in the concordance, all other XML attributes created by this
-script are turned into word-level tags in the concordance by the BaseTreeImporter
+script are turned into word-level tags in the concordance by the `BaseTreeImporter`
 and are available to Annotator scripts in the ConMan.
 
 If you want to modify the stage 2 pre-import script, here are some tips:
@@ -426,31 +429,32 @@ the pre-import script in step 2, which is helpful for debugging.
 + second, copy the default `pennout2cnc.py` file to any folder on
 your computer and modify the `PO_script_file` parameter in the `[advanced]`
 section of the workflow file to point to it.
-For example, your workflow file should look like this:
+
+Your workflow file should look like this:
 ```
 [advanced]
 PO_dump_xml=/home/myusername/tmp.xml
 PO_script_file=/home/myusername/myscripts/mypennout2cnc.py
 ```
-Instead of the default, the importer will now call the `script()` method
+Instead of the default, the `PennOutImporter` will now call the `script()` method
 of the module in `PO_script_file`.
 
 To understand how to manipulate the .xml file using the basetree library,
-please take a look at doc/basetree\_api.odt. The `tree` argument passed to
-the script is an instance of the basetree.BaseTree class, which inherits
-from xml.dom.minidom.Document.
+please take a look at [doc/basetree_api.odt](doc/basetree_api.odt). The
+`tree` argument passed to the script is an instance of the
+`basetree.BaseTree` class, which inherits from `xml.dom.minidom.Document`.
 
 ## 5. Merging
 
 The Merger modifies one concordance (the main concordance) using data from 
 another concordance. It is the only ConMan module which allows combining or
 comparing two sources of data and has three main functions:
-#. adding or updating hit-level annotation in the main concordance;
-#. adding or deleting hits in the main concordance;
-#. adding or updating token-level annotation in the main concordance.
+1. adding or updating hit-level annotation in the main concordance;
+2. adding or deleting hits in the main concordance;
+3. adding or updating token-level annotation in the main concordance.
 	
-To enable the merger module, pass the name of the file containing the other
-concordance on the command line using the -m argument, e.g. `-m other_concordance.csv`
+To enable the Merger module, pass the name of the file containing the other
+concordance on the command line using the `-m` argument, e.g. `-m other_concordance.csv`
 
 Scenario 1 is the default behaviour for a Merger and without configuration this
 is all it will do. It is intended to inject annotation added by the user in
@@ -458,7 +462,7 @@ the form of an extra column in a .csv table back into the main concordance.
 
 If you're using a workflow file, you should set the type of Merger 
 and the type of Importer in the `setup` section and then configure the Importer,
-if necessary, in the `other_importer` section, e.g.
+if necessary, in the `other_importer` section, e.g.:
 ```
 [setup]
 merger=ConcordanceMerger
@@ -476,11 +480,11 @@ to a concordance in tabular format and we wish to read it back into the
 database.
 
 By default, the merger assumes that the two concordances contain the same
-hits in the same order. If this isn't the case, you need to instruct the
-Merger how to match the hits in the two concordances. There are two options:
-use the UUID (best) which ConMan attributes to every hit, or use the reference
+**Hits** in the same order. If this isn't the case, you need to instruct the
+Merger how to match the **Hits** in the two concordances. There are two options:
+use the UUID (best) which ConMan attributes to every **Hit**, or use the reference
 string from the corpus. This can be configured using the `CM_match_by` 
-parameter, e.g.
+parameter, e.g.:
 ```
 [setup]
 merger=ConcordanceMerger
@@ -492,22 +496,22 @@ CM_match_by=uuid #match by UUID
 
 Additionally, if the user has updated existing tags, for example by correcting
 automatic annotation, you must set the `CM_update_hit_tags` parameter to
-`True` in order to update the annotation in the main concordance, e.g.
+`True` in order to update the annotation in the main concordance, e.g.:
 ```
 [merger]
 CM_update_hit_tags=True
 ```
 
-### 5.2 Scenario 2: adding and deleting hits
+### 5.2 Scenario 2: adding and deleting Hits
 
-To use a second concordance to add or delete hits from the main concordance,
+To use a second concordance to add or delete **Hits** from the main concordance,
 you should first set the `CM_match_by` parameter as described above, since
-the Merger needs to know which hits are the same. Then, use `CM_add_hits=True`
+the Merger needs to know which **Hits** are the same. Then, use `CM_add_hits=True`
 to add any extra hits from the other concordance to the main concordance, 
-and `CM_del_hits=True` to delete any hits from the main concordance which aren't
+and `CM_del_hits=True` to delete any **Hits** from the main concordance which aren't
 in the other concordance.
 
-For example, if the user has edited a table and deleted all hits which aren't
+For example, if the user has edited a table and deleted all **Hits** which aren't
 relevant, set up the workflow file as follows:
 ```
 [setup]
@@ -528,21 +532,21 @@ In practice, if we are updating token-level annotation, it's probably
 because the other concordance is being read from a one-token-per-line format
 file containing the output of a parser, tagger or lemmatizer. Since these
 formats don't store token IDs and don't often provide a means to mark the
-division into hits, the biggest problem for the Merger is to match up the
-tokens and hits in the two concordances.
+division into **Hits**, the biggest problem for the Merger is to match up the
+**Tokens** and **Hits** in the two concordances.
 
 In the remainder of the section, I assume that the other concordance is
 being read from a one-token-per-line format file. In *all* these cases,
-the two concordances should contain the same hits in the same order.
+the two concordances should contain the same **Hits** in the same order.
 
-#### 5.3.1 Identical tokenization with hit_end_token for hit division
+#### 5.3.1 Identical tokenization with `hit_end_token` for hit division
 
 The best case scenario is:
-+ you've set a `hit_end_token` to recover the division into hits and,
++ you've set a `hit_end_token` to mark the division into **Hits** and,
 + the third-party tool hasn't modified the tokenization.
 
 Let's say your one-token-per-line format file marks
-the end of a hit with a special punctuation mark, e.g. `?!`, and none of the
+the end of a **Hit** with a special punctuation mark, e.g. `?!`, and none of the
 third-party tools have retokenized the text. In this case, the following
 settings in the workflow file will update the token-level annotation
 successfully:
@@ -559,14 +563,14 @@ CM_merge_tokens=True # add the Conll annotation to the original tokens
 CM_update_token_tags=True # update any existing tags with the new values (optional) 
 ```
 
-This is the quickest and most reliable method for updating token tags.
+This is the quickest and most reliable method for updating **Token** tags.
 
-#### 5.3.2 Retokenized, use hit_end_token for hit division
+#### 5.3.2 Retokenized, use `hit_end_token` for hit division
 
 Even if you set a `hit_end_token`, some third-party tools will retokenize
 the original text when processing it. If this is the case, you need to 
-switch to using the TextMerger, which calls the Tokenized Text Aligner
-on each hit to ensure that the tokens are correctly matched
+switch to using the `TextMerger`, which calls the *Tokenized Text Aligner*
+on each **Hit** to ensure that the **Tokens** are correctly matched
 (see [https://sourceforge.net/projects/tokenized-text-aligner/](https://sourceforge.net/projects/tokenized-text-aligner/)).
 
 In this scenario, your workflow file will look like this:
@@ -582,21 +586,20 @@ other_importer=ConllImporter
 TM_hit_end_token=?! # DO set a hit_end_token for the merger!
 ```
 
-Note that, rather counter-intuitively, the `hit_end_token` must be passed
-**only** to the Merger and not to the Importer.
+Note that the `hit_end_token` must be passed only to the Merger and not
+to the Importer.
 
-#### 5.3.3 No hit_end_token
+#### 5.3.3 No `hit_end_token`
 
 If you have no `hit_end_token`, perhaps because it degrades parser or
-lemmatizer performance, the TextMerger reverts to treating the two concordances
+lemmatizer performance, the `TextMerger` reverts to treating the two concordances
 as texts. The alignment will be much, much slower.
 
 Here are the correct settings for merging a concordance where the division
-into hits is irrecoverable:
+into **Hits** is irrecoverable:
 ```
 [setup]
 merger=TextMerger
-other_importer=ConllImporter
 ```
 
 ## 6. Annotating
@@ -605,22 +608,22 @@ The Annotator module is designed for the automatic generation hit-level
 annotation and the intention is that the user will write their own scripts here.
 
 Three annotation scripts are provided with ConMan:
-+ KeywordTagAnnotator: raises some token-level tags from the keyword to the
-level of the hit
-+ LgermFilterAnnotator: disambiguates LGeRM lemmas by part-of-speech.
-+ CoreContextAnnotator: tags a subset of tokens in the hit as the core context.
-See [section 7][7. Core Context]
++ `KeywordTagAnnotator`: raises some token-level tags from the keyword to the
+level of the **Hit**.
++ `LgermFilterAnnotator`: disambiguates LGeRM lemmas by part-of-speech
++ `CoreContextAnnotator`: tags a subset of tokens in the hit as the core context.
+See [section 7](#7-core-context)
 
 ### 6.1 KeywordTagAnnotator
 
 If there's only one keyword in the concordance, it's useful for the
 concordance to contain a separate column for its part-of-speech and lemma tag.
-This is achieved by using the KeywordTagAnnotator.
-The script takes a single argument: a list of (keyword_tag, hit_tag) tuples
-specifying which token-level tags to copy to the hit.
+This is achieved by using the `KeywordTagAnnotator`.
+The script takes a single argument: a list of `(keyword_tag, hit_tag)`
+tuples specifying which **Token** tags to copy to the **Hit**.
 
 For example, the following workflow file settings will project the
-part-of-speech and lemma of the keyword to the hit level:
+part-of-speech and lemma of the keyword to the **Hit** level:
 ```
 [setup]
 Annotator=KeywordTagAnnotator
@@ -629,7 +632,7 @@ Annotator=KeywordTagAnnotator
 tags=[('pos', 'kw_pos'), ('lemma', 'kw_lemma')]
 ```
 
-Export the result using the TableExporter to get a .csv concordance with
+Export the result using the `TableExporter` to get a .csv concordance with
 extra `kw_pos` and `kw_lemma` columns.
 
 ### 6.2 Writing your own script
@@ -650,14 +653,14 @@ annotator=Annotator # Run an annotator
 annotator_script_file=/home/me/myscripts/myannotator.py
 ```
 
-#### 6.2.2 The script() function
+#### 6.2.2 The `script()` method
 
 Your script file must contain a `script()` method with two positional
 arguments, `annotator` and `hit` and it must return a hit. Here is
 the minimal "do nothing" function:
 ```
 def script(annotator, hit):
-	return hit
+    return hit
 ```
 
 #### 6.2.3 Understanding Hits and Tokens
@@ -668,33 +671,33 @@ The `conman.concordance.Hit` object passed to the script is a list of
 + `hit.tags`: dictionary of all hit-level tags
 + `hit.ref`: reference from corpus
 + `hit.uuid`: UUID (not writable)
-For further documentation, see the DOCSTRING in conman/concordance.py.
+For further documentation, see the DOCSTRING in [conman/concordance.py](conman/concordance.py).
 
-Tokens are *sort of* strings (they're UserStrings), which means that sometimes
+**Tokens** are *sort of* strings (they're UserStrings), which means that sometimes
 they behave like strings (e.g. two tokens are equal (`==`) if they have the same
 form even if they have different IDs) and sometimes they don't (e.g. when
 passed to `re.match` or `join`). So get into the habit of using `str()` if
 you need a string and `is` rather than `==` if you want to be sure it's the
-same token.
+same **Token**.
 
-`Tokens` have a single attribute, the dictionary `.tags`, which contains
+**Tokens** have a single attribute, the dictionary `.tags`, which contains
 all token-level annotation.
 
-Here's a commented version of the KeywordTagAnnotator script to demonstrate
-how hits and tokens can be queried:
+Here's a commented version of the `KeywordTagAnnotator` script to demonstrate
+how **Hits** and **Tokens** can be processed by the Annotator module:
 ```
 def script(annotator, hit, tags=[]):
-	# The tags keyword argument is specified in the workflow file.
-	# It contains a list of (kw_tag, hit_tag) tuples.
-	# The main loop iterates over the tags list passed to the script.
+    # The tags keyword argument is specified in the workflow file.
+    # It contains a list of (kw_tag, hit_tag) tuples.
+    # The main loop iterates over the tags list passed to the script.
     for kw_tag, hit_tag in tags:
     	# Initialize an empty list, which we will use to store the 
     	# keyword tags (there may be more than one keyword).
         l = []
         # Iterate over the keyword tokens, which are listed in hit.kws. 
         for kw in hit.kws:
-        	# Check whether the token-level tag we are looking for is present
-        	# in the .tags dictionary of this token (this avoids KeyError).
+	    # Check whether the token-level tag we are looking for is present
+	    # in the .tags dictionary of this token (this avoids KeyError).
             if kw_tag in kw.tags:
             	# Append the value of kw_tag to l
                 l.append(kw.tags[kw_tag])
@@ -702,45 +705,45 @@ def script(annotator, hit, tags=[]):
             	# If the value wasn't in the .tags dictionary, append an empty string
             	# to l instead.
                 l.append('')
-		# Now, join the values for kw_tag for all the keywords with an
-		# underscore and store this value in the hit.tags dictionary 
-		# under the key provided by the user in the tags list.
+	# Now, join the values for kw_tag for all the keywords with an
+	# underscore and store this value in the hit.tags dictionary 
+	# under the key provided by the user in the tags list.
         hit.tags[hit_tag] = '_'.join(l)
     # Return the modified hit.
     return hit
 ```
 
 More complex queries are possible, for example using dependency annotation
-imported from Conll or the `ancestors` attributes provided by the Penn
-Importer to search for specific syntactic structures. All such token-level
-annotation can be read from the .tags dictionary of the token attributes.
+imported from Conll or the `ancestors` attributes provided by the 
+`PennOutImporter` to search for specific syntactic structures. All such token-level
+annotation can be read from the `.tags` dictionary of the **Token**.
 
 ## 7. Core Context
 
-It's possible to annotate a subset of the tokens in a hit as the "core context".
+It's possible to mark a subset of the **Tokens** in a **Hit** as the "core context".
 The core context must include all the keywords. The idea behind this
-is to speed up the parsing process by only exporting words within the same
+is to speed up the parsing process by only exporting tokens within the same
 clause as the keyword to a parser.
 
 To use the core context, the following procedure must be used:
 + Pass 1:
-	+ annotate the core context by using the CoreContextAnnotator
-	+ export the result in Conll format by using the ConllExporter with
-	core_cx set to "True" and a suitable `hit_end_token`
+	+ annotate the core context by using the `CoreContextAnnotator`
+	+ export the result in Conll format by using the `ConllExporter` with
+	`core_cx` set to `True` and a suitable `hit_end_token`
 + Pass 2:
-	+ re-import the parsed data using the ConllImporter;
+	+ re-import the parsed data using the `ConllImporter`;
 	+ merge the parsed data into the original concordance using the
-	ConcordanceMerger or the TextMerger with `CM_core_cx` or `TM_core_cx`
-	respectively set to "True".
+	`ConcordanceMerger` or the `TextMerger` with `CM_core_cx` or `TM_core_cx`
+	respectively set to `True`.
 	
-The CoreContextAnnotator requires a `delim_pattern` argument.
+The `CoreContextAnnotator` requires a `delim_pattern` argument.
 This is a regular expression which matches all tokens which are assumed to
-delimit the core context, e.g. punctuation markes.
+delimit the core context, e.g. punctuation marks.
 
 The following workflow file will import a concordance from a .csv file and
 create a Conll file for a parser containing (i) all tokens after the last
 punctuation to the left of the keyword(s), (ii) the keywords, (iii)
-all tokens preceding the first punctuation after the keywords (pass 1).
+all tokens preceding the first punctuation after the keywords.
 ```
 [setup]
 importer=TableImporter
@@ -756,8 +759,8 @@ delim_pattern=r'[.,!?;:]' # Matches punctuation tokens
 ```
 
 Once parsed, the following workflow file re-imports the Conll annotation,
-adds the head and deprel tags of the keyword to the hit (just to show it's
-done something) and re-exports the result as a table.
+adds the `head` and `deprel` tags of the keyword to the **Hit** 
+and re-exports the result as a table.
 ```
 [setup]
 other_importer=ConllImporter
