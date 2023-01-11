@@ -1,10 +1,9 @@
-% Concordance Manager (ConMan). Concordance management and generation tools for SILPAC H1 WP2. 
-% © Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart
-% January 2023
+# Concordance Manager (ConMan). Concordance management and generation tools for SILPAC H1 WP2. 
+© Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, January 2023
 
-[https://sites.google.com/site/rainsfordtm/home]{https://sites.google.com/site/rainsfordtm/home}
+[https://sites.google.com/site/rainsfordtm/home](https://sites.google.com/site/rainsfordtm/home)
 
-# 1. Introduction
+## 1. Introduction
 
 The Concordance Manager (ConMan) is a command-line Python tool designed to 
 post-process data extracted from linguistic corpora in the form of a KWIC
@@ -14,9 +13,9 @@ It is designed to read this data from a variety of different input formats,
 process it in a flexible and user-configurable way, and output the result in
 different formats for further study.
 
-# 2. What the ConMan does
+## 2. What the ConMan does
 
-## 2.1 Data
+### 2.1 Data
 
 The ConMan manages data in the form of a **Concordance**. A concordance is
 defined as a list of **Hits**, i.e. short sections of text corresponding to 
@@ -31,31 +30,31 @@ Within each Hit, the ConMan stores and processes the following information:
 For each Token within a hit, the ConMan can store any number of annotations
 (part of speech, lemma, dependency parse data in Conll format, etc.)
 
-## 2.2 Modules
+### 2.2 Modules
 
 The ConMan has four core modules which are called in the following order 
 each time it is run.
-1. Importer: imports the primary concordance from an input file. If the
+1. **Importer**: imports the primary concordance from an input file. If the
 Importer module isn't run, the primary concordance must be loaded from a
 .cnc file saved by ConMan.
-2. Merger: Imports a secondary concordance and merges it with the 
+2. **Merger**: Imports a secondary concordance and merges it with the 
 primary concordance. This can be used to add or remove hits from the
 primary concordance or to add annotations to existing hits.
-3. Annotator: Adds user-defined annotations to the primary concordance.
-4. Exporter: exports the primary concordance to an output file. If the
-'-s' file is passed on the command line, it also saves a .cnc file
+3. **Annotator**: Adds user-defined annotations to the primary concordance.
+4. **Exporter**: exports the primary concordance to an output file. If the
+`-s` flag is passed on the command line, it also saves a .cnc file
 containing the primary concordance.
 	
-## 2.3 Workflow files
+### 2.3 Workflow files
 
 Workflow files are configuration files which tell the ConMan what to do:
 + which modules should be run;
-+ which importers and exporters should be used (see [section 4][4. Importers and Exporters]) and what parameters
++ which importers and exporters should be used (see [section 4](#4-importers-and-exporters)) and what parameters
 should be passed to the importer and exporter;
 + how hits from two concordances should be merged;
 + which script should be used to annotate the concordance.
 	
-The workflow file is passed using the '-w' argument on the command line, e.g.
+The workflow file is passed using the `-w` argument on the command line, e.g.:
 ```
 ./conman.py -w my_workflow.cfg in_file.csv out_file.csv
 ```
@@ -68,9 +67,9 @@ to guess what the user wants it to do. All importers, exporters, and mergers wil
 use default parameters. The result is unlikely to be what you want, unless the
 task is a very simple one.
 
-# 3. Some sample workflows
+## 3. Some sample workflows
 
-## 3.1 The unannotated corpus
+### 3.1 The unannotated corpus
 
 You've extracted a concordance using a regex from an unannotated corpus but
 would like to tag and lemmatize the keywords to check whether or not the data
@@ -101,7 +100,7 @@ demo_tasks/bfm-rnn-pass-1.py demo_tasks/bfm-rnn-pass-1.csv out.txt
 demo_tasks/bfm-rnn-pass-2.py demo_tasks/bfm-rnn-pass-2.cnc demo_tasks/bfm-rnn-pass-2.txt out.csv
 ```
 	
-## 3.2. The quick parse
+### 3.2. The quick parse
 
 You've found all the tokens of the verbs you're looking for in a well-lemmatized
 but unparsed corpus, but now you want to know which of the approximately 
@@ -138,7 +137,7 @@ demo_tasks/bfm-parse-pass-2.py demo_tasks/bfm-parse-pass-2.cnc demo_tasks/bfm-pa
 (Observant users will note that the results are rather unsatisfactory, but this
 reflects wrong output from the parser with the sample data rather than an issue with ConMan.)
 	
-## 3.3 The Penn .out headache
+### 3.3 The Penn .out headache
 
 You've got CorpusSearch to find the structure you're looking for in a 
 parsed corpus but you've ended up with a massive .out file which is basically
@@ -158,9 +157,9 @@ Try this with the demo task!
 demo_tasks/penn-out-to-csv.py demo_tasks/penn-out-to-csv.out out.csv
 ```
 
-# 4. Importers and Exporters
+## 4. Importers and Exporters
 
-## 4.1 Types of Importers and Exporters
+### 4.1 Types of Importers and Exporters
 
 The ConMan implements the following importers and exporters:
 
@@ -177,7 +176,7 @@ PennOutImporter                      .out        Importer for Penn format .out f
 For every importer and exporter, the `encoding` parameter sets the correct text 
 encoding. Default is `utf-8`.
 
-## 4.2 Importing and exporting Tokens
+### 4.2 Importing and exporting Tokens
 
 Every Importer and Exporter has methods for solving the two fundamental
 problems when importing Tokens from a source:
@@ -187,7 +186,7 @@ problems when importing Tokens from a source:
 In the ConMan, problem 1 is generally solved using built-in methods and classes
 while problem 2 is fully user-customizable using a regular expression.
 
-### 4.2.1 Token annotation
+#### 4.2.1 Token annotation
 
 When exporting data from a corpus, it's common for annotation such as 
 part-of-speech annotation or lemmas to be printed alongside the token in the
@@ -235,7 +234,7 @@ tok_fmt={0}_{0.tags[pos]}_{0.tags[lemma]}
 Note that setting the `kw_fmt` parameter allows keywords to have a different
 format to context tokens.
 
-### 4.2.2 Tokenization
+#### 4.2.2 Tokenization
 
 By default, the `Importer` and `TableImporter` interpret tokens as being delimited
 by whitespace. More source-specific behaviour can be achieved by specifying
@@ -256,7 +255,7 @@ space.
 
 All other Importers and Exporters deal with pre-tokenized data.
 
-## 4.3 Using the tabular importers and exporters
+### 4.3 Using the tabular importers and exporters
 
 The TableImporter and TableExporter are the primary ways of importing and
 exporting data from the ConMan, since they best represent the underlying
@@ -294,7 +293,7 @@ By default, all fields, including the fields annotated in the `tags` dictionary
 of the hit, are exported, with UUID, REF, LCX, KEYWORDS, and RCX preceding all
 tags, which are in alphabetical order.
 
-## 4.4 Using the one-token-per-line exporter and importers
+### 4.4 Using the one-token-per-line exporter and importers
 
 In a typical workflow, one-token-per-line formats should only be used if
 you need to call an external tool like a lemmatizer, tagger or parser, because
@@ -305,7 +304,7 @@ The one-token-per-line exporters are: TokenListExporter (generic),
 LGermExporter (for the LGerm lemmatizer), ConllExporter. The one-token-per-line
 importers are: TokenListImporter (generic), ConllImporter.
 
-### 4.4.1 Using hit_end_token
+#### 4.4.1 Using hit_end_token
 
 All one-token-per-line exporters and importers accept a `hit_end_token` 
 parameter in the workflow file. If provided, the value of `hit_end_token`
@@ -326,7 +325,7 @@ CE_hit_end_token=?!
 If no `hit_end_token` is given, the importers and exporters interpret empty
 lines in the file to signal the beginning and end of Hits.
 
-### 4.4.2 Exporting and importing annotated tokens
+#### 4.4.2 Exporting and importing annotated tokens
 
 Use the `lcx_regex` (Importer) and the `tok_fmt` (Exporter) parameters if
 the one-token-per-line file contains annotation. For example, to parse
@@ -344,7 +343,7 @@ the workflow file:
 tok_fmt={0}\t{0.tags[lemma]}
 ```
 
-### 4.4.3 Further parameters
+#### 4.4.3 Further parameters
 
 The behaviour of the ConllExporter is highly configurable, and it is possible
 to set the name of the tag which should be exported in each column of the
@@ -355,9 +354,9 @@ in a single file, splitting the export across several files where necessary.
 It's used by the LGermExporter to avoid exceeded the file size limit for
 LGeRM.
 
-## 4.5 The PennOutImporter
+### 4.5 The PennOutImporter
 
-### 4.5.1 Basic use
+#### 4.5.1 Basic use
 	
 The PennOutImporter requires a CorpusSearch .out file **with node numbers**,
 which are enabled by setting `print_indices: true` in the .q file of CorpusSearch.
@@ -385,7 +384,7 @@ importer section of the workflow file or by including
 `PO_keyword_node_regex=<regex>` (no whitespace!) in the remark section of the
 .out file (tip: this is copied directly from the remark section of the .q file).
 
-### 4.5.2 Advanced use
+#### 4.5.2 Advanced use
 
 The PennOutImporter is based on tools I developed before the ConMan and so
 triggers a multi-stage workflow:
@@ -438,7 +437,7 @@ please take a look at doc/basetree\_api.odt. The `tree` argument passed to
 the script is an instance of the basetree.BaseTree class, which inherits
 from xml.dom.minidom.Document.
 
-# 5. Merging
+## 5. Merging
 
 The Merger modifies one concordance (the main concordance) using data from 
 another concordance. It is the only ConMan module which allows combining or
@@ -467,7 +466,7 @@ TI_dialect=tab
 TI_fields=REF,LCX,KEYWORDS,RCX
 ```
 
-## 5.1 Scenario 1: adding annotation to hits
+### 5.1 Scenario 1: adding annotation to hits
 
 This is the default scenario: the user has added a column of extra annotation
 to a concordance in tabular format and we wish to read it back into the 
@@ -496,7 +495,7 @@ automatic annotation, you must set the `CM_update_hit_tags` parameter to
 CM_update_hit_tags=True
 ```
 
-## 5.2 Scenario 2: adding and deleting hits
+### 5.2 Scenario 2: adding and deleting hits
 
 To use a second concordance to add or delete hits from the main concordance,
 you should first set the `CM_match_by` parameter as described above, since
@@ -516,7 +515,7 @@ CM_match_by=uuid
 CM_del_hits=true
 ```
 
-## 5.3 Scenario 3: Updating token annotation
+### 5.3 Scenario 3: Updating token annotation
 
 In principle, updating token-level annotation is achieved simply by setting
 `CM_merge_tokens` (to add new tags) and `CM_update_token_tags` (to update
@@ -533,7 +532,7 @@ In the remainder of the section, I assume that the other concordance is
 being read from a one-token-per-line format file. In *all* these cases,
 the two concordances should contain the same hits in the same order.
 
-### 5.3.1 Identical tokenization with hit_end_token for hit division
+#### 5.3.1 Identical tokenization with hit_end_token for hit division
 
 The best case scenario is:
 + you've set a `hit_end_token` to recover the division into hits and,
@@ -559,7 +558,7 @@ CM_update_token_tags=True # update any existing tags with the new values (option
 
 This is the quickest and most reliable method for updating token tags.
 
-### 5.3.2 Retokenized, use hit_end_token for hit division
+#### 5.3.2 Retokenized, use hit_end_token for hit division
 
 Even if you set a `hit_end_token`, some third-party tools will retokenize
 the original text when processing it. If this is the case, you need to 
@@ -583,7 +582,7 @@ TM_hit_end_token=?! # DO set a hit_end_token for the merger!
 Note that, rather counter-intuitively, the `hit_end_token` must be passed
 **only** to the Merger and not to the Importer.
 
-### 5.3.3 No hit_end_token
+#### 5.3.3 No hit_end_token
 
 If you have no `hit_end_token`, perhaps because it degrades parser or
 lemmatizer performance, the TextMerger reverts to treating the two concordances
@@ -597,7 +596,7 @@ merger=TextMerger
 other_importer=ConllImporter
 ```
 
-# 6. Annotating
+## 6. Annotating
 
 The Annotator module is designed for the automatic generation hit-level
 annotation and the intention is that the user will write their own scripts here.
@@ -609,7 +608,7 @@ level of the hit
 + CoreContextAnnotator: tags a subset of tokens in the hit as the core context.
 See [section 7][7. Core Context]
 
-## 6.1 KeywordTagAnnotator
+### 6.1 KeywordTagAnnotator
 
 If there's only one keyword in the concordance, it's useful for the
 concordance to contain a separate column for its part-of-speech and lemma tag.
@@ -630,9 +629,9 @@ tags=[('pos', 'kw_pos'), ('lemma', 'kw_lemma')]
 Export the result using the TableExporter to get a .csv concordance with
 extra `kw_pos` and `kw_lemma` columns.
 
-## 6.2 Writing your own script
+### 6.2 Writing your own script
 
-### 6.2.1 Calling the script
+#### 6.2.1 Calling the script
 
 Create a Python file anywhere on your computer for the script. The script
 is enabled using the following settings in the workflow file:
@@ -648,7 +647,7 @@ annotator=Annotator # Run an annotator
 annotator_script_file=/home/me/myscripts/myannotator.py
 ```
 
-### 6.2.2 The script() function
+#### 6.2.2 The script() function
 
 Your script file must contain a `script()` method with two positional
 arguments, `annotator` and `hit` and it must return a hit. Here is
@@ -658,7 +657,7 @@ def script(annotator, hit):
 	return hit
 ```
 
-### 6.2.3 Understanding Hits and Tokens
+#### 6.2.3 Understanding Hits and Tokens
 
 The `conman.concordance.Hit` object passed to the script is a list of 
 `conman.concordance.Tokens` and has the following attributes:
@@ -713,7 +712,7 @@ imported from Conll or the `ancestors` attributes provided by the Penn
 Importer to search for specific syntactic structures. All such token-level
 annotation can be read from the .tags dictionary of the token attributes.
 
-# 7. Core Context
+## 7. Core Context
 
 It's possible to annotate a subset of the tokens in a hit as the "core context".
 The core context must include all the keywords. The idea behind this
