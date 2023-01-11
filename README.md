@@ -29,7 +29,6 @@ Within each **Hit**, the ConMan stores and processes the following information:
 * the tokens in the **Hit**;
 * the keyword or keywords within the **Hit**, as distinct from the context;
 * any number of user-defined annotations attached to the **Hit** as a whole;
-* tokens in the "core context" of the **Hit** (see [section 7](#7-core-context)).
 
 For each **Token** within a **Hit**, the ConMan can store any number of annotations
 (part of speech, lemma, dependency parse data in Conll format, etc.)
@@ -40,20 +39,23 @@ The ConMan has four core modules which are called in the following order
 each time it is run.
 1. **Importer**: imports the primary concordance from an input file. If the
 Importer module isn't run, the primary concordance must be loaded from a
-.cnc file saved by ConMan.
+.cnc file saved by ConMan. See [section 4](#4-importers-and-exporters).
 2. **Merger**: Imports a secondary concordance and merges it with the 
 primary concordance. This can be used to add or remove hits from the
 primary concordance or to add annotations to existing hits.
+See [section 5](#5-merging).
 3. **Annotator**: Adds user-defined annotations to the primary concordance.
+See [section 6](#6-annotating).
 4. **Exporter**: exports the primary concordance to an output file. If the
 `-s` flag is passed on the command line, it also saves a .cnc file
 containing the primary concordance.
+See [section 4](#4-importers-and-exporters).
 	
 ### 2.3 Workflow files
 
 Workflow files are configuration files which tell the ConMan what to do:
 + which modules should be run;
-+ which importers and exporters should be used (see [section 4](#4-importers-and-exporters)) and what parameters
++ which importers and exporters should be used and which parameters
 should be passed to the importer and exporter;
 + how **Hits** from two concordances should be merged;
 + which script should be used to annotate the concordance.
@@ -71,7 +73,7 @@ to guess what the user wants it to do. All importers, exporters, and mergers wil
 use default parameters. The result is unlikely to be what you want, unless the
 task is a very simple one.
 
-## 3. Some sample workflows
+## 3. Some sample tasks
 
 ### 3.1 The unannotated corpus
 
@@ -80,20 +82,20 @@ would like to tag and lemmatize the keywords to check whether or not the data
 you've extracted is what you really want.
 
 + Pass 1:
-	+ Import the data, probably with a TableImporter
+	+ Import the data, probably with a `TableImporter`
 	+ Export the data in a one-token-per-line format to feed to the tagger,
-	using the TokenListExporter
+	using the `TokenListExporter`
 	+ Save the concordance by setting the `-s` flag on the command line.
 + Next, run the tagger/lemmatizer on the one-token-per-line data.
 + Pass 2:
 	+ Reload your original concordance from the .cnc file, i.e. no Importer necessary
-	+ Use the TokenListImporter as the `other_importer` to import the tagged and
+	+ Use the `TokenListImporter` as the `other_importer` to import the tagged and
 	lemmatized data as a second concordance.
-	+ Merge the two concordances using the TextMerger to inject the new 
+	+ Merge the two concordances using the `TextMerger` to inject the new 
 	tags into the old concordance.
-	+ Annotate the concordance using the KeywordTagAnnotator to project the
-	**Token**-level pos and lemma tags on the keyword to a **Hit**-level tag.
-	+ Export the concordance using the TableExporter.
+	+ Annotate the concordance using the `KeywordTagAnnotator` to project the
+	token-level `pos` and `lemma` tags on the keyword to a hit-level tag.
+	+ Export the concordance using the `TableExporter`.
 	
 Try this out as a demo task!
 ```
@@ -110,8 +112,8 @@ but unparsed corpus, but now you want to know which of the approximately
 20000 hits have a direct object. Luckily, you have a good dependency parser.
 
 + Pass 1:
-	+ Import the data, probably with a TableImporter
-	+ Export the data using the ConllExporter.
+	+ Import the data, probably with a `TableImporter`.
+	+ Export the data using the `ConllExporter`.
 	    + You may want to limit yourself to the "core context" to
 	    speed up the parsing process (see [section 7](7-core-context)).
 	    + Use `CE_hit_end_token` to add a special symbol or punctuation
@@ -122,14 +124,14 @@ but unparsed corpus, but now you want to know which of the approximately
 is present from the Conll annotation.
 + Pass  2:
 	+ Reload your original concordance from the .cnc file, i.e. no Importer necessary
-	+ Use the ConllImporter as the `other_importer` to import the tagged and
+	+ Use the `ConllImporter` as the `other_importer` to import the tagged and
 	lemmatized data as a second concordance.
-	+ Merge the two concordances using the ConcordanceMerger to inject the Conll 
+	+ Merge the two concordances using the `ConcordanceMerger` to inject the Conll 
 	tags into the old concordance. Set `CI_hit_end_token` to recognize the
 	special symbol used to mark the end of the hit.
 	+ Annotate the concordance using your Python script to add a tag to each
-	hit for the presence/absence of a direct object 
-	+ Export the concordance using the TableExporter.
+	hit for the presence/absence of a direct object.
+	+ Export the concordance using the `TableExporter`.
 	
 Try this out as a demo task!
 ```
@@ -144,18 +146,16 @@ reflects wrong output from the parser with the sample data rather than an issue 
 ### 3.3 The Penn .out headache
 
 You've got CorpusSearch to find the structure you're looking for in a 
-parsed corpus but you've ended up with a massive .out file which is basically
-unreadable, especially if the CorpusSearch "tokens" have had lemmas added to
-them.
+parsed corpus but you've ended up with a massive unreadable .out file.
 
 + Setting up the .out file
 	+ Make sure CorpusSearch is set to print node numbers (see [section 4.5](4-5-the-pennoutexporter)).
 + ConMan workflow
-	+ Import the data using the PennOutImporter.
+	+ Import the data using the `PennOutImporter`.
 	    + Set the `PO_keyword_node_regex` to identify the keyword node.
 	    + Set the `lcx_regex` to split off the lemmas from
 	    the form of the token.
-	+ Export the data using the TableExporter.
+	+ Export the data using the `TableExporter`.
 	
 Try this out as a demo task!
 ```
@@ -168,15 +168,15 @@ demo_tasks/penn-out-to-csv.py demo_tasks/penn-out-to-csv.out out.csv
 
 The ConMan implements the following importers and exporters:
 
-| Importer          | Exporter          | Extension | Description                                                               |             
-| ---               | ---               | ---       | ---                                                                       |
-| Importer          | Exporter          | .txt      | Generic: lines are **Hits**, **Tokens** are separated by whitespace.      |
-| TableImporter     | TableExporter     | .csv      | Generic for concordances in tabular format, one line per **Hit**.         |
-| TokenListImporter | TokenListExporter | .txt      | Generic one **Token** per line format.                                    |
-|                   | LGermExporter     | .txt      | Specific one **Token** per line export for the LGeRM lemmatizer.          |
-| ConllImporter     | ConllExporter     | .conllu   | CoNLL format for dependency parsing.                                      |
-| BaseTreeImporter  |                   | .xml      | Generic importer for treebank corpora, must be converted to BaseTree XML. |
-| PennOutImporter   |                   | .out      | Importer for Penn format .out files (constituency parsing).               |
+| Importer            | Exporter            | Extension | Description                                                               |             
+| ---                 | ---                 | ---       | ---                                                                       |
+| `Importer`          | `Exporter`          | .txt      | Generic: lines are **Hits**, **Tokens** are separated by whitespace.      |
+| `TableImporter`     | `TableExporter`     | .csv      | Generic for concordances in tabular format, one line per **Hit**.         |
+| `TokenListImporter` | `TokenListExporter` | .txt      | Generic one **Token** per line format.                                    |
+|                     | `LGermExporter`     | .txt      | Specific one **Token** per line export for the LGeRM lemmatizer.          |
+| `ConllImporter`     | `ConllExporter`     | .conllu   | CoNLL format for dependency parsing.                                      |
+| `BaseTreeImporter`  |                     | .xml      | Generic importer for treebank corpora, must be converted to BaseTree XML. |
+| `PennOutImporter`   |                     | .out      | Importer for Penn format .out files (constituency parsing).               |
 
 For every importer and exporter, the `encoding` parameter sets the correct text 
 encoding. Default is `utf-8`.
@@ -184,9 +184,9 @@ encoding. Default is `utf-8`.
 ### 4.2 Importing and exporting Tokens
 
 Every Importer and Exporter has methods for solving the two fundamental
-problems when importing **Tokens** from a source:
-1. tokenization, i.e. how are **Tokens** separated from each other?
-2. token-level annotation, i.e. what is the **Token** itself and what is annotation?
+problems when importing tokens from a source:
+1. tokenization, i.e. how are tokens separated from each other?
+2. token-level annotation, i.e. what is the token itself and what is annotation?
 	
 In the ConMan, problem 1 is generally solved using built-in methods and classes
 while problem 2 is fully user-customizable using a regular expression.
@@ -195,7 +195,7 @@ while problem 2 is fully user-customizable using a regular expression.
 
 When exporting data from a corpus, it's common for annotation such as 
 part-of-speech annotation or lemmas to be printed alongside the token in the
-output. Here are some formats that I came across while writing the ConMan
+output. Here are some formats that I came across while writing the ConMan:
 + **BFM via TXM web**: customizable, tags separated by underscores, e.g. `de_PRE_|de|`
 + **FRANTEXT**: customizable, tags separated by slashes, e.g. `de/PRE/de`
 + **Lemmatized Penn corpora**: encoded in the .psd file as part of the token 
@@ -206,9 +206,14 @@ split off from the form of the token itself. This is done using a Python 3
 regular expression containing symbolic group names, passed as the parameter
 `lcx_regex` in the parameter file. Here's an example of some possible regexes:
 ```
-lcx_regex=(?P<word>[^_]+)_(?P<pos_bfm>[^_]+)_(?P<lemma_bfm>.*) # de_PRE_|de|
-lcx_regex=(?P<word>[^/]+)/(?P<pos_ft>[^/]+)/(?P<lemma_ft>.*) # de/PRE/de
-lcx_regex=(?P<word>[^@]+)@t=(?P<pos>[^@]+)@l=(?P<lemma>.*) # de@t=PRE@l=de
+# For the BFM, e.g. de_PRE_|de|
+lcx_regex=(?P<word>[^_]+)_(?P<pos_bfm>[^_]+)_(?P<lemma_bfm>.*) 
+
+# For FRANTEXT, e.g. de/PRE/de
+lcx_regex=(?P<word>[^/]+)/(?P<pos_ft>[^/]+)/(?P<lemma_ft>.*) 
+
+# For Penn corpora, e.g. de@t=PRE@l=de
+lcx_regex=(?P<word>[^@]+)@t=(?P<pos>[^@]+)@l=(?P<lemma>.*)
 ```
 Note that the name `word` is reserved for the form of the token. Everything
 else will be stored as a tag.
@@ -223,7 +228,8 @@ lcx_regex=(?P<word>[^\t]+)\t(?P<pos>[^\t]+)\t(?P<lemma>[^\t]) # de	PRE	de
 When exporting from the BFM, it's possible for the form of the tokens in the
 left context, right context and in the keywords to be individually set. If
 you need a separate regex for keywords and right context, use `kw_regex`
-and `rcx_regex` parameters respectively.
+and `rcx_regex` parameters respectively. Otherwise the `lcx_regex` 
+regex is used for everything.
 
 When exporting from ConMan, you can use the `tok_fmt` parameter in the `exporter`
 section of the workflow file to add
@@ -262,11 +268,11 @@ All other Importers and Exporters deal with pre-tokenized data.
 
 ### 4.3 Using the tabular importers and exporters
 
-The TableImporter and TableExporter are the primary ways of importing and
+The `TableImporter` and `TableExporter` are the primary ways of importing and
 exporting data from the ConMan, since they best represent the underlying
 Concordance format that the software is designed to manage.  
 
-By default, the TableImporter requires .csv files to be comma-delimited, UTF-8
+By default, the `TableImporter` requires .csv files to be comma-delimited, UTF-8
 encoded, and with a header row containing the following field names IN 
 CAPITALS:
 + `KEYWORDS`: Keyword tokens only
@@ -419,8 +425,9 @@ non-word tags as XML attributes, e.g. `lemma="aller"`.
 	
 Except for the `KEYWORD` attribute, which is used by the `BaseTreeImporter` to
 build the hits in the concordance, all other XML attributes created by this
-script are turned into word-level tags in the concordance by the `BaseTreeImporter`
-and are available to Annotator scripts in the ConMan.
+script are added to the `.tags` dictionary of each **Token** in the
+concordance by the `BaseTreeImporter` and so are available to 
+Annotator scripts.
 
 If you want to modify the stage 2 pre-import script, here are some tips:
 + first, enable `PO_dump_xml` in the `[advanced]` section of the 
