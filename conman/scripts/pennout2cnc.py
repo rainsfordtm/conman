@@ -66,7 +66,10 @@ def script(transformer, tree,
         # Iterate over the named groups in groupdict()
         for key, value in m.groupdict().items():
             # Rename the key 'keyword_node' to keyword_attr
-            if key == 'keyword_node': key = keyword_attr
+            if key == 'keyword_node':
+                key = keyword_attr
+            else:
+                key = 'KEYNODE_' + key
             # Add the key attribute to the branch if this is the first
             # parse
             if i == 0: tree.add_branch_attr(key)

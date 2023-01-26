@@ -42,7 +42,8 @@ class Annotator():
           'Annotator':  Annotator,
           'CoreContextAnnotator': CoreContextAnnotator,
           'KeywordTagAnnotator': KeywordTagAnnotator,
-          'LgermFilterAnnotator': LgermFilterAnnotator
+          'LgermFilterAnnotator': LgermFilterAnnotator,
+          'PennAnnotator': PennAnnotator
         }
         if annotator_type not in ANNOTATOR_TYPE_TO_CLASS_MAP:
               raise ValueError('Bad annotator type {}'.format(annotator_type))
@@ -198,4 +199,50 @@ class LgermFilterAnnotator(Annotator):
             return KeywordTagAnnotator.script(None, hit, tags=[('lemma_lgerm', 'lemma_lgerm'), ('lgerm_out', 'lgerm_out')])
         else:
             return hit
+            
+class PennAnnotator(Annotator):
+    """
+    Annotator containing methods for performing analysis on corpora
+    imported from Penn Treebank format.
+    Default script prints (i) the cat of the keynode and (ii) the
+    form and the cat of all nodes of interest identified in the 
+    keyword_node_regex.
+    Like KeywordTagAnnotator, also raises tags given in the 
+    tags argument to the level of the hit.
+    """
+    
+    def script(self, hit, tags=[]):
+        # Tags is a list of kw tags.
+        # 1. Add 'cat' to tags
+        if not 'cat' in tags: tags.append('cat')
+        # 2. Get keywords
+        kws = hit.kws
+        # Quit if no keywords
+        if not kws: return hit
+        # 3. Find keys beginning 'KEYNODE_'
+        keynode_keys = []
+        for tag in kws[0].tags.keys():
+            # In case trees were split, need to read back KW number.
+            kw_no = kws[0].tags['KEYWORDS']
+            if tag.startswith('KEYNODE_'): keynode_keys.append(tag)
+        # 4. Build tag, token_list tuples for each KEYNODE tags
+        keynodes = []
+        for key in keynode_keys:
+            l = []
+            for tok in hit:
+                if tok.tags[key] == kw_no: l.append(tok)
+            keynodes.append((key, l))
+        # 5. Add form of each keynode as a hit tag
+        for key, toks in keynodes:
+            hit.tags[key[8:] + '_' + 'form'] = ' '.join([str(tok) for tok in toks])
+        # 6. Iterate over tags and add each one
+        for tag in tags:
+            hit.tags['kw_' + tag] = ' '.join([tok.tags[tag] for tok in kws])
+            for key, toks in keynodes:
+                hit.tags[key[8:] + '_' + tag] = ' '.join([tok.tags[tag] for tok in toks])
+        return hit
+        
+        
+    
+    
         

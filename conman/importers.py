@@ -540,14 +540,14 @@ class BaseTreeImporter(Importer):
             # 2. Make a list of separate kws lists.
             l_kws = []
             for value in values:
-                l_kws.append(
+                l_kws.append((value,
                     list(filter(lambda x: x.tags[self.keyword_attr] == value, kws))
-                )
+                ))
         else:
-            l_kws = [kws]
+            l_kws = [('', kws)]
         # Iterate over l_kws to generate a list of hits from the tree.
         hits = []
-        for kws in l_kws:
+        for true_val, kws in l_kws:
             hit = Hit(l, kws)
             # Use tree_id for the ref whatever -- this format is needed for the
             # pennout2cnc script.
