@@ -61,26 +61,40 @@ def script(transformer, tree,
     ################################
     # Get the comment
     comment = get_keynode_comment()
-    # Add the keyword attr to all branches
-    tree.add_branch_attr(keyword_attr)
     # Find keyword node numbers using keyword_node_regex
     for i, m in enumerate(re.finditer(keyword_node_regex, comment)):
-        keyword_node = m.groupdict()['keyword_node']
-        # Find the keyword in the tree
-        keyword_branch = tree.find_nodes('cs_id', keyword_node, regex=False)[0]
-        # Set the attribute to str(i + 1) on the keyword branch
-        keyword_branch.setAttribute(keyword_attr, str(i + 1))
-        # Get all descendents
-        branches = keyword_branch.getElementsByTagName('branch')
-        for branch in branches:
-            branch.setAttribute(keyword_attr, str(i + 1))
+        # Iterate over the named groups in groupdict()
+        for key, value in m.groupdict().items():
+            # Rename the key 'keyword_node' to keyword_attr
+            if key == 'keyword_node': key = keyword_attr
+            # Add the key attribute to the branch if this is the first
+            # parse
+            if i == 0: tree.add_branch_attr(key)
+            # Find the node in the tree
+            branch = tree.find_nodes('cs_id', value, regex=False)[0]
+            # Set the attribute to str(i + 1) on the keyword branch
+            branch.setAttribute(key, str(i + 1))
+            # Get all descendents
+            desc_branches = branch.getElementsByTagName('branch')
+            for desc_branch in desc_branches:
+                desc_branch.setAttribute(key, str(i + 1))
             
     ###############################
     # 2. Remove all code nodes
     ###############################
     nodes = tree.find_nodes('cat', 'CODE', regex=False)
     while nodes:
-        tree.del_node_deep(nodes.pop(0))
+        # An extremely rare annotation error causes CODE nodes
+        # to be nested. This causes problems when a nested node is
+        # deleted as a child of the higher node before the deletion
+        # method is called.
+        # So here we'll make sure that CODE nodes with <branch/>
+        # children are only removed using del_node, not del_node_deep.
+        node = nodes.pop(0)
+        if tree.get_child_branches(node):
+            tree.del_node(node)
+        else:
+            tree.del_node_deep(node)
     # Very occasionally, CODE nodes replace a terminal. One case of the code
     # "Latin Prayer omitted" which is tagged as NP-PRN. So make sure all
     # branches left without terminals are also deleted to prevent .sort()
