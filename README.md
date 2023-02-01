@@ -372,7 +372,7 @@ LGeRM.
 ### 4.5 The PennOutImporter
 
 > **Tip**: For a tabular export, make a workflow using the 
-> [`PennOutAnnotator`](6-2-pennannotator) and the
+> [`PennAnnotator`](6-2-pennannotator) and the
 > [`TableExporter`](4-3-using-the-tabular-importers-and-exporters).
 
 #### 4.5.1 Basic use
@@ -410,7 +410,7 @@ node, you can set the following regex:
 ```
 \s(?P<keyword_node>[0-9]+)\sVX,\s(?P<subject>[0-9]+)\sNP-SBJ
 ```
-Use the [`PennOutAnnotator`](6-2-pennannotator) to visualize these tokens in a table.
+Use the [`PennAnnotator`](6-2-pennannotator) to visualize these tokens in a table.
 
 #### 4.5.2 Advanced use
 
