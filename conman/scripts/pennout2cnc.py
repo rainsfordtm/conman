@@ -61,6 +61,8 @@ def script(transformer, tree,
     ################################
     # Get the comment
     comment = get_keynode_comment()
+    # Add KN_cat attribute
+    tree.add_branch_attr('KN_cat')
     # Find keyword node numbers using keyword_node_regex
     for i, m in enumerate(re.finditer(keyword_node_regex, comment)):
         # Iterate over the named groups in groupdict()
@@ -75,12 +77,15 @@ def script(transformer, tree,
             if i == 0: tree.add_branch_attr(key)
             # Find the node in the tree
             branch = tree.find_nodes('cs_id', value, regex=False)[0]
+            cat = branch.getAttribute('cat')
             # Set the attribute to str(i + 1) on the keyword branch
             branch.setAttribute(key, str(i + 1))
+            branch.setAttribute('KN_cat', cat)
             # Get all descendents
             desc_branches = branch.getElementsByTagName('branch')
             for desc_branch in desc_branches:
                 desc_branch.setAttribute(key, str(i + 1))
+                desc_branch.setAttribute('KN_cat', cat)
             
     ###############################
     # 2. Remove all code nodes

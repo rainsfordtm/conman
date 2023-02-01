@@ -213,28 +213,30 @@ class PennAnnotator(Annotator):
     
     def script(self, hit, tags=[]):
         # Tags is a list of kw tags.
-        # 1. Add 'cat' to tags
-        if not 'cat' in tags: tags.append('cat')
-        # 2. Get keywords
+        # 1. Get keywords
         kws = hit.kws
         # Quit if no keywords
         if not kws: return hit
-        # 3. Find keys beginning 'KEYNODE_'
+        # 2. Find keys beginning 'KEYNODE_'
         keynode_keys = []
         for tag in kws[0].tags.keys():
             # In case trees were split, need to read back KW number.
             kw_no = kws[0].tags['KEYWORDS']
             if tag.startswith('KEYNODE_'): keynode_keys.append(tag)
-        # 4. Build tag, token_list tuples for each KEYNODE tags
+        # 3. Build tag, token_list tuples for each KEYNODE tags
         keynodes = []
         for key in keynode_keys:
             l = []
             for tok in hit:
                 if tok.tags[key] == kw_no: l.append(tok)
             keynodes.append((key, l))
-        # 5. Add form of each keynode as a hit tag
+        # 4. Add form and cat of each keynode as a hit tag
+        # Begin with keyword cat
+        hit.tags['kw_cat'] = kws[0].tags['KN_cat']
+        # Other keynodes
         for key, toks in keynodes:
             hit.tags[key[8:] + '_' + 'form'] = ' '.join([str(tok) for tok in toks])
+            hit.tags[key[8:] + '_' + 'cat'] = toks[0].tags['KN_cat'] if toks else ''
         # 6. Iterate over tags and add each one
         for tag in tags:
             hit.tags['kw_' + tag] = ' '.join([tok.tags[tag] for tok in kws])
