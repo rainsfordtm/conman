@@ -115,7 +115,7 @@ but unparsed corpus, but now you want to know which of the approximately
 	+ Import the data, probably with a `TableImporter`.
 	+ Export the data using the `ConllExporter`.
 	    + You may want to limit yourself to the "core context" to
-	    speed up the parsing process (see [section 7](7-core-context)).
+	    speed up the parsing process (see [section 7](#7-core-context)).
 	    + Use `CE_hit_end_token` to add a special symbol or punctuation
 	    mark at the end of each hit so this can be recovered after parsing.
 	+ Also save your concordance by passing the `-s` flag on the command line.
@@ -150,7 +150,7 @@ You've got CorpusSearch to find the structure you're looking for in a
 parsed corpus but you've ended up with a massive unreadable .out file.
 
 + Setting up the .out file
-	+ Make sure CorpusSearch is set to print node numbers (see [section 4.5](4-5-the-pennoutexporter)).
+	+ Make sure CorpusSearch is set to print node numbers (see [section 4.5](#4-5-the-pennoutexporter)).
 + ConMan workflow
 	+ Import the data using the `PennOutImporter`.
 	    + Set the `PO_keyword_node_regex` to identify the keyword and other keynodes.
@@ -372,8 +372,8 @@ LGeRM.
 ### 4.5 The PennOutImporter
 
 > **Tip**: For a tabular export, make a workflow using the 
-> [`PennAnnotator`](6-2-pennannotator) and the
-> [`TableExporter`](4-3-using-the-tabular-importers-and-exporters).
+> [`PennAnnotator`](#6-2-pennannotator) and the
+> [`TableExporter`](#4-3-using-the-tabular-importers-and-exporters).
 
 #### 4.5.1 Basic use
 	
@@ -382,7 +382,7 @@ which are enabled by setting `print_indices: true` in the .q file of CorpusSearc
 
 Most users will only have to bother with one or perhaps two parameters:
 + `PO_keyword_node_regex`: identifies one node as the keyword.
-+ `lcx_regex`: to parse the tokens if they contain further annotation (see [section 4.2.1](4-2-1-token-annotation) above)
++ `lcx_regex`: to parse the tokens if they contain further annotation (see [section 4.2.1](#4-2-1-token-annotation) above)
 
 `PO_keyword_node_regex` is a Python regex which identifies a node number
 in each hit and assigns it the symbolic group name `keyword_node`.
@@ -410,7 +410,7 @@ node, you can set the following regex:
 ```
 \s(?P<keyword_node>[0-9]+)\sVX,\s(?P<subject>[0-9]+)\sNP-SBJ
 ```
-Use the [`PennAnnotator`](6-2-pennannotator) to visualize these tokens in a table.
+Use the [`PennAnnotator`](#6-2-pennannotator) to visualize these tokens in a table.
 
 #### 4.5.2 Advanced use
 
@@ -636,7 +636,7 @@ Three annotation scripts are provided with ConMan:
 level of the **Hit**.
 + `PennAnnotator`: adds columns containing properties of the keywords
 and other keynodes identified in a CorpusSearch query. Only works
-for concordances created with the [`PennOutImporter`](4-5-the-pennoutimporter).
+for concordances created with the [`PennOutImporter`](#4-5-the-pennoutimporter).
 + `LgermFilterAnnotator`: disambiguates LGeRM lemmas by part-of-speech
 + `CoreContextAnnotator`: tags a subset of tokens in the hit as the core context.
 See [section 7](#7-core-context)
