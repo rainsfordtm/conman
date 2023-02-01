@@ -372,7 +372,7 @@ LGeRM.
 ### 4.5 The PennOutImporter
 
 > **Tip**: For a tabular export, make a workflow using the 
-> [`PennOutAnnotator`](6-2-pennannotator)` and the
+> [`PennOutAnnotator`](6-2-pennannotator) and the
 > [`TableExporter`](4-3-using-the-tabular-importers-and-exporters).
 
 #### 4.5.1 Basic use
