@@ -157,6 +157,7 @@ class Launcher():
             for key in ['encoding', 'tok_fmt', 'kw_fmt', 'tok_delimiter']:
                 value = self.workflow.get('exporter', key, fallback='')
                 if value:
+                    # convert to normal string to allow \n, \s, etc.
                     value = fix_escape_characters(value)
                     setattr(self.exporter, key, value)
             value = self.workflow.getint('exporter', 'split_hits', fallback=0)

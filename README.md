@@ -115,7 +115,7 @@ but unparsed corpus, but now you want to know which of the approximately
 	+ Import the data, probably with a `TableImporter`.
 	+ Export the data using the `ConllExporter`.
 	    + You may want to limit yourself to the "core context" to
-	    speed up the parsing process (see [section 7](7-core-context)).
+	    speed up the parsing process (see [section 7](#7-core-context)).
 	    + Use `CE_hit_end_token` to add a special symbol or punctuation
 	    mark at the end of each hit so this can be recovered after parsing.
 	+ Also save your concordance by passing the `-s` flag on the command line.
@@ -150,12 +150,14 @@ You've got CorpusSearch to find the structure you're looking for in a
 parsed corpus but you've ended up with a massive unreadable .out file.
 
 + Setting up the .out file
-	+ Make sure CorpusSearch is set to print node numbers (see [section 4.5](4-5-the-pennoutexporter)).
+	+ Make sure CorpusSearch is set to print node numbers (see [section 4.5](#4-5-the-pennoutexporter)).
 + ConMan workflow
 	+ Import the data using the `PennOutImporter`.
-	    + Set the `PO_keyword_node_regex` to identify the keyword node.
+	    + Set the `PO_keyword_node_regex` to identify the keyword and other keynodes.
 	    + Set the `lcx_regex` to split off the lemmas from
 	    the form of the token.
+	+ Enable the `PennAnnotator` to add extra information about the
+	keyword and other keynodes to the **Hit**.
 	+ Export the data using the `TableExporter`.
 	
 Try this out as a demo task!
@@ -369,6 +371,10 @@ LGeRM.
 
 ### 4.5 The PennOutImporter
 
+> **Tip**: For a tabular export, make a workflow using the 
+> [`PennAnnotator`](#6-2-pennannotator) and the
+> [`TableExporter`](#4-3-using-the-tabular-importers-and-exporters).
+
 #### 4.5.1 Basic use
 	
 The PennOutImporter requires a CorpusSearch .out file **with node numbers**,
@@ -376,7 +382,7 @@ which are enabled by setting `print_indices: true` in the .q file of CorpusSearc
 
 Most users will only have to bother with one or perhaps two parameters:
 + `PO_keyword_node_regex`: identifies one node as the keyword.
-+ `lcx_regex`: to parse the tokens if they contain further annotation (see [section 4.2.1](4-2-1-token-annotation) above)
++ `lcx_regex`: to parse the tokens if they contain further annotation (see [section 4.2.1](#4-2-1-token-annotation) above)
 
 `PO_keyword_node_regex` is a Python regex which identifies a node number
 in each hit and assigns it the symbolic group name `keyword_node`.
@@ -397,6 +403,15 @@ importer section of the workflow file or by including
 `PO_keyword_node_regex=<regex>` (no whitespace!) in the remark section of the
 .out file (tip: this is copied directly from the remark section of the .q file).
 
+**NEW 01/02/23**: You can name further nodes from your query using
+the same technique and ConMan will tag all tokens dominated by that
+node on import. For example, if you are also interested in the NP subject
+node, you can set the following regex:
+```
+\s(?P<keyword_node>[0-9]+)\sVX,\s(?P<subject>[0-9]+)\sNP-SBJ
+```
+Use the [`PennAnnotator`](#6-2-pennannotator) to visualize these tokens in a table.
+
 #### 4.5.2 Advanced use
 
 The `PennOutImporter` is based on tools I developed before the ConMan and so
@@ -411,6 +426,9 @@ The pre-import script is, by default, the `script()` method of
 [`scripts.pennout2cnc.py`](scripts/pennout2cnc.py). It does the following:
 + identifies the keyword(s) by adding an XML attribute `KEYWORD="1"`,
 `KEYWORD="2"` to each keyword in the sentence;
++ identifies tokens dominated by other nodes in the regex using and
+tags them by adding the XML attribute `KEYNODE_<group_name>="1"` to
+each token;
 + deletes the `CODE` nodes (they clutter up the text);
 + identifies the `ID` node and copies it to the id attribute of the
 `<tree>` element node where the `BaseTreeImporter` will look for it,
@@ -424,11 +442,9 @@ deep structure respectively, e.g. `ancestors_cs_id="1|6"`.
 + parses the CorpusSearch tokens using the `lcx_regex` parameter, storing all 
 non-word tags as XML attributes, e.g. `lemma="aller"`.
 	
-Except for the `KEYWORD` attribute, which is used by the `BaseTreeImporter` to
-build the hits in the concordance, all other XML attributes created by this
-script are added to the `.tags` dictionary of each **Token** in the
-concordance by the `BaseTreeImporter` and so are available to 
-Annotator scripts.
+All  XML attributes created by this script are added to the `.tags`
+dictionary of each **Token** in the concordance by the `BaseTreeImporter`
+and so are available to Annotator scripts.
 
 If you want to modify the stage 2 pre-import script, here are some tips:
 + first, enable `PO_dump_xml` in the `[advanced]` section of the 
@@ -618,6 +634,9 @@ annotation and the intention is that the user will write their own scripts here.
 Three annotation scripts are provided with ConMan:
 + `KeywordTagAnnotator`: raises some token-level tags from the keyword to the
 level of the **Hit**.
++ `PennAnnotator`: adds columns containing properties of the keywords
+and other keynodes identified in a CorpusSearch query. Only works
+for concordances created with the [`PennOutImporter`](#4-5-the-pennoutimporter).
 + `LgermFilterAnnotator`: disambiguates LGeRM lemmas by part-of-speech
 + `CoreContextAnnotator`: tags a subset of tokens in the hit as the core context.
 See [section 7](#7-core-context)
@@ -643,9 +662,46 @@ tags=[('pos', 'kw_pos'), ('lemma', 'kw_lemma')]
 Export the result using the `TableExporter` to get a .csv concordance with
 extra `kw_pos` and `kw_lemma` columns.
 
-### 6.2 Writing your own script
+### 6.2 PennAnnotator
 
-#### 6.2.1 Calling the script
+The `PennAnnotator` adds properties of the keyword(s) and other keynodes
+identified in a CorpusSearch query to the **Hit**:
++ `<node_name>_cat`: the Penn category tag for the node;
++ `<node_name>_form`: the string of tokens dominated by the node.
+
+The `PennAnnotator` script takes a single `tags` argument, which is a
+list of token-level tags which should be added to the hit for each
+keynode.
+
+For example, let's assume a CorpusSearch query identifying verbs and
+subject. The CorpusSearch results look something like this:
+```
+11 IP-INF:  11 IP-INF, 16 VX, 12 NP-SBJ
+```
+The following workflow file will generate a tabular concordance
+with extra columns `kw_cat`, `kw_lemma`, `subject_form`, `subject_cat`,
+`subject_lemma` from the .out file:
+```
+[setup]
+Importer=PennOutImporter
+Annotator=PennAnnotator
+Exporter=TableExporter
+
+[importer]
+# Parses a Penn token with extra attributes @rl= and @rt=
+lcx_regex=(?P<word>.+)@rl=(?P<lemma_rnn>.+)@rt=(?P<pos_rnn>.+)
+# Identifies the verb as a keyword and the subject as the keynode "subject"
+PO_keyword_node_regex=\s(?P<keyword_node>[0-9]+)\sV[^,]+,\s(?P<subject>[0-9]+)\sNP-SBJ
+
+[annotator]
+# Add a tag containing the "lemma_rnn" of each token in the keyword
+# or other keynodes to the concordance.
+tags=['lemma_rnn']
+```
+
+### 6.3 Writing your own script
+
+#### 6.3.1 Calling the script
 
 Create a Python file anywhere on your computer for the script. The script
 is enabled using the following settings in the workflow file:
@@ -661,7 +717,7 @@ annotator=Annotator # Run an annotator
 annotator_script_file=/home/me/myscripts/myannotator.py
 ```
 
-#### 6.2.2 The `script()` method
+#### 6.3.2 The `script()` method
 
 Your script file must contain a `script()` method with two positional
 arguments, `annotator` and `hit` and it must return a hit. Here is
@@ -671,7 +727,7 @@ def script(annotator, hit):
     return hit
 ```
 
-#### 6.2.3 Understanding Hits and Tokens
+#### 6.3.3 Understanding Hits and Tokens
 
 The `conman.concordance.Hit` object passed to the script is a list of 
 `conman.concordance.Tokens` and has the following attributes:
