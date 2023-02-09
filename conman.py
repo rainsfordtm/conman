@@ -43,6 +43,7 @@ class Launcher():
     path_out (str):                         Path to the output file.
     path_other (str):                       Path to the other concordance.
     path_save (str):                        Path to which concordance should be saved.
+    gz_save (bool):                         Enable gzip compression of saved cnc file.
     workflow (configparser.ConfigParser)    ConfigParser containing data read for workflow.
     
     
@@ -59,6 +60,7 @@ class Launcher():
         self.path_in = path_in
         self.path_out = path_out
         self.path_other, self.path_save = '', ''
+        self.gz_save = False
         self.cnc, self.other_cnc = None, None
         self.importer, self.other_importer = None, None
         self.exporter = None
@@ -68,18 +70,24 @@ class Launcher():
         
     def _initialize_from_path(self):
         # Uses the path variables to set importers, exporters and mergers
-        if os.path.splitext(self.path_in)[1] in CONCORDANCE_EXTS:
+        in_splitext = os.path.splitext(self.path_in)
+        if in_splitext[1] in CONCORDANCE_EXTS or \
+        (in_splitext[1] == '.gz' and os.path.splitext(in_splitext[0])[1] in CONCORDANCE_EXTS):
             self.cnc = load_concordance(self.path_in)
         else:
             self.importer = get_importer_from_path(self.path_in)
         if self.path_other:
-            if os.path.splitext(self.path_other)[1] in CONCORDANCE_EXTS:
+            other_splitext = os.path.splitext(self.path_other)
+            if other_splitext[1] in CONCORDANCE_EXTS or \
+            (other_splitext[1] == '.gz' and os.path.splitext(other_splitext[0])[1] in CONCORDANCE_EXTS):
                 self.other_cnc = load_concordance(self.path_other)
             else:
                 self.other_importer = get_importer_from_path(self.path_other)
         if self.other_cnc or self.other_importer:
             self.merger = ConcordanceMerger()
-        if os.path.splitext(self.path_out)[1] not in CONCORDANCE_EXTS:
+        out_splitext = os.path.splitext(self.path_out)
+        if out_splitext[1] not in CONCORDANCE_EXTS or \
+        (out_splitext[1] == '.gz' and os.path.splitext(out_splitext[0])[1] not in CONCORDANCE_EXTS):
             self.exporter = get_exporter_from_path(self.path_out)
         else:
             self.path_save = self.path_out
@@ -306,7 +314,7 @@ class Launcher():
         print('Done!')
 
 def main(path_in, path_out, path_other='', path_workflow='', 
-    save=False):
+    save=False, gz=False):
     """
     Builds and runs a Launcher object.
     
@@ -320,6 +328,7 @@ def main(path_in, path_out, path_other='', path_workflow='',
     launcher = Launcher(path_in, path_out)
     if save:
         launcher.path_save = os.path.splitext(path_out)[0] + CONCORDANCE_EXTS[0]
+        if gz: launcher.path_save += '.gz'
     if path_other:
         launcher.path_other = path_other
     if path_workflow:
@@ -365,12 +374,14 @@ if __name__ == '__main__':
         'if an exporter is given in the workflow file or if outfile is not of ' + \
         'type .cnc.'
     )
-    
+    parser.add_argument('-z', '--zip', action='store_true',
+        help='Gzip compress the .cnc file while saving.'
+    )
     # Convert Namespace to dict.
     args = vars(parser.parse_args())
     merge = args.pop('merge')[0] if 'merge' in args else ''
     workflow = args.pop('workflow')[0] if 'workflow' in args else ''
     main(args.pop('infile'), args.pop('outfile'), merge,
-        workflow, args.pop('save'))
+        workflow, args.pop('save'), args.pop('zip'))
     
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import collections, pickle, os.path
+import collections, pickle, os.path, gzip
 from uuid import UUID, uuid4
 
 # This global variable is available in the whole of conman for identifying
@@ -113,9 +113,12 @@ class Concordance(collections.UserList):
         Parameters:
             path (str): Path to file where object should be saved.
         """
-        if not os.path.splitext(path)[1] in CONCORDANCE_EXTS:
+        path_splitext = os.path.splitext(path)
+        if not path_splitext[1] in CONCORDANCE_EXTS or \
+        (path_splitext[1] == '.gz' and not os.path.splitext(path_splitext[0])[1] in CONCORDANCE_EXTS):
             path += CONCORDANCE_EXTS[0]
-        with open(path, 'wb') as f:
+        open_fnc = gzip.open if os.path.splitext(path)[1] == '.gz' else open
+        with open_fnc(path, 'wb') as f:
             pickle.dump(self, f)
     
 class Hit(collections.UserList):
@@ -409,7 +412,8 @@ def load_concordance(path):
     Returns:
         load_concordance(path): A concordance object.
     """
-    with open(path, 'rb') as f:
+    open_fnc = gzip.open if os.path.splitext(path)[1] == '.gz' else open
+    with open_fnc(path, 'rb') as f:
         cnc = pickle.load(f)
     if not isinstance(cnc, Concordance):
         raise LoadError('File does not contain a concordance.')
