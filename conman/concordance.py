@@ -114,8 +114,11 @@ class Concordance(collections.UserList):
             path (str): Path to file where object should be saved.
         """
         path_splitext = os.path.splitext(path)
-        if not path_splitext[1] in CONCORDANCE_EXTS or \
-        (path_splitext[1] == '.gz' and not os.path.splitext(path_splitext[0])[1] in CONCORDANCE_EXTS):
+        if path_splitext[1] in CONCORDANCE_EXTS or \
+        (path_splitext[1] == '.gz' and os.path.splitext(path_splitext[0])[1] in CONCORDANCE_EXTS):
+            # Path is OK
+            pass
+        else:
             path += CONCORDANCE_EXTS[0]
         open_fnc = gzip.open if os.path.splitext(path)[1] == '.gz' else open
         with open_fnc(path, 'wb') as f:
