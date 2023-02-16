@@ -211,6 +211,26 @@ class PennAnnotator(Annotator):
     tags argument to the level of the hit.
     """
     
+    def get_ip_id(self, hit, tok):
+        """Returns a unique identifier for the last IP node to
+        dominate token tok, created from hit.ref (the CorpusSearch
+        ID of the sentence) plus underscore plus the node number of
+        the IP."""
+        # Check the token has ancestors.
+        if not 'ancestors' in tok.tags: return hit.ref
+        # Check that the token itself isn't an IP (unlikely)
+        if tok.tags['cat'].startswith('IP'):
+            return hit.ref + '_' + tok.tags['cs_id']
+        # Turn ancestor attributes into lists
+        ancestors = tok.tags['ancestors'].split('|')
+        ancestors_cs_id = tok.tags['ancestors_cs_id'].split('|')
+        # Iterate to find IP
+        for cs_id, cat in zip(ancestors_cs_id, ancestors):
+            if cat.startswith('IP'):
+                return hit.ref + '_' + cs_id
+        # Found no IP (unlikely), must return something
+        return hit.ref
+    
     def script(self, hit, tags=[]):
         # Tags is a list of kw tags.
         # 1. Get keywords
@@ -242,6 +262,9 @@ class PennAnnotator(Annotator):
             hit.tags['kw_' + tag] = ' '.join([tok.tags[tag] for tok in kws])
             for key, toks in keynodes:
                 hit.tags[key[8:] + '_' + tag] = ' '.join([tok.tags[tag] for tok in toks])
+        # 7. Create ip_id tag to uniquely identify the IP containing
+        # the hit. For compatibility with AS's coding tables.
+        hit.tags['ip_id'] = self.get_ip_id(hit, kws[0])
         return hit
         
         
