@@ -76,7 +76,10 @@ def script(transformer, tree,
             # parse
             if i == 0: tree.add_branch_attr(key)
             # Find the node in the tree
-            branch = tree.find_nodes('cs_id', value, regex=False)[0]
+            branches = tree.find_nodes('cs_id', value, regex=False)
+            if not branches:
+                transformer.script_error('Node {} not a branch id'.format(value))
+            branch = branches[0]
             cat = branch.getAttribute('cat')
             # Set the attribute to str(i + 1) on the keyword branch
             branch.setAttribute(key, str(i + 1))

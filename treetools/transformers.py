@@ -1,5 +1,13 @@
 #!/usr/bin/python3
 
+class Error(Exception):
+    """Base class for errors in this module"""
+    pass
+    
+class TransformError(Error):
+    """Errors raised by transformers."""
+    pass
+
 class Transformer():
     """
     Base class used to transform a basetree into a different format.
@@ -13,6 +21,9 @@ class Transformer():
     Methods:
     --------
     
+    script_error(self, msg):
+        Called by script function in case of error.
+    
     transform(self, forest):
         Applies the transformations given in self.script to each tree in
         a BaseForest.
@@ -21,6 +32,14 @@ class Transformer():
     
     def __init__(self):
         self.script = script
+        
+    def script_error(self, msg, e = None):
+        """Called by script in case of error."""
+        if e:
+            print(msg)
+            raise e
+        else:
+            raise TransformError(msg)
     
     def transform(self, forest, **kwargs):
         """
@@ -46,10 +65,8 @@ class Transformer():
             # Self passed explicitly because it's a FUNCTION not a METHOD.
             try:
                 tree = self.script(self, tree, **kwargs)
-            except:
-                print('Before tree was passed to script, it looked like this:')
-                print(stree)
-                raise
+            except Exception as e:
+                self.script_error('Error transforming tree:\n' + stree, e)
             try:
                 forest[i] = tree.to_string_tree()
             except:
