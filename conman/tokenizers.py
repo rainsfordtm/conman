@@ -122,6 +122,9 @@ class BfmTokenizer(Tokenizer):
                 print("Last token: {}".format(toks[-1] if toks else ''))
                 # start again from next whitespace or end, if it's the last
                 # token.
+                # everything preceding next w/s considered to be 
+                # a token
+                toks.append(s.split(' ', maxsplit=1)[0])
                 s = s[s.index(' ') + 1:] if ' ' in s else ''
             else:
                 toks.append(m.group(0))
