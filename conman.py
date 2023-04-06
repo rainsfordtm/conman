@@ -264,7 +264,9 @@ class Launcher():
             except LoadError:
                 raise ConfigError('No other importer set and cannot load concordance from {}'.format(self.path_other))
         if not self.exporter:
-            if os.path.splitext(self.path_out)[1] in CONCORDANCE_EXTS:
+            out_splitext = os.path.splitext(self.path_out)
+            if out_splitext[1] in CONCORDANCE_EXTS or \
+            (out_splitext[1] == '.gz' and os.path.splitext(out_splitext[0])[1] in CONCORDANCE_EXTS):
                 # save don't export
                 self.path_save = self.path_out
             else:
@@ -289,7 +291,7 @@ class Launcher():
         if not self.other_cnc and self.other_importer and self.path_other:
             self.other_cnc = self.other_importer.parse(self.path_other)
         if self.path_other and not self.other_cnc:
-            raise ConfigError('Cannot load or import the concordance to merge.')
+            raise ConfigError('Cannot load or import the concordance to merge or concordance is empty.')
         # 3. Merging
         if self.other_cnc:
             print('Merging concordances...')
