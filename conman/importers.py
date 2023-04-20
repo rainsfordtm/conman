@@ -153,7 +153,7 @@ class Importer():
         l = self.tokenize(s)
         if special_field in ['LCX', 'TOKENS']:
             result = [self.parse_token(item, self.lcx_regex) for item in l]
-        if special_field == 'KEYWORDS':
+        if special_field.startswith('KEYWORDS'):
             result = [self.parse_token(item, self.keywds_regex) for item in l]
         if special_field == 'RCX':
             result = [self.parse_token(item, self.rcx_regex) for item in l]
@@ -743,7 +743,7 @@ class TableImporter(Importer):
             delimiter='\t',
             quoting=csv.QUOTE_NONE
             )
-        
+            
     def parse(self, path):
         """
         Parses a CSV file.
@@ -785,7 +785,7 @@ class TableImporter(Importer):
         uuid, ref, d = None, '', dict()
         # Parse the fields
         for key, value in zip(self.fields, row):
-            if key in self.SPECIAL_FIELDS:
+            if key in self.SPECIAL_FIELDS or key.startswith('KEYWORDS'):
                 if key == 'UUID':
                     uuid = get_uuid(value) # Get UUID will always return a UUID.
                 elif key == 'REF':
@@ -796,6 +796,13 @@ class TableImporter(Importer):
                 d[key] = value
         # Create list of all tokens
         #print(d)
+        # Check for KEYWORDS split over several columns and rewrite
+        # them as a single column
+        l = []
+        for field in self.fields:
+            if field.startswith('KEYWORDS'): l.append(field)
+        if l:
+            d['KEYWORDS'] = [tok for field in l for tok in d.pop(field)]
         if 'KEYWORDS' in d:
             l, kws = context_to_list(d.pop('LCX'), d.pop('KEYWORDS'), d.pop('RCX'))
         else:
