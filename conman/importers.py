@@ -248,7 +248,11 @@ class Importer():
         """
         if not self.ref_regex: return {}
         m = re.match(self.ref_regex, ref)
-        return m.groupdict()
+        if m:
+            return m.groupdict()
+        else:
+            return {}
+        
         
     def tokenize(self, s):
         """
