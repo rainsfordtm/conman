@@ -280,10 +280,14 @@ class ConcordanceMerger(Merger):
                 The corresponding hit in self.cnc, or None if not found.
         """
         if self.match_by == 'uuid':
-            l = self.cnc.get_uuids()
+            # Calculate cnc_uuids only once and store in merger.
+            if not hasattr(self, '_cnc_uuids'): self._cnc_uuids = self.cnc.get_uuids()
+            l = self._cnc_uuids
             return self.cnc[l.index(other_hit.uuid)] if other_hit.uuid in l else None
-        if self.match_by == 'ref':
-            l = [hit.ref for hit in self.cnc]
+        if self.match_by == 'ref': 
+            # Calculate refs only once and store.
+            if not hasattr(self, '_cnc_refs'): self._cnc_refs = [hit.ref for hit in self.cnc]
+            l = self._cnc_refs
             matches = list(filter(lambda x: x[0] == other_hit.ref, l))
             if len(matches) == 1:
                 # One matching reference

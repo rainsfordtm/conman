@@ -182,7 +182,7 @@ class EvaluationAnnotator(Annotator):
         s += '**********************\n'
         max_key = max([len(key) for key in self.summary.keys()])
         for key, value in self.summary.items():
-            s += '{}: {!s: >7}\n'.format(key + ' ' * max_key - len(key), value)
+            s += '{} {!s: >7}\n'.format(key + ' ' * (max_key - len(key)), value)
         print(s)
 
 class KeywordTagAnnotator(Annotator):
