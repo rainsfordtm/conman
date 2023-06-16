@@ -22,7 +22,7 @@ class Annotator():
     Methods:
     --------
     
-    annotate(self, cnc, **kwargs):
+    annotate(self, cnc):
         Adds annotation to the concordance using the script function.
         
     annotate_hit(self, hit):
@@ -41,6 +41,7 @@ class Annotator():
         ANNOTATOR_TYPE_TO_CLASS_MAP = {
           'Annotator':  Annotator,
           'CoreContextAnnotator': CoreContextAnnotator,
+          'EvaluationAnnotator': EvaluationAnnotator,
           'KeywordTagAnnotator': KeywordTagAnnotator,
           'LgermFilterAnnotator': LgermFilterAnnotator,
           'PennAnnotator': PennAnnotator
@@ -59,11 +60,9 @@ class Annotator():
         Parameters:
             cnc (conman.concordance.Concordance):
                 The concordance to be annotated.
-            **kwargs:
-                **kwargs to be passed to self.annotate_hit.
                 
         Returns:
-            annotate(self, cnc, **kwargs) :
+            annotate(self, cnc) :
                 An updated concordance.
         """
         for i, hit in enumerate(cnc):
@@ -141,6 +140,50 @@ class CoreContextAnnotator(Annotator):
         for tok, val in zip(list(hit), bools):
             if val: l.append(tok)
         return l
+        
+class EvaluationAnnotator(Annotator):
+    """
+    As the parent class, but prints a summary of key statistics and
+    changes made by the annotation script once the annotation procedure
+    is complete.
+    """
+    
+    def __init__(self):
+        # Run the parent class method.
+        Annotator.__init__(self)
+        # Add an extra dictionary attribute for storing basic
+        # statistics.
+        self.summary = {}
+        
+    def annotate(self, cnc):
+        """
+        Calls the parent annotate() method and then prints a summary of
+        statistics.
+            
+        Parameters:
+            cnc (conman.concordance.Concordance):
+                The concordance to be annotated.
+                
+        Returns:
+            annotate(self, cnc) :
+                An updated concordance.
+        """
+        cnc = Annotator.annotate(self, cnc)
+        self.summary['total_hits'] = len(cnc)
+        self.print_summary()
+        return cnc
+        
+    def print_summary(self):
+        """
+        Prints the contents of the self.summary dictionary in 
+        tabular form to standard out.
+        """
+        s = 'SUMMARY OF ANNOTATION:\n'
+        s += '**********************\n'
+        max_key = max([len(key) for key in self.summary.keys()])
+        for key, value in self.summary.items():
+            s += '{}: {!s: >7}\n'.format(key + ' ' * max_key - len(key), value)
+        print(s)
 
 class KeywordTagAnnotator(Annotator):
     """
@@ -266,8 +309,4 @@ class PennAnnotator(Annotator):
         # the hit. For compatibility with AS's coding tables.
         hit.tags['ip_id'] = self.get_ip_id(hit, kws[0])
         return hit
-        
-        
-    
-    
         
