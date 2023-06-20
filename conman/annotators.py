@@ -40,6 +40,7 @@ class Annotator():
         
         ANNOTATOR_TYPE_TO_CLASS_MAP = {
           'Annotator':  Annotator,
+          'ConllAnnotator': ConllAnnotator,
           'CoreContextAnnotator': CoreContextAnnotator,
           'EvaluationAnnotator': EvaluationAnnotator,
           'KeywordTagAnnotator': KeywordTagAnnotator,
@@ -97,22 +98,22 @@ class Annotator():
         pass
         
 class ConllAnnotator(Annotator):
-	"""
-	Annotator with methods for parsing the structure of a CONLL-U
-	file.
-	"""
-	
+    """
+    Annotator with methods for parsing the structure of a CONLL-U
+    file.
+    """
+    
     def get_children(self, parent):
         """
         Returns all child toks of tok.
         
-		Parameters:
-			parent (conman.concordance.Token)
-				The token for which descendents should be found.
-				
-		Returns:
-			self.get_children(hit, parent)
-				A list of Tokens which are the children of parent.
+        Parameters:
+            parent (conman.concordance.Token)
+                The token for which descendents should be found.
+                
+        Returns:
+            self.get_children(hit, parent)
+                A list of Tokens which are the children of parent.
         """
         l = []
         for tok in self.hit:
@@ -127,17 +128,17 @@ class ConllAnnotator(Annotator):
                 raise
         return l
         
-	def get_descendents(self, parent):
+    def get_descendents(self, parent):
         """
         Returns all descendent toks of parent.
         
         Parameters:
-			parent (conman.concordance.Token)
-				The token for which descendents should be found.
-				
-		Returns:
-			self.get_descendents(parent)
-				A list of Tokens which depend on parent.
+            parent (conman.concordance.Token)
+                The token for which descendents should be found.
+                
+        Returns:
+            self.get_descendents(parent)
+                A list of Tokens which depend on parent.
         """
         l, newl, i = [], [parent], 0
         while newl and i < 1000:
@@ -154,14 +155,14 @@ class ConllAnnotator(Annotator):
         """
         Returns the parent and all dominated nodes as a string.
         
-		Parameters:
-			parent (conman.concordance.Token)
-				The token for which descendents should be found.
-				
-		Returns:
-			self.get_string(parent)
-				A string representing the tokens in the subtree
-				depending on parent.
+        Parameters:
+            parent (conman.concordance.Token)
+                The token for which descendents should be found.
+                
+        Returns:
+            self.get_string(parent)
+                A string representing the tokens in the subtree
+                depending on parent.
         """
         tree = self.get_descendents(parent)
         tree.append(parent)
@@ -169,19 +170,19 @@ class ConllAnnotator(Annotator):
         return ' '.join([str(x) for x in tree])
         
     def reset_ids(self):
-		"""
-		Resets the conll_IDs in the hit, since they may have been
-		derived from several subtrees.
-		"""
-	    i, last_id = 0, 0
-	    for tok in self.hit:
-	        if not 'conll_ID' in tok.tags: continue
-	        if int(tok.tags['conll_ID']) < last_id:
-	            last_id = 0
-	            i += 1
-	        last_id = int(tok.tags['conll_ID'])
-	        tok.tags['conll_ID'] = str(i*100 + int(tok.tags['conll_ID']))
-	        tok.tags['conll_HEAD'] = str(i*100 + int(tok.tags['conll_HEAD']))
+        """
+        Resets the conll_IDs in the hit, since they may have been
+        derived from several subtrees.
+        """
+        i, last_id = 0, 0
+        for tok in self.hit:
+            if not 'conll_ID' in tok.tags: continue
+            if int(tok.tags['conll_ID']) < last_id:
+                last_id = 0
+                i += 1
+            last_id = int(tok.tags['conll_ID'])
+            tok.tags['conll_ID'] = str(i*100 + int(tok.tags['conll_ID']))
+            tok.tags['conll_HEAD'] = str(i*100 + int(tok.tags['conll_HEAD']))
 
 class CoreContextAnnotator(Annotator):
     """
@@ -190,14 +191,14 @@ class CoreContextAnnotator(Annotator):
     """
     
     def annotate_hit(self, hit):
-		self.hit = hit
+        self.hit = hit
         l = self.script(**self.kwargs)
         l = list(l) # in case script has returned a hit object
         self.hit.core_cx = l
         return self.hit
         
     def script(self, delim_pattern=''):
-		hit = self.hit
+        hit = self.hit
         # If no kws, return empty list.
         if not hit.kws: return []
         # Set flag
@@ -281,7 +282,7 @@ class KeywordTagAnnotator(Annotator):
     """
     
     def script(self, tags=[]):
-		hit = self.hit
+        hit = self.hit
         # Tags should be a list of (kw_tag, hit_tag) pairs
         for kw_tag, hit_tag in tags:
             l = []
@@ -311,7 +312,7 @@ class LgermFilterAnnotator(Annotator):
         prioritize_frequent=True,
         strip_numbers=True
     ):
-		hit = self.hit
+        hit = self.hit
         # initialize filterer
         filterer = LgermFilterer()
         for tok in hit:
@@ -364,7 +365,7 @@ class PennAnnotator(Annotator):
         return hit.ref
     
     def script(self, tags=[]):
-		hit = self.hit
+        hit = self.hit
         # Tags is a list of kw tags.
         # 1. Get keywords
         kws = hit.kws
