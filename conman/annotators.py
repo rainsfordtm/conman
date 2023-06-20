@@ -74,28 +74,115 @@ class Annotator():
         
     def annotate_hit(self, hit):
         """
-        Calls self.script on each hit in the concordance. The default 
-        method does nothing else.
+        Sets the "hit" attribute of the Annotator to the current hit,
+        then calls self.script.
         
         Parameters:
             hit (conman.concordance.Hit):
                 The Hit to be annotated.
         """
-        return self.script(hit, **self.kwargs)
+        self.hit = hit
+        self.script(**self.kwargs)
+        return self.hit
         
-    def script(self, hit, **kwargs):
+    def script(self, **kwargs):
         """
         Default function for Annotator class applies to hit: returns the hit
         unchanged.
         
         Parameters:
-            hit (conman.concordance.Hit):
-                The hit to be annotated
             **kwargs:
                 All further arguments must be keyword arguments.
         """
-        return hit
+        pass
         
+class ConllAnnotator(Annotator):
+	"""
+	Annotator with methods for parsing the structure of a CONLL-U
+	file.
+	"""
+	
+    def get_children(self, parent):
+        """
+        Returns all child toks of tok.
+        
+		Parameters:
+			parent (conman.concordance.Token)
+				The token for which descendents should be found.
+				
+		Returns:
+			self.get_children(hit, parent)
+				A list of Tokens which are the children of parent.
+        """
+        l = []
+        for tok in self.hit:
+            if not 'conll_ID' in tok.tags: continue
+            try:
+                if int(tok.tags['conll_HEAD']) == int(parent.tags['conll_ID']):
+                    l.append(tok)
+            except:
+                print(self.hit)
+                print(tok)
+                print(tok.tags)
+                raise
+        return l
+        
+	def get_descendents(self, parent):
+        """
+        Returns all descendent toks of parent.
+        
+        Parameters:
+			parent (conman.concordance.Token)
+				The token for which descendents should be found.
+				
+		Returns:
+			self.get_descendents(parent)
+				A list of Tokens which depend on parent.
+        """
+        l, newl, i = [], [parent], 0
+        while newl and i < 1000:
+            i += 1
+            toks = newl
+            newl = []
+            for tok in toks:
+                newl += self.get_children(tok)
+            l += newl
+        l.sort(key=lambda x: int(x.tags['conll_ID']))
+        return l
+        
+    def get_string(self, parent):
+        """
+        Returns the parent and all dominated nodes as a string.
+        
+		Parameters:
+			parent (conman.concordance.Token)
+				The token for which descendents should be found.
+				
+		Returns:
+			self.get_string(parent)
+				A string representing the tokens in the subtree
+				depending on parent.
+        """
+        tree = self.get_descendents(parent)
+        tree.append(parent)
+        tree.sort(key=lambda x: int(x.tags['conll_ID']))
+        return ' '.join([str(x) for x in tree])
+        
+    def reset_ids(self):
+		"""
+		Resets the conll_IDs in the hit, since they may have been
+		derived from several subtrees.
+		"""
+	    i, last_id = 0, 0
+	    for tok in self.hit:
+	        if not 'conll_ID' in tok.tags: continue
+	        if int(tok.tags['conll_ID']) < last_id:
+	            last_id = 0
+	            i += 1
+	        last_id = int(tok.tags['conll_ID'])
+	        tok.tags['conll_ID'] = str(i*100 + int(tok.tags['conll_ID']))
+	        tok.tags['conll_HEAD'] = str(i*100 + int(tok.tags['conll_HEAD']))
+
 class CoreContextAnnotator(Annotator):
     """
     Annotator which populates the CORE_CX list of a hit from the list of 
@@ -103,12 +190,14 @@ class CoreContextAnnotator(Annotator):
     """
     
     def annotate_hit(self, hit):
-        l = self.script(hit, **self.kwargs)
+		self.hit = hit
+        l = self.script(**self.kwargs)
         l = list(l) # in case script has returned a hit object
-        hit.core_cx = l
-        return hit
+        self.hit.core_cx = l
+        return self.hit
         
-    def script(self, hit, delim_pattern=''):
+    def script(self, delim_pattern=''):
+		hit = self.hit
         # If no kws, return empty list.
         if not hit.kws: return []
         # Set flag
@@ -191,7 +280,8 @@ class KeywordTagAnnotator(Annotator):
     to the level of the hit. 
     """
     
-    def script(self, hit, tags=[]):
+    def script(self, tags=[]):
+		hit = self.hit
         # Tags should be a list of (kw_tag, hit_tag) pairs
         for kw_tag, hit_tag in tags:
             l = []
@@ -208,7 +298,6 @@ class KeywordTagAnnotator(Annotator):
                 print(l)
                 print(hit.kws)
                 raise
-        return hit
         
 class LgermFilterAnnotator(Annotator):
     """
@@ -216,12 +305,13 @@ class LgermFilterAnnotator(Annotator):
     on the tokens. Calls lgerm.lgerm.LgermFilterer.
     """
     
-    def script(self, hit, pos_tag='',
+    def script(self, pos_tag='',
         kw_tag_to_hit=True,
         lower_case=True,
         prioritize_frequent=True,
         strip_numbers=True
     ):
+		hit = self.hit
         # initialize filterer
         filterer = LgermFilterer()
         for tok in hit:
@@ -239,9 +329,7 @@ class LgermFilterAnnotator(Annotator):
             )
             tok.tags['lemma_lgerm'] = '|'.join(lemmas)
         if kw_tag_to_hit:
-            return KeywordTagAnnotator.script(None, hit, tags=[('lemma_lgerm', 'lemma_lgerm'), ('lgerm_out', 'lgerm_out')])
-        else:
-            return hit
+            KeywordTagAnnotator.script(None, tags=[('lemma_lgerm', 'lemma_lgerm'), ('lgerm_out', 'lgerm_out')])
             
 class PennAnnotator(Annotator):
     """
@@ -254,11 +342,12 @@ class PennAnnotator(Annotator):
     tags argument to the level of the hit.
     """
     
-    def get_ip_id(self, hit, tok):
+    def get_ip_id(self, tok):
         """Returns a unique identifier for the last IP node to
         dominate token tok, created from hit.ref (the CorpusSearch
         ID of the sentence) plus underscore plus the node number of
         the IP."""
+        hit = self.hit
         # Check the token has ancestors.
         if not 'ancestors' in tok.tags: return hit.ref
         # Check that the token itself isn't an IP (unlikely)
@@ -274,7 +363,8 @@ class PennAnnotator(Annotator):
         # Found no IP (unlikely), must return something
         return hit.ref
     
-    def script(self, hit, tags=[]):
+    def script(self, tags=[]):
+		hit = self.hit
         # Tags is a list of kw tags.
         # 1. Get keywords
         kws = hit.kws
@@ -308,5 +398,3 @@ class PennAnnotator(Annotator):
         # 7. Create ip_id tag to uniquely identify the IP containing
         # the hit. For compatibility with AS's coding tables.
         hit.tags['ip_id'] = self.get_ip_id(hit, kws[0])
-        return hit
-        
