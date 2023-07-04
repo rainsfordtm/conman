@@ -70,6 +70,7 @@ class Exporter():
         self.split_hits = 0
         self.tok_fmt = '{0}'
         self.tok_delimiter = ' '
+        self.exts = ['txt', 'csv', 'tsv']
         
     @classmethod
     def create(cls, exporter_type):
@@ -110,6 +111,25 @@ class Exporter():
                 self._export(cnc, path)
         else:
             self._export(cnc, path)
+            
+    def fix_ext(self, path):
+        """
+        Ensures that the exporter only saves to a file with an appropriate
+        extension as specified in self.exts. If a wrong extension is
+        found, used the first entry in self.exts.
+        
+        Parameters:
+            path (str):                     File name
+            
+        Returns:
+            self.fix_ext(path)
+                A file name with an appropriate extension.
+        """
+        name, ext = os.path.splitext(path)
+        if not ext or not ext[1:] in self.exts:
+            return name + '.' + self.exts[0]
+        else:
+            return path
             
     def get_tokens(self, hit):
         """
@@ -191,6 +211,7 @@ class TokenListExporter(Exporter):
         """
         Exporter.__init__(self)
         self.hit_end_token = ''
+        self.exts = ['txt', 'tsv']
         
     def _export(self, cnc, path):
         """
@@ -308,6 +329,7 @@ class TableExporter(Exporter):
             delimiter='\t',
             quoting=csv.QUOTE_NONE
             )
+        self.exts = ['csv', 'tsv']
         
     def _set_default_fields(self, cnc):
         # Set the default fields if none have been given at the moment of
@@ -417,7 +439,7 @@ class ConllExporter(Exporter):
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
         self.hit_end_token = 'ENDHIT'
-        
+        self.exts = ['conllu', 'conll', 'txt', 'tsv']
     def _export(self, cnc, path, add_refs = True):
         """
         Exports a concordance as a Conll file suitable for dependency parsing.

@@ -309,7 +309,11 @@ class Launcher():
         if self.path_save:
             self.cnc.save(self.path_save)
         if self.exporter and self.path_out:
+            # Fix output path using the exporters fix_ext method.
+            # Prevents idiot errors like typing .cnc as an extension
+            # with an exporter specified in the workflow file.
             #print(self.exporter.kw_fmt)
+            self.path_out = self.exporter.fix_ext(self.path_out)
             self.exporter.export(self.cnc, self.path_out)
         if not self.path_save and not self.exporter:
             raise ConfigError('Cannot save or export the result.')
