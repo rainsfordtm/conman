@@ -170,6 +170,18 @@ class Hit(collections.UserList):
     format_token(self, [tok_fmt, [kw_fmt]]):
         Returns a string representation of tok formatted according to 
         the tok_fmt and kw_fmt format strings.
+        
+    get_ix(sf, tok_constant):
+        Returns the start and end indices of the subset of tokens
+        specified by tok_constant within the hit.
+        
+    get_following_tokens(tok, [tok_constant]):
+        Returns a list of all tokens following tok. tok_constant
+        specifies the context (core_cx, all tokens, etc.).
+        
+    get_preceding_tokens(tok, [tok_constant]):
+        Returns a list of all preceding tokens. tok_constant
+        specifies the context (core_cx, all tokens, etc.).
     
     get_tokens(tok_constant):
         Returns the specified tokens as a list.
@@ -249,6 +261,50 @@ class Hit(collections.UserList):
         collections.UserList.extend(self, other)
         
     # Other methods
+    
+    def get_following_tokens(self, tok, tok_constant = 0):
+        """
+        Returns a list of all tokens following tok.
+        
+        Parameters:
+            tok:    A token in the hit
+            
+        Returns:
+            get_following(tok):
+                A list of tokens.
+        """
+        return self._get_sublist(tok, tok_constant, backwards=False)
+        
+    def get_preceding_tokens(self, tok, tok_constant = 0):
+        """
+        Returns a list of all tokens preceding tok.
+        
+        Parameters:
+            tok:    A token in the hit
+            
+        Returns:
+            get_preceding(tok):
+                A list of tokens.
+        """
+        return self._get_sublist(tok, tok_constant, backwards=True)
+        
+    def _get_sublist(self, the_tok, tok_constant, backwards=False):
+        # Called by get_following_tokens or get_preceding_tokens
+        # 1. Get the tokens
+        toks = self.get_tokens(tok_constant)
+        # 2. Reverse list if finding preceding tokens
+        if backwards: toks.reverse()
+        # 3. Pop first token
+        tok = toks.pop(0)
+        # 4. Scan the list until the_tok is found.
+        while toks and not tok is the_tok: tok = toks.pop(0)
+        # 5. If no toks (because tok is not found, or was the first or the last)
+        # return an empty list
+        if not toks: return []
+        # 6. Otherwise reverse toks if we've been searching backwards
+        if backwards: toks.reverse()
+        # 7. Return toks
+        return toks
     
     def get_ix(self, sf, tok_constant=0):
         """
