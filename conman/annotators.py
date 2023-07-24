@@ -151,6 +151,25 @@ class ConllAnnotator(Annotator):
         l.sort(key=lambda x: int(x.tags['conll_ID']))
         return l
         
+    def get_parent(self, tok):
+        """
+        Returns the parent tok of a given token using the conll_HEAD
+        entry in the dictionary.
+        
+        Parameters:
+            parent (conman.concordance.Token)
+                The token for which the parent should be found.
+                
+        Returns:
+            self.get_parent(tok)
+                The parent token identified by the conll_HEAD tag.
+        """
+        head_id = int(tok.tags.get('conll_HEAD', '0'))
+        if head_id == 0: return None
+        l = list(filter(lambda x: int(x.tags.get('conll_ID', '0')) == head_id, self.hit))
+        if not l: return None
+        return l[0]
+    
     def get_string(self, parent):
         """
         Returns the parent and all dominated nodes as a string.
