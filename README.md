@@ -2,7 +2,7 @@
 
 Concordance management and generation tools for SILPAC H1 WP2.
 
-© Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, January 2023
+© Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, October 2023
 
 [https://silpac.uni-mannheim.de/](https://silpac.uni-mannheim.de/)
 [https://sites.google.com/site/rainsfordtm/home](https://sites.google.com/site/rainsfordtm/home)
@@ -39,7 +39,7 @@ The ConMan has four core modules which are called in the following order
 each time it is run.
 1. **Importer**: imports the primary concordance from an input file. If the
 Importer module isn't run, the primary concordance must be loaded from a
-.cnc file saved by ConMan. See [section 4](#4-importers-and-exporters).
+.cnc or .cnc.gz file saved by ConMan. See [section 4](#4-importers-and-exporters).
 2. **Merger**: Imports a secondary concordance and merges it with the 
 primary concordance. This can be used to add or remove hits from the
 primary concordance or to add annotations to existing hits.
@@ -48,7 +48,8 @@ See [section 5](#5-merging).
 See [section 6](#6-annotating).
 4. **Exporter**: exports the primary concordance to an output file. If the
 `-s` flag is passed on the command line, it also saves a .cnc file
-containing the primary concordance.
+containing the primary concordance. If a `-z` flag is also passed, it
+compresses the .cnc file and saves it as a .cnc.gz file.
 See [section 4](#4-importers-and-exporters).
 	
 ### 2.3 Workflow files
@@ -631,7 +632,7 @@ merger=TextMerger
 The Annotator module is designed for the automatic generation hit-level
 annotation and the intention is that the user will write their own scripts here.
 
-Three annotation scripts are provided with ConMan:
+Four annotation scripts are provided with ConMan:
 + `KeywordTagAnnotator`: raises some token-level tags from the keyword to the
 level of the **Hit**.
 + `PennAnnotator`: adds columns containing properties of the keywords
@@ -639,7 +640,7 @@ and other keynodes identified in a CorpusSearch query. Only works
 for concordances created with the [`PennOutImporter`](#4-5-the-pennoutimporter).
 + `LgermFilterAnnotator`: disambiguates LGeRM lemmas by part-of-speech
 + `CoreContextAnnotator`: tags a subset of tokens in the hit as the core context.
-See [section 7](#7-core-context)
+See [section 7](#7-core-context).
 
 ### 6.1 KeywordTagAnnotator
 
@@ -781,6 +782,23 @@ More complex queries are possible, for example using dependency annotation
 imported from Conll or the `ancestors` attributes provided by the 
 `PennOutImporter` to search for specific syntactic structures. All such token-level
 annotation can be read from the `.tags` dictionary of the **Token**.
+
+### 6.4 Advanced use cases
+
+**New 30/10/23**. For advanced use cases, two further annotators are
+provided to be used in combination with user-defined annotation scripts:
++ `EvaluationAnnotator`: Identical to the default annotator but contains
+a `.summary` attribute (dictionary), the contents of which is displayed
+on the screen once all the hits have been processed. What the `.summary`
+dictionary contains is defined in the user-defined annotation script. 
+Intended to store statistics documenting changes made by the annotation
+script.
++ `ConllAnnotator`: Identical to the default annotator but provides some
+useful functions for querying Conll-U tags encoded in the concordance
+which can be accessed from the user-defined annotation script.
+
+For further documentation, see the DOCSTRING in the
+[conman/annotators.py](conman/annotators.py) file.
 
 ## 7. Core Context
 
