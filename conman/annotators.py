@@ -417,4 +417,4 @@ class PennAnnotator(Annotator):
                 hit.tags[key[8:] + '_' + tag] = ' '.join([tok.tags[tag] for tok in toks])
         # 7. Create ip_id tag to uniquely identify the IP containing
         # the hit. For compatibility with AS's coding tables.
-        hit.tags['ip_id'] = self.get_ip_id(hit, kws[0])
+        hit.tags['ip_id'] = self.get_ip_id(kws[0])
