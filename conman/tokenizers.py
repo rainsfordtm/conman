@@ -40,7 +40,8 @@ class Tokenizer():
         TOKENIZER_TYPE_TO_CLASS_MAP = {
           'Tokenizer':  Tokenizer,
           'BfmTokenizer': BfmTokenizer,
-          'FrantextTokenizer': FrantextTokenizer
+          'FrantextTokenizer': FrantextTokenizer,
+          'MidiaTokenizer': MidiaTokenizer
         }
         if tokenizer_type not in TOKENIZER_TYPE_TO_CLASS_MAP:
               raise ValueError('Bad tokenizer type {}'.format(tokenizer_type))
@@ -216,9 +217,27 @@ class FrantextTokenizer(Tokenizer):
             toks[-1] += '_' + '_'.join(strays_right)
         return toks
 
-        
+class MidiaTokenizer(Tokenizer):
+    """
+    Tokenizes CSV tables saved from the MIDIA corpus website (https://www.corpusmidia.unito.it/).
+    
+    Attributes:
+    -----------
+    
+    Methods:
+    --------
+    
+    tokenize(self, s):
+        Tokenizes s, returning a list of tokens.
+    """
+    
+    # At present, does nothing.
+    
+    pass
+    
 
-                    
+        
+    
             
         
     
