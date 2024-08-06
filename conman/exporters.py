@@ -563,7 +563,7 @@ def get_exporter_from_path(path):
     if ext == '.csv': return TableExporter()
     if ext == '.txt': return Exporter()
     if ext in ['.conll', '.conllu']: return ConllExporter()
-    raise ParseError('No default exporter for file extension "{}".'.format(ext))
+    raise ExportError('No default exporter for file extension "{}".'.format(ext))
     
 def lgermsafe(s):
     """

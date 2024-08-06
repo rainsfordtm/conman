@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
-import collections, pickle, os.path, gzip
+import collections, pickle, os.path, gzip, json
 from uuid import UUID, uuid4
 
 # This global variable is available in the whole of conman for identifying
 # valid path extensions for a concordance.
-CONCORDANCE_EXTS = ['.cnc']
+CONCORDANCE_EXTS = ['.cnc', '.json']
 
 class Error(Exception):
     """
@@ -40,6 +40,9 @@ class Concordance(collections.UserList):
     get_uuids(self):
         Returns a list of UUIDs for all the Hits in the concordance in the
         order in which they are currently stored.
+        
+    jsonable(self):
+        Returns the Concordance in a format compatible with json.dumps().
 
     save(self, path):
         Saves the concordance to path using pickle (binary).
@@ -104,25 +107,39 @@ class Concordance(collections.UserList):
                 List of UUIDs in the order that they currently appear.
         """
         return [hit.uuid for hit in self.data]
+        
+    def jsonable(self):
+        """
+        Returns the Concordance in a format compatible with json.dumps().
+        """
+        return [x.jsonable() for x in self.data]
 
     
     def save(self, path):
         """
-        Saves the concordance to path using pickle (binary).
+        Saves the concordance to path using pickle or JSON.
         
         Parameters:
             path (str): Path to file where object should be saved.
         """
-        path_splitext = os.path.splitext(path)
-        if path_splitext[1] in CONCORDANCE_EXTS or \
-        (path_splitext[1] == '.gz' and os.path.splitext(path_splitext[0])[1] in CONCORDANCE_EXTS):
+        ext, gz = os.path.splitext(path)[1], False
+        if ext == '.gz':
+            ext, gz = os.path.splitext(os.path.splitext(path)[0])[1], True
+        if ext in CONCORDANCE_EXTS:
             # Path is OK
             pass
         else:
-            path += CONCORDANCE_EXTS[0]
-        open_fnc = gzip.open if os.path.splitext(path)[1] == '.gz' else open
-        with open_fnc(path, 'wb') as f:
-            pickle.dump(self, f)
+            ext = CONCORDANCE_EXTS[0]
+            path += ext
+        open_fnc = gzip.open if gz else open
+        open_mode = 'wt' if ext == '.json' else 'wb'
+        with open_fnc(path, open_mode) as f:
+            if ext == '.json':
+                encoder = json.JSONEncoder(ensure_ascii=False, indent='')
+                for chunk in encoder.iterencode(self.jsonable()):
+                    f.write(chunk)
+            else: # Default is to use pickle
+                pickle.dump(self, f)
     
 class Hit(collections.UserList):
     """
@@ -190,6 +207,9 @@ class Hit(collections.UserList):
         Returns True or False depending on whether the Token instance is a
         keyword or not. Raises TypeError if tok is NOT a Token instance
         (The class uses exact object equivalence.)
+        
+    jsonable(self):
+        Returns the Hit as a JSON-able object compatible with json.dumps()
         
     to_string(self, [tok_constant, [delimiter, [tok_fmt, [kw_fmt]]]]) 
         Return a list of some or all of the tokens in the hit as a string
@@ -438,11 +458,29 @@ class Hit(collections.UserList):
         l = [self.format_token(tok, tok_fmt, kw_fmt) for tok in toks]
         return delimiter.join(l)
         
+    def jsonable(self):
+        """
+        Returns the object in a format compatible with json.dumps.
+        """
+        return {
+            'data': [x.jsonable() for x in self.data], # the tokens
+            'tags': make_jsonable(self.tags), # the tags dictionary
+            'ref': self.ref, # the reference (string)
+            'uuid': str(self._uuid), # UUID as a string
+            'kws': [self.data.index(x) for x in self.kws], # indexes of the kwd tokens
+            'core_cx': [self.data.index(x) for x in self.core_cx] # indexes of the core context tokens
+        }
+        
 class Token(collections.UserString):
     """
     Class to store a single Token.
     
     Core data: a String containing the form of the token.
+    
+    Methods:
+    --------
+    jsonable(self):
+        Returns the Token as a Python dictionary.
     
     Attributes:
     -----------
@@ -460,10 +498,16 @@ class Token(collections.UserString):
         """
         collections.UserString.__init__(self, s)
         self.tags = {}
+        
+    def jsonable(self):
+        """
+        Returns the object in a format compatible with json.dumps.
+        """
+        return {'data': self.data, 'tags': self.tags}
     
 def load_concordance(path):
     """
-    Function to load a concordance from a file. Uses pickle.
+    Function to load a concordance from a file. Uses pickle or JSON.
     
     Parameters:
         path (str): Path to object containing the concordance.
@@ -471,11 +515,49 @@ def load_concordance(path):
     Returns:
         load_concordance(path): A concordance object.
     """
-    open_fnc = gzip.open if os.path.splitext(path)[1] == '.gz' else open
+    ext, gz = os.path.splitext(path)[1], False
+    if ext == '.gz':
+        ext, gz = os.path.splitext(os.path.splitext(path)[0])[1], True
+    if ext == '.json':
+        return _load_json(path, gz)
+    else:
+        return _load_concordance(path, gz)
+        
+def _load_concordance(path, gz):
+    open_fnc = gzip.open if gz else open
     with open_fnc(path, 'rb') as f:
         cnc = pickle.load(f)
     if not isinstance(cnc, Concordance):
         raise LoadError('File does not contain a concordance.')
+    return cnc
+    
+def _load_json(path, gz):
+    open_fnc = gzip.open if gz else open
+    with open_fnc(path, 'rt') as f:
+        l = json.load(f)
+    cnc = make_concordance([])
+    while l: # save memory
+        json_hit = l.pop(0)
+        # Rebuild Token list
+        toks = [
+            Token(x['data']) for x in json_hit['data']
+        ]
+        # Rebuild Token tags
+        for i, tok in enumerate(toks):
+            tok.tags = json_hit['data'][i]['tags']
+        # Rebuild kwds pointers
+        kws = [toks[i] for i in json_hit['kws']]
+        # Make hit
+        hit = Hit(toks, kws, json_hit['uuid'])
+        # Rebuild core_cx pointers
+        hit.core_cx = [toks[i] for i in json_hit['core_cx']]
+        # Add ref
+        hit.ref = json_hit['ref']
+        # Add tags
+        hit.tags = json_hit['tags']
+        # Append to cnc
+        cnc.append(hit)
+    # Return cnc
     return cnc
     
 def make_concordance(l):
@@ -493,6 +575,27 @@ def make_concordance(l):
     if isinstance(l, Concordance): return l
     cnc = Concordance(l)
     return cnc
+    
+def make_jsonable(obj):
+    """
+    Function designed to make sure that the object contains only
+    JSON-able types. Designed to turn Tokens lurking the .tags 
+    dictionary into strings.
+    """
+    # 1. Tokens or strings. Return strings.
+    if isinstance(obj, str) or isinstance(obj, Token): return str(obj)
+    # 3. Dictionary-like objects: call make_jsonable on all values.
+    try:
+        return dict([(key, make_jsonable(value)) for key, value in obj.items()])
+    except AttributeError:
+        pass
+    # 4. Other iterables (lists): call make_jsonable on all values.
+    try:
+        return [make_jsonable(x) for x in obj]
+    except TypeError:
+        pass
+    # 5. Return the object as it is.
+    return obj
 
 def make_hit(l, kws = []):
     """
