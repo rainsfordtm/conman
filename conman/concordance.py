@@ -196,6 +196,10 @@ class Hit(collections.UserList):
         Returns a list of all tokens following tok. tok_constant
         specifies the context (core_cx, all tokens, etc.).
         
+    get_form_span(tok):
+        Returns an integer defining the number of tokens over which
+        the orthographic form of the token has a span.
+        
     get_preceding_tokens(tok, [tok_constant]):
         Returns a list of all preceding tokens. tok_constant
         specifies the context (core_cx, all tokens, etc.).
@@ -434,6 +438,31 @@ class Hit(collections.UserList):
             except:
                 return str(tok)
                 
+    def get_form_span(self, tok):
+        """
+        Return an integer indicating over how many tokens the .form()
+        property of a token spans. Useful for export format like 
+        Conllu requiring a metatoken. Possible return values: 1 = just
+        this token, >1 = this token and the following n - 1 tokens,
+        0 = this token is agglutinated to previous tokens.
+        
+        Parameters:
+            tok (concordance.Token):    a token
+            
+        Returns:
+            get_form_span(self, tok):
+                An integer representing the span of the form.
+        """
+        form = tok.form()
+        if not form: return 0 # form is empty string.
+        following_toks = self.get_following_tokens(tok)
+        i = 1
+        while following_toks:
+            following_tok = following_toks.pop(0)
+            if following_tok.form(): return i # following tok has a form
+            i += 1 # increment i
+        return i
+                
     def to_string(self, 
             tok_constant = 0,
             delimiter = ' ', 
@@ -487,6 +516,13 @@ class Token(collections.UserString):
     
     tags : dict
         Annotation attached to the token.
+        
+    Property:
+    ---------
+    
+    form : str
+        Orthographic form. By default, identical to the orthographic
+        form. Empty string indicates an aggluntination.
     """
     
     def __init__(self, s):
@@ -499,11 +535,32 @@ class Token(collections.UserString):
         collections.UserString.__init__(self, s)
         self.tags = {}
         
+    @property
+    def form(self):
+        """The orthographic form."""
+        try:
+            return self._form
+        except AttributeError:
+            return self.data
+    
+    @form.setter
+    def form(self, s):
+        self._form = str(s) # Make sure this is a string
+    
+    @form.deleter
+    def form(self):
+        del self._form
+        
     def jsonable(self):
         """
         Returns the object in a format compatible with json.dumps.
         """
-        return {'data': self.data, 'tags': self.tags}
+        d = {'data': self.data, 'tags': self.tags}
+        try:
+            d['_form'] = self._form
+        except AttributeError:
+            pass
+        return d
     
 def load_concordance(path):
     """
@@ -542,9 +599,13 @@ def _load_json(path, gz):
         toks = [
             Token(x['data']) for x in json_hit['data']
         ]
-        # Rebuild Token tags
+        # Rebuild Token attributes
         for i, tok in enumerate(toks):
             tok.tags = json_hit['data'][i]['tags']
+            try:
+                tok._form = json_hit['data'][i]['_form']
+            except KeyError:
+                pass
         # Rebuild kwds pointers
         kws = [toks[i] for i in json_hit['kws']]
         # Make hit
