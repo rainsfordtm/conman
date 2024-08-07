@@ -365,13 +365,44 @@ class ConllImporter(TokenListImporter):
         self.head_is_kw = True
         # Raise Parse Error if a token can't be dealt with.
         self._on_token_parse_error = 'drop'
-    
+        
     def parse(self, path):
         """
-        Wrapper for TokenListImporter.parse that just resets self.lcx_regex.
+        Mostly a wrapper for TokenListImporter.parse using a complex self.lcx_regex.
+        But also has handles Conllu's coding of agglutinations.
         """
+        
+        def parse_agglutination(hit):
+            # Pass 2 to remove agglutination
+            l, span, form = [], 0, ''
+            for tok in hit:
+                if form:
+                    # Reset tok.form
+                    tok.form = form
+                    # Eliminate form
+                    form = ''
+                    # Decrease span
+                    span += -1
+                elif span:
+                    # Reset tok.form
+                    tok.form = ''
+                    # Decrease span
+                    span += -1
+                else:
+                    ixs = tok.tags['conll_ID'].split('-')
+                    if len(ixs) > 1:
+                        # append the token to the deletion list
+                        l.append(tok)
+                        # calculate span
+                        span = int(ixs[1]) - int(ixs[0]) + 1
+                        # store full form
+                        form = tok.form
+            # Delete agglutinated tokens
+            for tok in l:
+                hit.remove(tok)
+        
         self.lcx_regex = ''.join([
-            r'(?P<conll_ID>[0-9]+)\t',
+            r'(?P<conll_ID>[0-9\-]+)\t',
             r'(?P<word>[^\t]+)\t',
             r'(?P<conll_LEMMA>[^\t]+)\t',
             r'(?P<conll_CPOSTAG>[^\t]+)\t',
@@ -384,6 +415,9 @@ class ConllImporter(TokenListImporter):
         ])
         # Run parse from the parent class
         TokenListImporter.parse(self, path)
+        # Re-parse agglutinated tokens
+        for hit in self.concordance:
+            parse_agglutination(hit)
         # Turn heads into kws if necessary
         if self.head_is_kw: self.head_to_kw()
         # Return concordance

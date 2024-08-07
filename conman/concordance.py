@@ -284,6 +284,36 @@ class Hit(collections.UserList):
         other = make_hit(other)
         collections.UserList.extend(self, other)
         
+    # UserList methods modified to ensure that deleted tokens are
+    # removed from .kws and .core_cx as well.
+    
+    def __delitem__(self, i):
+        self._remove_from_lists(self.data[i])
+        collections.UserList.__delitem__(self, i)
+    
+    def pop(self, i=-1):
+        self._remove_from_lists(self.data[i])
+        return collections.UserList.pop(self, i)
+        
+    def remove(self, item):
+        self._remove_from_lists(item)
+        collections.UserList.remove(self, item)
+        
+    def clear(self):
+        self.kws.clear()
+        self.core_cx.clear()
+        collections.UserList.clear(self)
+        
+    def _remove_from_lists(self, item):
+        try:
+            self.kws.remove(item)
+        except ValueError:
+            pass
+        try:
+            self.core_cx.remove(item)
+        except ValueError:
+            pass
+        
     # Other methods
     
     def get_following_tokens(self, tok, tok_constant = 0):
@@ -453,13 +483,13 @@ class Hit(collections.UserList):
             get_form_span(self, tok):
                 An integer representing the span of the form.
         """
-        form = tok.form()
+        form = tok.form
         if not form: return 0 # form is empty string.
         following_toks = self.get_following_tokens(tok)
         i = 1
         while following_toks:
             following_tok = following_toks.pop(0)
-            if following_tok.form(): return i # following tok has a form
+            if following_tok.form: return i # following tok has a form
             i += 1 # increment i
         return i
                 
