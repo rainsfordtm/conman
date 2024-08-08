@@ -101,6 +101,12 @@ class TextMerger(Merger):
     def _build_maps(self, cnc_chunk, other_cnc_chunk):
         # Builds (other_)cnc_map and (other_)cnc_list objects
         # First, reset the maps, in case we're calling this multiple times
+        # - _list attributes are (ix, token) tuples, where ix is the 
+        #         cumulative index of the token in the chunk, ignoring
+        #         hit boundaries.
+        # - _map attributes are (hit_ix, tok_ix) tuples for every token
+        #         in the chunk. The index of the tuple in _map corresponds
+        #         to the "a_id" attribute that the aligner uses.
         self._cnc_map, self._other_cnc_map = [], []
         self._cnc_list, self._other_cnc_list = [], []
         # Now, turn the concordance into a list of tokens, sensitive to 
@@ -110,6 +116,9 @@ class TextMerger(Merger):
             (cnc_chunk, self._cnc_list, self._cnc_map, self.core_cx),
             (other_cnc_chunk, self._other_cnc_list, self._other_cnc_map, False)
         ]:
+            # k keeps a running tally of the total number of tokens
+            # in previous hits in the concordance if chunk contains
+            # multiple hits.
             k = 0
             for j, hit in enumerate(cnc):
                 toks = hit.get_tokens(hit.CORE_CX if core_cx else hit.TOKENS)
