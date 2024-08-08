@@ -106,7 +106,8 @@ class TextMerger(Merger):
         #         hit boundaries.
         # - _map attributes are (hit_ix, tok_ix) tuples for every token
         #         in the chunk. The index of the tuple in _map corresponds
-        #         to the "a_id" attribute that the aligner uses.
+        #         to the "a_id" attribute that the aligner uses and to
+        #         the "ix" in _list.
         self._cnc_map, self._other_cnc_map = [], []
         self._cnc_list, self._other_cnc_list = [], []
         # Now, turn the concordance into a list of tokens, sensitive to 
@@ -128,7 +129,22 @@ class TextMerger(Merger):
                     offset = hit.get_ix('start', hit.CORE_CX)
                 else:
                     offset = 0
-                l += [(i + k + offset, str(tok)) for i, tok in enumerate(toks)]
+                # The form attribute is used for the list. Tokens with
+                # **no form** are stored in hit.tags['_formless'] for
+                # post-processing.
+                i, hit.tags['_formless'] = 0, []
+                while toks:
+                    # Pop the first token.
+                    tok = toks.pop(0)
+                    # Create l_item
+                    l_item = (i + k + offset, tok.form)
+                    # Increment i
+                    i += 1
+                    # If l_item has a form, add it to the list
+                    if tok.form:
+                        l.append(l_item)
+                    else: # The token is blank, append it to hit.tags['_formless']
+                        hit.tags['_formless'].append(l_item)
                 # Map must include an entry for every token in the cnc
                 # even if running in core context mode.
                 mp += [(j, i) for i in range(len(hit))]
