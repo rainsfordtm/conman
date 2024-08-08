@@ -229,7 +229,8 @@ class Launcher():
                     value = self.workflow.get('merger', key, fallback='')
                     if value:
                         num_value = float(value)
-                        setattr(self.merger, key[3:], value)
+                        if key == 'TM_ratio' and num_value > 1: num_value = num_value / 100
+                        setattr(self.merger, key[3:], num_value)
                 value = self.workflow.get('merger', 'TM_hit_end_token', fallback='')
                 if value:
                     self.merger.hit_end_token = value

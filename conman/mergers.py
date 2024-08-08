@@ -129,10 +129,7 @@ class TextMerger(Merger):
                     offset = hit.get_ix('start', hit.CORE_CX)
                 else:
                     offset = 0
-                # The form attribute is used for the list. Tokens with
-                # **no form** are stored in hit.tags['_formless'] for
-                # post-processing.
-                i, hit.tags['_formless'] = 0, []
+                i = 0
                 while toks:
                     # Pop the first token.
                     tok = toks.pop(0)
@@ -143,8 +140,8 @@ class TextMerger(Merger):
                     # If l_item has a form, add it to the list
                     if tok.form:
                         l.append(l_item)
-                    else: # The token is blank, append it to hit.tags['_formless']
-                        hit.tags['_formless'].append(l_item)
+                    else: # Forget about it
+                        pass
                 # Map must include an entry for every token in the cnc
                 # even if running in core context mode.
                 mp += [(j, i) for i in range(len(hit))]
@@ -190,19 +187,103 @@ class TextMerger(Merger):
         return chunks
         
     def _merge_chunk(self, cnc_chunk, other_cnc_chunk):
+        
+        def get_hit_tok_from_address(cnc_chunk, address, offset=0):
+            hit = cnc_chunk[address[0]]
+            tok = hit[address[1] + offset]
+            return hit, tok
+        
+        def get_toks_from_span(hit, tok, span, core_cx):
+            l = hit.get_following_tokens(
+                tok, hit.CORE_CX if core_cx else hit.TOKENS
+            )[:span - 1]
+            l.insert(0, tok)
+            return l
+        
         self._build_maps(cnc_chunk, other_cnc_chunk)
         self._align()
         # The .aligned attribute of the aligner is a list of tuples:
         # - First item: token in main text
         # - Second item: list of matching tokens in second text
         # - Third item: comments on mismatches (which we're going to ignore here).
+        # As we inject, so we retokenize in case of different spans.
+        # cnc_address_offset corrects the indices in the _maps.
+        cnc_address_offset = 0
+        last_cnc_hit = None
         for cnc_ix, other_cnc_ixs, x in self.aligner.aligned:
-            if other_cnc_ixs: # matches some token in text b
-                cnc_address = self._cnc_map[cnc_ix]
-                other_cnc_address = self._other_cnc_map[other_cnc_ixs[0]]
-                cnc_chunk[cnc_address[0]][cnc_address[1]].tags.update(
-                    other_cnc_chunk[other_cnc_address[0]][other_cnc_address[1]].tags
+            ###########################################################
+            # CALCULATE CNC_TOKS
+            ###########################################################
+            # Get hit and tok from original concordance
+            cnc_hit, cnc_tok = get_hit_tok_from_address(
+                cnc_chunk, self._cnc_map[cnc_ix], offset=cnc_address_offset
+            )
+            # Reset the address offset if we've changed hits
+            if not cnc_hit == last_cnc_hit:
+                cnc_address_offset = 0
+                last_cnc_hit = cnc_hit
+            # Calculate span
+            cnc_tok_span = cnc_hit.get_form_span(cnc_tok)
+            # If span > 1, we need to get all cnc_toks
+            if cnc_tok_span > 1:
+                cnc_toks = get_toks_from_span(
+                    cnc_hit, cnc_tok, cnc_tok_span,
+                    core_cx = self.core_cx
                 )
+            # If span == 1 (0 is not an option; will not have been
+            # passed to aligner): it's just cnc_tok
+            else:
+                cnc_toks = [cnc_tok]
+            ###########################################################
+            # CALCULATE OTHER_CNC_TOKS
+            ###########################################################
+            # If there are between one and three matching tokens: get them
+            if 0 < len(other_cnc_ixs) < 4:
+                # Get other_cnc_address of first token
+                other_cnc_address = self._other_cnc_map[other_cnc_ixs[0]]
+                # Get hit and tok from other concordance
+                other_cnc_hit, other_cnc_tok = get_hit_tok_from_address(
+                    other_cnc_chunk, other_cnc_address
+                )
+                # **Calculate span**
+                if len(other_cnc_ixs) == 1:
+                # If only one matched, we need its span
+                    other_cnc_tok_span = other_cnc_hit.get_form_span(other_cnc_tok)
+                # With multiple matches, the span is equal to the no. of matches
+                else:
+                    other_cnc_tok_span = len(other_cnc_ixs)
+                # **Calculate other_cnc_toks**
+                if other_cnc_tok_span > 1:
+                    other_cnc_toks = get_toks_from_span(
+                        other_cnc_hit, other_cnc_tok, other_cnc_tok_span,
+                        core_cx = False
+                    )
+                else:
+                    other_cnc_toks = [other_cnc_tok]
+            else:
+                other_cnc_toks = []
+            ############################################################
+            # RECALCULATE CNC_TOKS BY RETOKENIZING TO GET A MATCH
+            ############################################################
+            if len(other_cnc_toks) > len(cnc_toks) and len(cnc_toks) == 1:
+                cnc_toks = cnc_hit.split_token(cnc_toks[0], len(other_cnc_toks))
+                cnc_address_offset += len(cnc_toks) - 1
+            else:
+                # Do nothing
+                pass
+            ###########################################################
+            # UPDATE TAGS
+            ###########################################################
+            if len(cnc_toks) == len(other_cnc_toks) == 1:
+                # Most common case, just update dictionary, no looping
+                cnc_toks[0].tags.update(other_cnc_toks[0].tags)
+            elif len(cnc_toks) == len(other_cnc_toks):
+                for cnc_tok, other_cnc_tok in zip(cnc_toks, other_cnc_toks):
+                    cnc_tok.tags.update(other_cnc_tok.tags)
+                    # Update data only for multiple matches
+                    cnc_tok.data = other_cnc_tok.data
+            else: # Unequal nos of tokens; do nothing
+                pass
         return cnc_chunk
         
     def merge(self):
@@ -220,6 +301,7 @@ class TextMerger(Merger):
         if len(other_cnc_chunks) != len(self.cnc):
             # Not the same number of hits; can't use chunking. Run on
             # whole concordance
+            print('WARNING! not the same number of hits: {} and {}'. format(len(self.cnc), len(other_cnc_chunks)))
             self.cnc = self._merge_chunk(self.cnc, self.other_cnc)
         else:
             for i, hit in enumerate(self.cnc):

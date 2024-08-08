@@ -492,6 +492,35 @@ class Hit(collections.UserList):
             if following_tok.form: return i # following tok has a form
             i += 1 # increment i
         return i
+        
+    def split_token(self, tok, span=2):
+        """
+        Splits a token into span new tokens, returning them.
+        
+        Parameters:
+            
+        tok (concordance.Token):        Token in the Hit
+        span (int):                     Span of new tokens
+        
+        Returns:
+            split_token(self, tok, span):
+                The new Tokens as a list.
+        """
+        if span < 2:
+            raise Error("Span can't be less than 2.")
+        # Set form property.
+        tok.form = str(tok)
+        l = [tok]
+        for i in range(span - 1):
+            new_tok = Token(str(tok))
+            new_tok.tags = tok.tags.copy()
+            new_tok.form = ''
+            l.append(new_tok)
+            for ll in [self.data, self.kws, self.core_cx]:
+                if not tok in ll: continue
+                ll.insert(ll.index(tok) + 1, new_tok)
+        return l
+        
                 
     def to_string(self, 
             tok_constant = 0,
@@ -526,8 +555,12 @@ class Hit(collections.UserList):
             'tags': make_jsonable(self.tags), # the tags dictionary
             'ref': self.ref, # the reference (string)
             'uuid': str(self._uuid), # UUID as a string
-            'kws': [self.data.index(x) for x in self.kws], # indexes of the kwd tokens
-            'core_cx': [self.data.index(x) for x in self.core_cx] # indexes of the core context tokens
+            'kws': list(range(
+                self.get_ix('start', self.KEYWORDS), self.get_ix('end', self.KEYWORDS) + 1
+            )), # indexes of the kwd tokens
+            'core_cx': list(range(
+                self.get_ix('start', self.CORE_CX), self.get_ix('end', self.CORE_CX) + 1
+            )) if self.core_cx else [] # indexes of the core context tokens
         }
         
 class Token(collections.UserString):

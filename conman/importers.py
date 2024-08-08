@@ -905,6 +905,7 @@ def get_importer_from_path(path):
     .out : PennOutImporter
     .txt : Importer
     .xml : BaseTreeImporter
+    .conll(u) : ConllImporter
     
     All other extensions trigger ParseError.
     
@@ -924,6 +925,7 @@ def get_importer_from_path(path):
     if ext == '.out': return PennOutImporter()
     if ext == '.txt': return Importer()
     if ext == '.xml': return BaseTreeImporter()
+    if ext in ['.conll', '.conllu']: return ConllImporter()
     raise ParseError('No default importer for file extension "{}".'.format(ext))
     
 def get_uuid(s):
