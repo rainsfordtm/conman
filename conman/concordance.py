@@ -557,7 +557,7 @@ class Hit(collections.UserList):
             'uuid': str(self._uuid), # UUID as a string
             'kws': list(range(
                 self.get_ix('start', self.KEYWORDS), self.get_ix('end', self.KEYWORDS) + 1
-            )), # indexes of the kwd tokens
+            )) if self.kws else [], # indexes of the kwd tokens
             'core_cx': list(range(
                 self.get_ix('start', self.CORE_CX), self.get_ix('end', self.CORE_CX) + 1
             )) if self.core_cx else [] # indexes of the core context tokens

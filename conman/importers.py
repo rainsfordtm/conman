@@ -5,7 +5,7 @@ from conman.tokenizers import *
 from uuid import uuid4
 import treetools.basetree, treetools.syn_importer, treetools.transformers
 import conman.scripts.pennout2cnc
-import csv, re, os.path
+import copy, csv, glob, json, re, os.path
 
 class Error(Exception):
     """
@@ -62,7 +62,7 @@ class Importer():
             - 'drop':   the token is given as an empty string and a warning is printed. 
             - 'keep':   the whole string becomes a word and a warning is printed.
             - 'raise':  raises a ParseError.
-        Default is 'warn'.
+        Default is 'drop'.
     
     Methods:
     --------
@@ -104,7 +104,8 @@ class Importer():
           'ConllImporter': ConllImporter,
           'TableImporter': TableImporter,
           'PennOutImporter': PennOutImporter,
-          'BaseTreeImporter': BaseTreeImporter
+          'BaseTreeImporter': BaseTreeImporter,
+          'GrewMatchImporter': GrewMatchImporter
         }
         if importer_type not in IMPORTER_TYPE_TO_CLASS_MAP:
               raise ValueError('Bad importer type {}'.format(importer_type))
@@ -120,7 +121,7 @@ class Importer():
             r'(?P<word>.*)', r'(?P<word>.*)', r'(?P<word>.*)' 
         self.ref_regex = ''
         self.tokenizer = Tokenizer()
-        self._on_token_parse_error = 'warn'
+        self._on_token_parse_error = 'drop'
         
     def _handle_token_parse_error(self, s, regex):
         # What to do when a string is encountered that the regex can't
@@ -270,174 +271,6 @@ class Importer():
         except:
             print(s)
             raise
-        
-class TokenListImporter(Importer):
-    """
-    Class to import the tokens in a one-token-per-line list format.
-    
-    Attributes:
-    -----------
-    hit_end_token (str):
-        Character used as a dummy token to delimit the hits (essential).
-        Default is '', which is interpreted as an empty line. Otherwise,
-        empty lines are ignored until hit_end_token is encountered.
-    comment_string (str):
-        String used at the start of a line to indicate a comment. Default is
-        '', i.e. no comments
-    
-    Methods:
-    --------
-    parse(self, path):
-        Imports concordance from path, one token per line.
-    """
-    
-    def __init__(self):
-        """
-        Constructs all attributes needed for an instance of the class.
-        """
-        Importer.__init__(self)
-        self.hit_end_token = ''
-        self.comment_string = '#'
-        
-    def parse(self, path):
-        """
-        Imports concordance from path, one token per line.
-        
-        Parameters
-        ----------
-        path (str):
-            Path to the file to import.
-            
-        Returns:
-        --------
-        parse(self, path):
-            A concordance object
-        """     
-        with open(path, 'r', encoding=self.encoding, errors='replace') as f:
-            l = []
-            for line in f:
-                if self.comment_string and line.startswith(self.comment_string):
-                    # ignore comments
-                    continue
-                if line[:-1]:
-                    tok = self.parse_token(line[:-1], self.lcx_regex)
-                else:
-                    tok = Token('')
-                if tok and tok != self.hit_end_token: 
-                    # not an empty line, not the hit_end_token
-                    l.append(tok)
-                elif tok == self.hit_end_token:
-                    # could be an empty line if it's also the hit_end_token
-                    hit = Hit(l)
-                    self.concordance.append(hit)
-                    l = []
-            # If there are no hit end tokens, we basically get a concordance
-            # with a single hit. So we need to store whatever's left in l.
-            if l:
-                hit = Hit(l)
-                self.concordance.append(hit)
-                l = []
-        print(len(self.concordance))
-        print(self.concordance[0][:100])
-        return self.concordance
-        
-class ConllImporter(TokenListImporter):
-    """
-    Class to import Conll files. Uses TokenListImporter but resets 
-    self.lcx_regex when parse is called to ensure it's correct for a 
-    ten-column .conllu file.
-    
-    Attributes:
-    -----------
-    head_is_kw (boolean):
-        If set to True, it turns the first sentence root element in a 
-        parsed structure into the keyword. If False, no keywords are
-        identified. Default is True.
-        
-    Methods:
-    --------
-    head_to_kw(self):
-        If 
-    """
-    
-    def __init__(self):
-        TokenListImporter.__init__(self)
-        self.head_is_kw = True
-        # Raise Parse Error if a token can't be dealt with.
-        self._on_token_parse_error = 'drop'
-        
-    def parse(self, path):
-        """
-        Mostly a wrapper for TokenListImporter.parse using a complex self.lcx_regex.
-        But also has handles Conllu's coding of agglutinations.
-        """
-        
-        def parse_agglutination(hit):
-            # Pass 2 to remove agglutination
-            l, span, form = [], 0, ''
-            for tok in hit:
-                if form:
-                    # Reset tok.form
-                    tok.form = form
-                    # Eliminate form
-                    form = ''
-                    # Decrease span
-                    span += -1
-                elif span:
-                    # Reset tok.form
-                    tok.form = ''
-                    # Decrease span
-                    span += -1
-                else:
-                    ixs = tok.tags['conll_ID'].split('-')
-                    if len(ixs) > 1:
-                        # append the token to the deletion list
-                        l.append(tok)
-                        # calculate span
-                        span = int(ixs[1]) - int(ixs[0]) + 1
-                        # store full form
-                        form = tok.form
-            # Delete agglutinated tokens
-            for tok in l:
-                hit.remove(tok)
-        
-        self.lcx_regex = ''.join([
-            r'(?P<conll_ID>[0-9\-]+)\t',
-            r'(?P<word>[^\t]+)\t',
-            r'(?P<conll_LEMMA>[^\t]+)\t',
-            r'(?P<conll_CPOSTAG>[^\t]+)\t',
-            r'(?P<conll_POSTAG>[^\t]+)\t',
-            r'(?P<conll_FEATS>[^\t]+)\t',
-            r'(?P<conll_HEAD>[^\t]+)\t',
-            r'(?P<conll_DEPREL>[^\t]+)\t',
-            r'(?P<conll_PHEAD>[^\t]+)\t',
-            r'(?P<conll_PDEPREL>[^\t]+).*'
-        ])
-        # Run parse from the parent class
-        TokenListImporter.parse(self, path)
-        # Re-parse agglutinated tokens
-        for hit in self.concordance:
-            parse_agglutination(hit)
-        # Turn heads into kws if necessary
-        if self.head_is_kw: self.head_to_kw()
-        # Return concordance
-        return self.concordance
-        
-    def head_to_kw(self):
-        """
-        Promotes the first token for which conll_HEAD is 0 to a keyword,
-        allowing the hit to be treated as a concordance with left and
-        right context.
-        """
-        for hit in self.concordance:
-            for tok in hit:
-                try: 
-                    if str(tok.tags['conll_HEAD']) == '0':
-                        hit.kws = [tok]
-                        continue
-                except:
-                    print(tok, tok.tags)
-                    raise
 
 class BaseTreeImporter(Importer):
     """
@@ -598,7 +431,7 @@ class BaseTreeImporter(Importer):
             print(self.keyword_node_regex)
             raise ParseError
         return hits
-        
+
 class PennOutImporter(BaseTreeImporter):
     """
     Imports a .out file from CorpusSearch containing hits marked in the
@@ -718,6 +551,162 @@ class PennOutImporter(BaseTreeImporter):
             with open(self.dump_xml, 'w') as f:
                 f.write(forest.toxml())
         # 7. Return concordance.s 
+        return self.concordance
+        
+class GrewMatchImporter(Importer):
+    """
+    Imports a concordance derived from the .json output of a 
+    Grew Match search.
+    
+    Additional Attributes:
+    ----------------------
+    
+    add_ref_prefix (bool):
+        If True, adds a "corpus/file/" prefix to the sent_id in
+        MULTI mode. Default is True.
+    
+    corpus_path (str):
+        Path to the corpus file, which is either a .conllu file
+        (if running in MONO mode) or another .json file (MULTI mode)
+        
+    keyword_node (str):
+        Name of the node from the query to use as a keyword. Default
+        is "X" (Grew match's default label)
+        
+        
+    Methods:
+    --------
+    parse(self, path):
+        Parses the .json file containing the hits, reading the
+        original corpus to create a concordance.
+        
+    parse_conllu(self, path, results):
+        Parses a conllu file, reading the hits from "results".
+    
+    """
+    
+    def __init__(self):
+        Importer.__init__(self)
+        self.add_ref_prefix = True
+        self.corpus_path = ''
+        self.keyword_node = 'X'
+        self._importer = ConllImporter()
+        self._importer.head_is_kw = False
+        self._multi = False # Hidden attribute, set from corpus_path extension
+        
+    def _set_mode(self):
+        ext = os.path.splitext(self.corpus_path)[1]
+        self._multi = True if ext == '.json' else False
+        
+    def parse_conllu(self, path, results, ref_prefix=''):
+        """
+        Adds hits to self.concordance useing a conllu file and a list
+        of results.
+        
+        Parameters:
+            path (str):
+                Path to the original conllu file.
+            results (list):
+                A list of dictionaries read from the .json outputted
+                by Grew Match.
+        """
+        # Reset the .concordance attribute of the importer.
+        self._importer.concordance = Concordance([])
+        # Parse the .conllu file
+        raw_cnc = self._importer.parse(path)
+        # Get the .ref attributes as a list
+        refs = [x.ref for x in raw_cnc]
+        # Iterate over the results
+        for result in results:
+            try:
+                hit_src = raw_cnc[refs.index(result['sent_id'])]
+            except ValueError:
+                # The result is not in this concordance
+                # Continue the loop
+                # KeyError should never be raised
+                continue
+            try:
+                kw_ix = int(result['matching']['nodes'][self.keyword_node]) - 1
+            except KeyError:
+                # Can't find the node in this result; could have bee
+                # a weird or badly formed query
+                continue
+            # Rebuild the hit
+            hit = Hit([Token(x) for x in hit_src])
+            hit.tags = hit_src.tags.copy()
+            hit.ref = ref_prefix + hit_src.ref if self.add_ref_prefix else hit_src.ref
+            # Parse the ref
+            for key, value in self.parse_ref(hit.ref).items():
+                hit.tags[key] = value
+            try:
+                hit.kws = [hit.data[kw_ix]]
+            except:
+                print(hit)
+                print(hit_src)
+                print(result)
+                raise
+            # Append hit to self.concordance
+            self.concordance.append(hit)
+        
+    def parse(self, path):
+        """
+        Parses the Grew Match results from a .json file.
+        
+        Parameters:
+            path (str):
+                Path to the .json results file.
+        
+        Returns:
+            parse(self, path):
+                A concordance object.
+        """
+        # An initial check: corpus_path must be set
+        if not self.corpus_path:
+            raise ParserError('No path to original corpus (GM_corpus_path).')
+        
+        # We begin by working out if we're in "multi" mode or not.
+        self._set_mode()
+        # If we're in multi mode:
+        #   (i)   the results file is a dictionary keyed by corpus.
+        #   (ii)  self.corpus_path is a .json file containing a list of
+        #         corpora with "id" and "directory" attributes
+        #   (iii) the Concordance is obtained by iterating over corpora
+        #         and files in the corpora.
+        # Otherwise:
+        #   (i)   the results file is a list of hits
+        #   (ii)  self.corpus_path is the .conllu file containing the
+        #         data
+        if self._multi:
+            results_by_corpus = parse_json(path)
+            corpus_json = parse_json(self.corpus_path)
+            corpora = [x['id'] for x in corpus_json]
+            directories = [x['directory'] for x in corpus_json]
+            # If no ref_regex is set, 
+            if not self.ref_regex and self.add_ref_prefix:
+                self.ref_regex = r'(?P<corpus>[^/]+)/(?P<file>[^/]+)/.*'
+            for corpus, directory in zip(corpora, directories):
+                try:
+                    results = results_by_corpus[corpus]
+                except KeyError:
+                    # No results
+                    continue
+                if not os.path.isabs(directory):
+                    # calculate relative to 
+                    directory = os.path.join(os.path.dirname(self.corpus_path), directory)
+                conllus = [
+                    os.path.join(directory, x)
+                    for x in glob.glob(
+                        '*.conll*',
+                        root_dir=directory
+                    )
+                ]
+                for conllu in conllus:
+                    print('Parsing ' + conllu)
+                    ref_prefix = corpus + '/' + os.path.basename(conllu) + '/'
+                    self.parse_conllu(conllu, results, ref_prefix = ref_prefix)
+        else:
+            results = parse_json(path)
+            self.parse_conllu(self.corpus_path, results)
         return self.concordance
         
 class TableImporter(Importer):
@@ -873,6 +862,244 @@ class TableImporter(Importer):
             self.dialect = sniffer.sniff(f.read(1024))
             f.seek(0)
             self.has_header = sniffer.has_header(f.readline())
+            
+class TokenListImporter(Importer):
+    """
+    Class to import the tokens in a one-token-per-line list format.
+    
+    Attributes:
+    -----------
+    hit_end_token (str):
+        Character used as a dummy token to delimit the hits (essential).
+        Default is '', which is interpreted as an empty line. Otherwise,
+        empty lines are ignored until hit_end_token is encountered.
+    comment_string (str):
+        String used at the start of a line to indicate a comment. Default is
+        '', i.e. no comments
+    
+    Methods:
+    --------
+    parse(self, path):
+        Imports concordance from path, one token per line.
+        
+    parse_comment(self, s):
+        Parses a line starting with self.comment_string. Default
+        behaviour is to ignore comments. Returns a dictionary.
+        
+    """
+    
+    def __init__(self):
+        """
+        Constructs all attributes needed for an instance of the class.
+        """
+        Importer.__init__(self)
+        self.hit_end_token = ''
+        self.comment_string = '#'
+        
+    def parse(self, path):
+        """
+        Imports concordance from path, one token per line.
+        
+        Parameters
+        ----------
+        path (str):
+            Path to the file to import.
+            
+        Returns:
+        --------
+        parse(self, path):
+            A concordance object
+        """     
+        with open(path, 'r', encoding=self.encoding, errors='replace') as f:
+            d, l = {}, []
+            for line in f:
+                if self.comment_string and line.startswith(self.comment_string):
+                    # send to comment parser
+                    d.update(self.parse_comment(line))
+                    # next line
+                    continue
+                if line[:-1]:
+                    tok = self.parse_token(line[:-1], self.lcx_regex)
+                else:
+                    tok = Token('')
+                if tok and tok != self.hit_end_token: 
+                    # not an empty line, not the hit_end_token
+                    l.append(tok)
+                elif tok == self.hit_end_token:
+                    # could be an empty line if it's also the hit_end_token
+                    hit = Hit(l)
+                    hit.tags = d.copy()
+                    self.concordance.append(hit)
+                    d, l = {}, []
+            # If there are no hit end tokens, we basically get a concordance
+            # with a single hit. So we need to store whatever's left in l.
+            if l:
+                hit = Hit(l)
+                hit.tags = d.copy()
+                self.concordance.append(hit)
+                d, l = {}, []
+        #print(len(self.concordance))
+        #print(self.concordance[0][:100])
+        return self.concordance
+        
+    def parse_comment(self, s):
+        """
+        Parses a line starting with self.comment_string. Default
+        behaviour is to ignore comments. Returns a dictionary.
+        
+        Parameters
+        ----------
+        s (str):
+            A line from the input file containing a comment.
+            
+        Returns:
+        --------
+        parse_comment(self, s):
+            A dictionary.
+        """
+        return {}
+
+class ConllImporter(TokenListImporter):
+    """
+    Class to import Conll files. Uses TokenListImporter but resets 
+    self.lcx_regex when parse is called to ensure it's correct for a 
+    ten-column .conllu file.
+    
+    Attributes:
+    -----------
+    head_is_kw (boolean):
+        If set to True, it turns the first sentence root element in a 
+        parsed structure into the keyword. If False, no keywords are
+        identified. Default is True.
+        
+    Methods:
+    --------
+    head_to_kw(self):
+        Promotes the first token for which conll_HEAD is 0 to a keyword,
+        allowing the hit to be treated as a concordance with left and
+        right context.
+        
+    parse(self, path):
+        Parses a conllu file, returns a Concordance
+        
+    parse_comment(self, s):
+        Parses a comment line. If the line has the form "# key = value",
+        it's stored in the dictionary, otherwise it's ignored.
+    """
+    
+    def __init__(self):
+        TokenListImporter.__init__(self)
+        self.head_is_kw = True
+        # Raise Parse Error if a token can't be dealt with.
+        self._on_token_parse_error = 'raise'
+        
+    def head_to_kw(self):
+        """
+        Promotes the first token for which conll_HEAD is 0 to a keyword,
+        allowing the hit to be treated as a concordance with left and
+        right context.
+        """
+        for hit in self.concordance:
+            for tok in hit:
+                try: 
+                    if str(tok.tags['conll_HEAD']) == '0':
+                        hit.kws = [tok]
+                        continue
+                except:
+                    print(tok, tok.tags)
+                    raise
+        
+    def parse(self, path):
+        """
+        Mostly a wrapper for TokenListImporter.parse using a complex self.lcx_regex.
+        But also has handles Conllu's coding of agglutinations.
+        """
+        
+        def get_ref():
+            nonlocal hit, path, i
+            try:
+                return hit.tags['sent_id']
+            except KeyError:
+                pass
+            return '{}_{:0>5}'.format( 
+                os.path.basename(path),
+                i + 1 # Grew Match is 1-indexed.
+            )
+        
+        def parse_agglutination(hit):
+            # Pass 2 to remove agglutination
+            l, span, form = [], 0, ''
+            for tok in hit:
+                if form:
+                    # Reset tok.form
+                    tok.form = form
+                    # Eliminate form
+                    form = ''
+                    # Decrease span
+                    span += -1
+                elif span:
+                    # Reset tok.form
+                    tok.form = ''
+                    # Decrease span
+                    span += -1
+                else:
+                    ixs = tok.tags['conll_ID'].split('-')
+                    if len(ixs) > 1:
+                        # append the token to the deletion list
+                        l.append(tok)
+                        # calculate span
+                        span = int(ixs[1]) - int(ixs[0]) + 1
+                        # store full form
+                        form = tok.form
+            # Delete agglutinated tokens
+            for tok in l:
+                hit.remove(tok)
+        
+        self.lcx_regex = ''.join([
+            r'(?P<conll_ID>[0-9\-]+)\t',
+            r'(?P<word>[^\t]+)\t',
+            r'(?P<conll_LEMMA>[^\t]+)\t',
+            r'(?P<conll_CPOSTAG>[^\t]+)\t',
+            r'(?P<conll_POSTAG>[^\t]+)\t',
+            r'(?P<conll_FEATS>[^\t]+)\t',
+            r'(?P<conll_HEAD>[^\t]+)\t',
+            r'(?P<conll_DEPREL>[^\t]+)\t',
+            r'(?P<conll_PHEAD>[^\t]+)\t',
+            r'(?P<conll_PDEPREL>[^\t]+).*'
+        ])
+        # Run parse from the parent class
+        TokenListImporter.parse(self, path)
+        # Re-parse agglutinated tokens
+        for i, hit in enumerate(self.concordance):
+            parse_agglutination(hit)
+            # Generate a .ref from sent_id OR using Grew Match style
+            hit.ref = get_ref()
+        # Turn heads into kws if necessary
+        if self.head_is_kw: self.head_to_kw()
+        # Return concordance
+        return self.concordance
+        
+    def parse_comment(self, s):
+        """
+        Parses a comment line. If the line has the form "# key = value",
+        it's stored in the dictionary, otherwise it's ignored.
+        
+        Parameters
+        ----------
+        s (str):
+            A line from the input file containing a comment.
+            
+        Returns:
+        --------
+        parse_comment(self, s):
+            A dictionary.
+        
+        """
+        m = re.match(r'#+\s*([^\s=]+)\s*=\s*([^\n]+)', s)
+        if m:
+            return {m.group(1): m.group(2)}
+        else:
+            return {}
       
 def context_to_list(lcx, keywds, rcx):
     """
@@ -945,6 +1172,21 @@ def get_uuid(s):
     except:
         uuid = uuid4()
     return uuid
+    
+def parse_json(path):
+    """
+    Loads a JSON file into a Python object.
+
+    Parameters:
+        path (str):    Path to the JSON file
+        
+    Returns:
+        parse_json(path):
+            A Python object.
+    """
+    with open(path) as f:
+        return json.load(f)
+    
     
 def tags_to_tok(tags, tagnames = [], word_tag='word'):
     """

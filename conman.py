@@ -160,6 +160,16 @@ class Launcher():
                     name = os.path.splitext(os.path.basename(value))[0]
                     script_module = load_module(name, value)
                     importer.script = script_module.script
+            if isinstance(importer, GrewMatchImporter):
+                value = self.workflow.get(section, 'GM_corpus_path', fallback='')
+                if value:
+                    importer.corpus_path = value
+                value = self.workflow.get(section, 'GM_keyword_node', fallback='')
+                if value:
+                    importer.keyword_node = value
+                value = self.workflow.get(section, 'GM_add_ref_prefix', fallback='True')
+                importer.add_ref_prefix = True if value.lower() == 'true' else False
+                
         # 3. Read exporter section
         if self.exporter:
             for key in ['encoding', 'tok_fmt', 'hit_end_token', 'kw_fmt', 'tok_delimiter']:
