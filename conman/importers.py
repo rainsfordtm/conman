@@ -632,7 +632,7 @@ class GrewMatchImporter(Importer):
                 # a weird or badly formed query
                 continue
             # Rebuild the hit
-            hit = Hit([Token(x) for x in hit_src])
+            hit = Hit([copy.copy(x) for x in hit_src])
             hit.tags = hit_src.tags.copy()
             hit.ref = ref_prefix + hit_src.ref if self.add_ref_prefix else hit_src.ref
             # Parse the ref
