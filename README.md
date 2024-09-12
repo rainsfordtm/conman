@@ -2,7 +2,7 @@
 
 Concordance management and generation tools for SILPAC H1 WP2.
 
-© Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, October 2023
+© Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, October 2023 - September 2024
 
 [https://silpac.uni-mannheim.de/](https://silpac.uni-mannheim.de/)
 [https://sites.google.com/site/rainsfordtm/home](https://sites.google.com/site/rainsfordtm/home)
@@ -39,7 +39,7 @@ The ConMan has four core modules which are called in the following order
 each time it is run.
 1. **Importer**: imports the primary concordance from an input file. If the
 Importer module isn't run, the primary concordance must be loaded from a
-.cnc or .cnc.gz file saved by ConMan. See [section 4](#4-importers-and-exporters).
+.json(.gz) or .cnc(.gz) file saved by ConMan. See [section 4](#4-importers-and-exporters).
 2. **Merger**: Imports a secondary concordance and merges it with the 
 primary concordance. This can be used to add or remove hits from the
 primary concordance or to add annotations to existing hits.
@@ -47,9 +47,9 @@ See [section 5](#5-merging).
 3. **Annotator**: Adds user-defined annotations to the primary concordance.
 See [section 6](#6-annotating).
 4. **Exporter**: exports the primary concordance to an output file. If the
-`-s` flag is passed on the command line, it also saves a .cnc file
+`-s` flag is passed on the command line, it also saves a .json file
 containing the primary concordance. If a `-z` flag is also passed, it
-compresses the .cnc file and saves it as a .cnc.gz file.
+compresses the .cnc file and saves it as a .json.gz file.
 See [section 4](#4-importers-and-exporters).
 	
 ### 2.3 Workflow files
@@ -89,7 +89,7 @@ you've extracted is what you really want.
 	+ Save the concordance by setting the `-s` flag on the command line.
 + Next, run the tagger/lemmatizer on the one-token-per-line data.
 + Pass 2:
-	+ Reload your original concordance from the .cnc file, i.e. no Importer necessary
+	+ Reload your original concordance from the .json file, i.e. no Importer necessary
 	+ Use the `TokenListImporter` as the `other_importer` to import the tagged and
 	lemmatized data as a second concordance.
 	+ Merge the two concordances using the `TextMerger` to inject the new 
@@ -125,7 +125,7 @@ but unparsed corpus, but now you want to know which of the approximately
 is present from the Conll annotation
     + Check out [demo_tasks/bfm-parse-pass-2-annotator-script.py](demo_tasks/bfm-parse-pass-2-annotator-script.py).
 + Pass  2:
-	+ Reload your original concordance from the .cnc file, i.e. no Importer necessary
+	+ Reload your original concordance from the .json file, i.e. no Importer necessary
 	+ Use the `ConllImporter` as the `other_importer` to import the tagged and
 	lemmatized data as a second concordance.
 	+ Merge the two concordances using the `ConcordanceMerger` to inject the Conll 
@@ -181,6 +181,7 @@ The ConMan implements the following importers and exporters:
 | `ConllImporter`     | `ConllExporter`     | .conllu   | CoNLL format for dependency parsing.                                      |
 | `BaseTreeImporter`  |                     | .xml      | Generic importer for treebank corpora, must be converted to BaseTree XML. |
 | `PennOutImporter`   |                     | .out      | Importer for Penn format .out files (constituency parsing).               |
+| `GrewMatchImporter` |                     | .json     | Importer for .json files exported by Grew Match (*new in version 1.1*)    |
 
 For every importer and exporter, the `encoding` parameter sets the correct text 
 encoding. Default is `utf-8`.
@@ -404,10 +405,10 @@ importer section of the workflow file or by including
 `PO_keyword_node_regex=<regex>` (no whitespace!) in the remark section of the
 .out file (tip: this is copied directly from the remark section of the .q file).
 
-**NEW 01/02/23**: You can name further nodes from your query using
-the same technique and ConMan will tag all tokens dominated by that
-node on import. For example, if you are also interested in the NP subject
-node, you can set the following regex:
+You can name further nodes from your query using the same technique and
+ConMan will tag all tokens dominated by that node on import. For example,
+if you are also interested in the NP subject node, you can set the following
+regex:
 ```
 \s(?P<keyword_node>[0-9]+)\sVX,\s(?P<subject>[0-9]+)\sNP-SBJ
 ```
@@ -468,6 +469,51 @@ To understand how to manipulate the .xml file using the basetree library,
 please take a look at [doc/basetree_api.odt](doc/basetree_api.odt). The
 `tree` argument passed to the script is an instance of the
 `basetree.BaseTree` class, which inherits from `xml.dom.minidom.Document`.
+
+### 4.6 The GrewMatchImporter
+
+The `GrewMatchImporter` is designed to work with the .json results
+file produced by [Grew Match's](https://grew.fr/usage/cli/) command-line
+`grew grep` command.
+
+Unlike other formats handled by the ConMan, this
+type of file doesn't contain the original corpus text, which has to be
+retrieved from the CONLLU files queried by Grew match. For this reason
+it's essential to set the `GM_corpus_path` parameter
+in the config file. This either indicates a single .conllu file, or,
+if Grew Match is used to query multiple files (MULTI mode), the .json
+file used by Grew Match to compile the corpus. Note that the ConMan
+will only find the corpus files if they were identified using the
+`directory` parameter in the .json file.
+
+Let's take an example. We've used `grew grep` to generate a hits.json
+file from a corpus stored in `/home/me/myconllucorpus`. In order to
+query these files in MULTI mode, we created a .json file `/home/me/mycorpus.json`
+with the following structure and compiled it with Grew:
+```
+[
+  { "id": "MYCORPUS",
+    "directory": "/home/me/myconllucorpus"
+  } 
+]
+```
+Now, to import hits.json into the ConMan, we use the following
+workflow file:
+```
+[setup]
+importer=GrewMatchImporter
+
+[importer]
+GM_corpus_path=/home/me/mycorpus.json
+GM_keyword_node=Y
+```
+The parameter `GM_keyword_node` tells the importer which node in the
+Grew query to use as the keyword. Default is "X" (also Grew's default).
+
+Finally, we run the ConMan:
+```
+conman.py -w myworkflow.cfg hits.json table.csv
+```
 
 ## 5. Merging
 
@@ -785,7 +831,7 @@ annotation can be read from the `.tags` dictionary of the **Token**.
 
 ### 6.4 Advanced use cases
 
-**New 30/10/23**. For advanced use cases, two further annotators are
+For advanced use cases, two further annotators are
 provided to be used in combination with user-defined annotation scripts:
 + `EvaluationAnnotator`: Identical to the default annotator but contains
 a `.summary` attribute (dictionary), the contents of which is displayed
@@ -860,3 +906,11 @@ CM_merge_tokens=True
 [annotator]
 tags=[('conll_DEPREL', 'deprel'), ('conll_HEAD', 'head')]
 ```
+
+## Version history
+
++ September 2024: version 1.1
+    + added handling of agglutinated tokens in CONLL-U format
+    + change base save format to .json (formerly .cnc pickle)
+    + added GrewMatchImporter
++ October 2023: version 1.0

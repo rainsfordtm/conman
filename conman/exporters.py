@@ -33,7 +33,11 @@ class Exporter():
 
     kw_fmt(str):
         Format string used to format each keyword. Takes a single positional
-        argument, which is evaluated as a token instance. Default is '{0}'.
+        argument, which is evaluated as a token instance. Default is '{0.form}'.
+        
+    hit_end_token(str):
+        Character added as dummy token at the end of each hit (essential).
+        Default is '', i.e. don't add an empty token.
         
     split_hits (int):
         Splits the output into smaller files containing maximum split_hits
@@ -44,8 +48,8 @@ class Exporter():
         
     tok_fmt (str):
         Format string used to represent each token. Takes a single positional
-        argument, which is evaluated as a token instance. Default is '{0}',
-        i.e. just the token as a string.
+        argument, which is evaluated as a token instance. Default is '{0.form}',
+        i.e. the orthographic form of the token.
         
     Methods:
     --------
@@ -65,12 +69,13 @@ class Exporter():
         Constructs all attributes needed for an instance of the class.
         """
         self.encoding = 'utf-8'
-        self.kw_fmt = '{0}'
+        self.kw_fmt = '{0.form}'
         self.core_cx = False
         self.split_hits = 0
-        self.tok_fmt = '{0}'
+        self.tok_fmt = '{0.form}'
         self.tok_delimiter = ' '
         self.exts = ['txt', 'csv', 'tsv']
+        self.hit_end_token = ''
         
     @classmethod
     def create(cls, exporter_type):
@@ -172,7 +177,7 @@ class Exporter():
                         'Nothing to export. Check core context settings\n.' + \
                         'Hit: ' + hit.to_string(hit.TOKENS)
                     )
-                f.write(s + '\n')
+                f.write(s + self.tok_delimiter + self.hit_end_token + '\n')
                 
     def _splitter(self, cnc):
         """
@@ -197,12 +202,6 @@ class Exporter():
 class TokenListExporter(Exporter):
     """
     Class to export the tokens in a one-token-per-line list format.
-    
-    Attributes:
-    -----------
-    hit_end_token (str):
-        Character used as a dummy token to delimit the hits (essential).
-        Default is '', i.e. an empty line.
     """
     
     def __init__(self):
@@ -210,7 +209,6 @@ class TokenListExporter(Exporter):
         Constructs all attributes needed for an instance of the class.
         """
         Exporter.__init__(self)
-        self.hit_end_token = ''
         self.exts = ['txt', 'tsv']
         
     def _export(self, cnc, path):
@@ -412,8 +410,6 @@ class ConllExporter(Exporter):
     phead (str)    : key in tok.tags whose value should be mapped to the PHEAD column
     pdeprel (str)  : key in tok.tags whose value should be mapped to the PDEPREL column
     feats (list)   : list of keys in tok.tags whose values should be mapped to the FEATS column
-    hit_end_token (str): Character used as a dummy token to delimit the hits (essential).
-                    Default is 'ENDHIT'.
     
     Methods:
     --------
@@ -438,8 +434,8 @@ class ConllExporter(Exporter):
         self.phead = 'conll_PHEAD'
         self.pdeprel = 'conll_PDEPREL'
         self.feats = []
-        self.hit_end_token = 'ENDHIT'
         self.exts = ['conllu', 'conll', 'txt', 'tsv']
+        
     def _export(self, cnc, path, add_refs = True):
         """
         Exports a concordance as a Conll file suitable for dependency parsing.
@@ -472,8 +468,23 @@ class ConllExporter(Exporter):
         s = ''
         toks = self.get_tokens(hit)
         for ix, tok in enumerate(toks):
-            s += '\t'.join(self.tok_to_list(tok, ix + 1))
-            s += '\n'
+            if tok.form: # Possible agglutination
+                span = hit.get_form_span(tok)
+                if span > 1: # Definite agglutination
+                    s += '\t'.join([
+                        str(ix) + '-' + str(ix + span - 1),    # 1. ID
+                        tok.form,                              # 2. form
+                        '_',                                   # 3. lemma
+                        '_',                                   # 4. cpostag
+                        '_',                                   # 5. postag
+                        '_',                                   # 6. feats
+                        '_',                                   # 7. head
+                        '_',                                   # 8. deprel
+                        '_',                                   # 9. phead
+                        '_',                                   # 10. pdeprel
+                    ]) + '\n'
+            # Continue processing the token
+            s += '\t'.join(self.tok_to_list(tok, ix + 1)) + '\n'
         if self.hit_end_token:
             s += '\t'.join([
                 str(ix + 2), #1
@@ -507,6 +518,7 @@ class ConllExporter(Exporter):
         format.
         
         Parameters:
+            hit (concordance.Hit)   : the Hit to which the tok belongs
             tok (concordance.Token) : a Token object
             ix (int)                : value for the ID column
             
@@ -517,7 +529,7 @@ class ConllExporter(Exporter):
         
         # The ten columns are:
         # 1. ID (from 1 to n, given by ix)
-        # 2. form (str(tok))
+        # 2. form str(tok)
         # 3. lemma (tok.tags[self.lemma] or '_')
         # 4. cpostag (tok.tags[self.cpostag] or '_')
         # 5. postag (tok.tags[self.postag] or '_')
@@ -563,7 +575,7 @@ def get_exporter_from_path(path):
     if ext == '.csv': return TableExporter()
     if ext == '.txt': return Exporter()
     if ext in ['.conll', '.conllu']: return ConllExporter()
-    raise ParseError('No default exporter for file extension "{}".'.format(ext))
+    raise ExportError('No default exporter for file extension "{}".'.format(ext))
     
 def lgermsafe(s):
     """

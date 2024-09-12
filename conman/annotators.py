@@ -30,6 +30,24 @@ class Annotator():
         
     script(self, hit, **kwargs):
         Returns updated hit.
+        
+        
+    Further Methods to assist annotation scripts:
+    ---------------------------------------------
+    These methods are designed to be called by self.script,
+    and require self.hit to be set to the Hit being processed.
+    
+    get_ix_from_tok(self, tok):
+        Return the ix of token within self.hit
+    
+    get_next_tok(self, tok)
+        Returns the next token within self.hit
+        
+    get_prev_tok(self, tok)
+        Returns the previous token within self.hit
+    
+    get_tok_by_ix(self, tok)
+        Gets the token with index ix in self.hit
     """
     
     @classmethod
@@ -96,6 +114,71 @@ class Annotator():
                 All further arguments must be keyword arguments.
         """
         pass
+        
+    ####################################################################
+    # Some methods to facilitate searching hits, valid however they
+    # are annotated.
+    ####################################################################
+    
+    def get_ix_from_tok(self, tok):
+        """
+        Returns the ix of tok within the hit.
+        
+        Parameters:
+            tok (Token):        the token
+            
+        Returns:
+            self.get_ix_from_tok(tok):
+                An integer giving token index.
+        """
+        l = [x is tok for x in self.hit]
+        return l.index(True)
+        
+    def get_next_tok(self, tok):
+        """
+        Returns the next token in the Hit.
+        
+        Parameters:
+            tok (Token):        the token
+            
+            
+        Returns:
+            self.get_next_tok(tok)
+                the next token in the Hit
+        """
+        ix = self.get_ix_from_tok(tok)
+        try:
+            return self.get_tok_by_ix(ix + 1)
+        except IndexError:
+            return None
+            
+    def get_prev_tok(self, tok):
+        """
+        Returns the previous token in the Hit.
+        
+        Parameters:
+            tok (Token):        the token
+            
+            
+        Returns:
+            self.get_prev_tok(tok)
+                the previous token in the Hit
+        """
+        ix = self.get_ix_from_tok(tok)
+        return self.get_tok_by_ix(ix - 1) if ix > 0 else None
+    
+    def get_tok_by_ix(self, ix):
+        """
+        Returns the token with index ix from the hit.
+        
+        Parameters:
+            ix (int):   The index of the token
+            
+        Returns
+            self.get_tok_by_ix(ix): The token with ix = ix.
+        
+        """
+        return self.hit[ix]
         
 class ConllAnnotator(Annotator):
     """
@@ -186,7 +269,7 @@ class ConllAnnotator(Annotator):
         tree = self.get_descendents(parent)
         tree.append(parent)
         tree.sort(key=lambda x: int(x.tags['conll_ID']))
-        return ' '.join([str(x) for x in tree])
+        return ' '.join([x.form for x in tree])
         
     def reset_ids(self):
         """

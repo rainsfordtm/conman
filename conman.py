@@ -86,7 +86,7 @@ class Launcher():
         if self.other_cnc or self.other_importer:
             self.merger = ConcordanceMerger()
         out_splitext = os.path.splitext(self.path_out)
-        if out_splitext[1] not in CONCORDANCE_EXTS or \
+        if (out_splitext[1] != '.gz' and out_splitext[1] not in CONCORDANCE_EXTS) or \
         (out_splitext[1] == '.gz' and os.path.splitext(out_splitext[0])[1] not in CONCORDANCE_EXTS):
             self.exporter = get_exporter_from_path(self.path_out)
         else:
@@ -160,9 +160,19 @@ class Launcher():
                     name = os.path.splitext(os.path.basename(value))[0]
                     script_module = load_module(name, value)
                     importer.script = script_module.script
+            if isinstance(importer, GrewMatchImporter):
+                value = self.workflow.get(section, 'GM_corpus_path', fallback='')
+                if value:
+                    importer.corpus_path = value
+                value = self.workflow.get(section, 'GM_keyword_node', fallback='')
+                if value:
+                    importer.keyword_node = value
+                value = self.workflow.get(section, 'GM_add_ref_prefix', fallback='True')
+                importer.add_ref_prefix = True if value.lower() == 'true' else False
+                
         # 3. Read exporter section
         if self.exporter:
-            for key in ['encoding', 'tok_fmt', 'kw_fmt', 'tok_delimiter']:
+            for key in ['encoding', 'tok_fmt', 'hit_end_token', 'kw_fmt', 'tok_delimiter']:
                 value = self.workflow.get('exporter', key, fallback='')
                 if value:
                     # convert to normal string to allow \n, \s, etc.
@@ -229,7 +239,8 @@ class Launcher():
                     value = self.workflow.get('merger', key, fallback='')
                     if value:
                         num_value = float(value)
-                        setattr(self.merger, key[3:], value)
+                        if key == 'TM_ratio' and num_value > 1: num_value = num_value / 100
+                        setattr(self.merger, key[3:], num_value)
                 value = self.workflow.get('merger', 'TM_hit_end_token', fallback='')
                 if value:
                     self.merger.hit_end_token = value
@@ -320,7 +331,7 @@ class Launcher():
         print('Done!')
 
 def main(path_in, path_out, path_other='', path_workflow='', 
-    save=False, gz=False):
+    save=False, json=False, gz=False):
     """
     Builds and runs a Launcher object.
     
@@ -332,8 +343,11 @@ def main(path_in, path_out, path_other='', path_workflow='',
     path_workflow (str):    Path to workflow configuration file.
     """
     launcher = Launcher(path_in, path_out)
-    if save:
-        launcher.path_save = os.path.splitext(path_out)[0] + CONCORDANCE_EXTS[0]
+    if json:
+        launcher.path_save = os.path.splitext(path_out)[0] + '.json'
+        if gz: launcher.path_save += '.gz'
+    elif save:
+        launcher.path_json = os.path.splitext(path_out)[0] + CONCORDANCE_EXTS[0]
         if gz: launcher.path_save += '.gz'
     if path_other:
         launcher.path_other = path_other
@@ -376,18 +390,19 @@ if __name__ == '__main__':
         help='Workflow configuration file.')
     
     parser.add_argument('-s', '--save', action='store_true', 
-        help='Saves the concordance to the same path as the exported file even ' + \
-        'if an exporter is given in the workflow file or if outfile is not of ' + \
-        'type .cnc.'
+        help='Saves the concordance.'
+    )
+    parser.add_argument('-j', '--json', action='store_true', 
+        help='Save in JSON format.'
     )
     parser.add_argument('-z', '--zip', action='store_true',
-        help='Gzip compress the .cnc file while saving.'
+        help='Gzip compress the .cnc or .json file while saving.'
     )
     # Convert Namespace to dict.
     args = vars(parser.parse_args())
     merge = args.pop('merge')[0] if 'merge' in args else ''
     workflow = args.pop('workflow')[0] if 'workflow' in args else ''
     main(args.pop('infile'), args.pop('outfile'), merge,
-        workflow, args.pop('save'), args.pop('zip'))
+        workflow, args.pop('save'), args.pop('json'), args.pop('zip'))
     
 

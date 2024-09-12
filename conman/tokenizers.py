@@ -231,9 +231,21 @@ class MidiaTokenizer(Tokenizer):
         Tokenizes s, returning a list of tokens.
     """
     
-    # At present, does nothing.
+    def tokenize(self, s):
+        """
+        Tokenizes s, returning a list of tokens. Identical to
+        original tokenizer but treats the midpoint (·) as a token
+        boundary.
     
-    pass
+        Parameters:
+            s (str) : String containing tokens
+        
+        Return:
+            tokenize(self, s):
+              A list of tokens
+        """
+        # 
+        return re.split(r'[\s·]+', s)
     
 
         
