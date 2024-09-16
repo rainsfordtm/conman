@@ -370,8 +370,8 @@ class ConcordanceMerger(Merger):
         Performs a sanity check on the merger parameters and prints a 
         warning if something is not compatible.
         """
-        if self.del_hits and not self.match_by == 'uuid':
-            print("WARNING: Merger not set to match by UUID. Hits will not be deleted.")
+        if self.del_hits and not self.match_by in ['uuid', 'ref']:
+            print("WARNING: Merger not set to match by UUID or REF. Hits will not be deleted.")
         
     def match_hit(self, other_hit, ix):
         """
@@ -393,12 +393,13 @@ class ConcordanceMerger(Merger):
             return self.cnc[l.index(other_hit.uuid)] if other_hit.uuid in l else None
         if self.match_by == 'ref': 
             # Calculate refs only once and store.
-            if not hasattr(self, '_cnc_refs'): self._cnc_refs = [hit.ref for hit in self.cnc]
-            l = self._cnc_refs
-            matches = list(filter(lambda x: x[0] == other_hit.ref, l))
-            if len(matches) == 1:
+            if not hasattr(self, '_cnc_refs'): self._cnc_refs = self.cnc.get_refs()
+            #l = self._cnc_refs
+            #matches = list(filter(lambda x: x[0] == other_hit.ref, l))
+            n = self._cnc_refs.count(other_hit.ref)
+            if n == 1:
                 # One matching reference
-                return self.cnc[matches[0][1]]
+                return self.cnc[self._cnc_refs.index(other_hit.ref)]
             else:
                 # None or more than one matching reference; return None
                 return None
@@ -449,6 +450,11 @@ class ConcordanceMerger(Merger):
             l = self.other_cnc.get_uuids()
             self.cnc = Concordance(list(
                 filter(lambda x: x.uuid in l, self.cnc)
+            ))
+        if self.del_hits and self.match_by == 'ref':
+            l = self.other_cnc.get_refs()
+            self.cnc = Concordance(list(
+                filter(lambda x: x.ref in l, self.cnc)
             ))
         return self.cnc
         

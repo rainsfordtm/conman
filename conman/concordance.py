@@ -37,6 +37,10 @@ class Concordance(collections.UserList):
     Methods:
     --------
     
+    get_refs(self):
+        Returns a list of REFs for all the Hits in the concordance in the
+        order in which they are currently stored.
+    
     get_uuids(self):
         Returns a list of UUIDs for all the Hits in the concordance in the
         order in which they are currently stored.
@@ -97,6 +101,18 @@ class Concordance(collections.UserList):
         collections.UserList.extend(self, other)
         
     # Other methods
+    
+    def get_refs(self):
+        """
+        Returns a list of REFs for all the Hits in the concordance in the
+        order in which they are currently stored.
+        
+        Returns:
+            get_refs(self):
+                List of refs in the order that they currently appear.
+        """
+        return [hit.ref for hit in self.data]
+    
     def get_uuids(self):
         """
         Returns a list of UUIDs for all the Hits in the concordance in the
