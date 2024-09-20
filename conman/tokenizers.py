@@ -40,6 +40,7 @@ class Tokenizer():
         TOKENIZER_TYPE_TO_CLASS_MAP = {
           'Tokenizer':  Tokenizer,
           'BfmTokenizer': BfmTokenizer,
+          'TxmFrenchTokenizer': TxmFrenchTokenizer,
           'FrantextTokenizer': FrantextTokenizer,
           'MidiaTokenizer': MidiaTokenizer
         }
@@ -74,6 +75,10 @@ class BfmTokenizer(Tokenizer):
         Tokenizes s, returning a list of tokens.
     """
     
+    def __init__(self):
+        self.token_regex_multi = "[^_\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
+        self.token_regex = "[^\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
+    
     def tokenize(self, s):
         """
         Tokenizes s, returning a list of tokens.
@@ -102,16 +107,17 @@ class BfmTokenizer(Tokenizer):
         # Step 2: Generate regex to identify a token from the number of
         # parts before the underscore plus a sophisticated regex to identify
         # the end of the token.
+        #print(parts)
         if parts > 0:
             # Used if every token contains at least one underscore, i.e.
             # underscores are special characters.
-            r = '[^_]+_' * parts + "[^_\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
+            r = '[^_]+_' * parts + self.token_regex_multi
         else:
             # Used if one token does not contain an underscore, i.e. 
             # underscores (probably) aren't special characters.
             # Necessary because there are occasional tokens containing
             # spaces in the BFM :-(
-            r = "[^\s'(]*[^\s'(),.!]'?|[,.()!]|,!"
+            r = self.token_regex
         regex = re.compile(r)
         # Step 3: Tokenize using re.match on the string.
         toks = []
@@ -131,6 +137,15 @@ class BfmTokenizer(Tokenizer):
                 toks.append(m.group(0))
             s = s[len(toks[-1]):].lstrip() # remove whitespace
         return toks
+        
+class TxmFrenchTokenizer(BfmTokenizer):
+    """
+    Slightly adapted form of BFM tokenizer for standard French
+    """
+    
+    def __init__(self):
+        self.token_regex_multi = "[^\s_,.\[\]\(\)!']*\.?[^\s_,.\[\]\(\)!']'?|[,.\[\]\(\)!']|,!|,´"
+        self.token_regex = "[^\s_,.\[\]\(\)!']*\.?[^\s_,.\[\]\(\)!']'?|[,.\[\]\(\)!']|,!|,´"
 
 class FrantextTokenizer(Tokenizer):
     """
