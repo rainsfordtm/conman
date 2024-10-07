@@ -145,11 +145,11 @@ class PennPsd(Parser):
         # 3. Line contains '*/', '*~/': treat as comment but set self.in_comment
         # to False
         # 4. self.in_comment is True
-        if re.match('//.*', line): return True
-        if re.match('/~?\*.*', line):
+        if re.match(r'//.*', line): return True
+        if re.match(r'/~?\*.*', line):
             self.in_comment = True
             return True
-        if re.search('\*~?/', line):
+        if re.search(r'\*~?/', line):
             self.in_comment = False
             return True
         if self.in_comment: return True

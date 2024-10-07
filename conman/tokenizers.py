@@ -76,8 +76,8 @@ class BfmTokenizer(Tokenizer):
     """
     
     def __init__(self):
-        self.token_regex_multi = "[^_\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
-        self.token_regex = "[^\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
+        self.token_regex_multi = r"[^_\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
+        self.token_regex = r"[^\s'(]*[^_\s'(),.!´][(']?|[,.)!]|,!|,´"
     
     def tokenize(self, s):
         """
@@ -111,7 +111,7 @@ class BfmTokenizer(Tokenizer):
         if parts > 0:
             # Used if every token contains at least one underscore, i.e.
             # underscores are special characters.
-            r = '[^_]+_' * parts + self.token_regex_multi
+            r = r'[^_]+_' * parts + self.token_regex_multi
         else:
             # Used if one token does not contain an underscore, i.e. 
             # underscores (probably) aren't special characters.
@@ -144,8 +144,8 @@ class TxmFrenchTokenizer(BfmTokenizer):
     """
     
     def __init__(self):
-        self.token_regex_multi = "[^\s_,.\[\]\(\)!']*\.?[^\s_,.\[\]\(\)!']'?|[,.\[\]\(\)!']|,!|,´"
-        self.token_regex = "[^\s_,.\[\]\(\)!']*\.?[^\s_,.\[\]\(\)!']'?|[,.\[\]\(\)!']|,!|,´"
+        self.token_regex_multi = r"[^\s_,.\[\]\(\)!']*\.?[^\s_,.\[\]\(\)!']'?|[,.\[\]\(\)!']|,!|,´"
+        self.token_regex = r"[^\s_,.\[\]\(\)!']*\.?[^\s_,.\[\]\(\)!']'?|[,.\[\]\(\)!']|,!|,´"
 
 class FrantextTokenizer(Tokenizer):
     """
