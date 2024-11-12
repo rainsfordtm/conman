@@ -625,6 +625,14 @@ class GrewMatchImporter(Importer):
                 # Continue the loop
                 # KeyError should never be raised
                 continue
+            # Iterate over all matched nodes in the query
+            for name, strix  in result['matching']['nodes'].items():
+                node_ix = int(strix) - 1
+                try:
+                    hit_src[node_ix].tags['grew_node'] = name
+                except IndexError:
+                    pass
+            # Set kw_ix
             try:
                 kw_ix = int(result['matching']['nodes'][self.keyword_node]) - 1
             except KeyError:
@@ -641,10 +649,11 @@ class GrewMatchImporter(Importer):
             try:
                 hit.kws = [hit.data[kw_ix]]
             except:
-                print(hit)
+                print("Keyword beyond end of match: mismatched IDS?. Ignoring")
+                #print(hit)
                 print(hit_src)
                 print(result)
-                raise
+                continue
             # Append hit to self.concordance
             self.concordance.append(hit)
         
@@ -1057,7 +1066,7 @@ class ConllImporter(TokenListImporter):
         
         self.lcx_regex = ''.join([
             r'(?P<conll_ID>[0-9\-]+)\t',
-            r'(?P<word>[^\t]+)\t',
+            r'(?P<word>[^\t]*)\t', # allow empty tokens
             r'(?P<conll_LEMMA>[^\t]+)\t',
             r'(?P<conll_CPOSTAG>[^\t]+)\t',
             r'(?P<conll_POSTAG>[^\t]+)\t',
