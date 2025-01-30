@@ -554,15 +554,16 @@ By default, the merger assumes that the two concordances contain the same
 **Hits** in the same order. If this isn't the case, you need to instruct the
 Merger how to match the **Hits** in the two concordances. There are two options:
 use the UUID (best) which ConMan attributes to every **Hit**, or use the reference
-string from the corpus. This can be configured using the `CM_match_by` 
-parameter, e.g.:
+string from the corpus. If the reference string is used, the text itself
+will be used to disambiguate **Hits** with the same reference in the
+corpus. The matching mode is configured by the `CM_match_by` parameter, e.g.:
 ```
 [setup]
 merger=ConcordanceMerger
 
 [merger]
 CM_match_by=uuid #match by UUID
-#CM_match_by=ref #match by reference
+#CM_match_by=ref #match by reference with text for disambiguation
 ```
 
 Additionally, if the user has updated existing tags, for example by correcting
