@@ -400,8 +400,45 @@ class ConcordanceMerger(Merger):
             if n == 1:
                 # One matching reference
                 return self.cnc[self._cnc_refs.index(other_hit.ref)]
+            elif n > 1:
+                # More than one matching reference. Disambiguate using
+                # text itself.
+                # 1. Get the indices of every matching reference
+                possible_hit_ixs = [i for i, x in enumerate(self._cnc_refs) if x == other_hit.ref]
+                # 2. Get the text from the other_hit.
+                other_text = other_hit.to_string(other_hit.TOKENS)
+                # 3. Iterate over possible matches and check against
+                # text.
+                l = []
+                for ix in possible_hit_ixs:
+                    possible_hit = self.cnc[ix]
+                    possible_hit_text = possible_hit.to_string(possible_hit.TOKENS)
+                    # 4. Calculate difference in length of text
+                    a, b = len(possible_hit_text), len(other_text)
+                    diff = a - b
+                    # The amount of text to be *removed* from each side of the 
+                    # LONGEST hit is either
+                    #   - (i) the absolute value of the difference in length (so double what's necessary)
+                    #   - (ii) or half of the difference in length between the longest hit and one-third
+                    #          of the length of the shortest hit, so that at least one-third of the
+                    #          shortest hit remains
+                    # whichever value is SMALLER (delete as little as necessary)
+                    k = min(
+                        abs(diff),
+                        (max(a, b) - (min(a, b) // 3)) // 2,
+                    )
+                    # Positive diff means possible_hit_text is longer and must be trimmed,
+                    # and vice versa.
+                    if (diff >= 0 and other_text.find(possible_hit_text[k:-k]) != -1) \
+                    or (diff < 0 and possible_hit_text.find(other_text[k:-k]) != -1):
+                        l.append(possible_hit)
+                # 4. If only one value has been found, return it, else None.
+                if len(l) == 1:
+                    return l[0]
+                else:
+                    return None
             else:
-                # None or more than one matching reference; return None
+                # No matching references; return None
                 return None
         # Assume match by list index
         return self.cnc[ix] if ix < len(self.cnc) else None
