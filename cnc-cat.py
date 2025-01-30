@@ -37,7 +37,7 @@ def main(infiles, outfile, gz=False):
         
     # Step 6. Check outfile path name, splitting off any user ending
     outfile = os.path.splitext(outfile)[0]
-    if not outfile.endswith('.cnc'): outfile += '.cnc'
+    if not outfile.endswith('.json'): outfile += '.json'
     if gz: outfile += '.gz'
     
     # Step 7. Save concordance
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', nargs=1, default=['out.cnc'],
         help='Output file.')
     parser.add_argument('-z', '--zip', action='store_true',
-        help='Gzip compress the .cnc file while saving.'
+        help='Gzip compress the .json file while saving.'
     )
     # Convert Namespace to dict.
     args = vars(parser.parse_args())

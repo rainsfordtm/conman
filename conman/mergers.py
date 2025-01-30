@@ -396,45 +396,24 @@ class ConcordanceMerger(Merger):
             if not hasattr(self, '_cnc_refs'): self._cnc_refs = self.cnc.get_refs()
             #l = self._cnc_refs
             #matches = list(filter(lambda x: x[0] == other_hit.ref, l))
-            n = self._cnc_refs.count(other_hit.ref)
-            if n == 1:
-                # One matching reference
-                return self.cnc[self._cnc_refs.index(other_hit.ref)]
-            elif n > 1:
-                # More than one matching reference. Disambiguate using
-                # text itself.
-                # 1. Get the indices of every matching reference
+            if self._cnc_refs.count(other_hit.ref):
+                # At least one matching reference. Now check KW.
+                # 1. Get possible_hits
                 possible_hit_ixs = [i for i, x in enumerate(self._cnc_refs) if x == other_hit.ref]
-                # 2. Get the text from the other_hit.
-                other_text = other_hit.to_string(other_hit.TOKENS)
-                # 3. Iterate over possible matches and check against
-                # text.
-                l = []
-                for ix in possible_hit_ixs:
-                    possible_hit = self.cnc[ix]
-                    possible_hit_text = possible_hit.to_string(possible_hit.TOKENS)
-                    # 4. Calculate difference in length of text
-                    a, b = len(possible_hit_text), len(other_text)
-                    diff = a - b
-                    # The amount of text to be *removed* from each side of the 
-                    # LONGEST hit is either
-                    #   - (i) the absolute value of the difference in length (so double what's necessary)
-                    #   - (ii) or half of the difference in length between the longest hit and one-third
-                    #          of the length of the shortest hit, so that at least one-third of the
-                    #          shortest hit remains
-                    # whichever value is SMALLER (delete as little as necessary)
-                    k = min(
-                        abs(diff),
-                        (max(a, b) - (min(a, b) // 3)) // 2,
-                    )
-                    # Positive diff means possible_hit_text is longer and must be trimmed,
-                    # and vice versa.
-                    if (diff >= 0 and other_text.find(possible_hit_text[k:-k]) != -1) \
-                    or (diff < 0 and possible_hit_text.find(other_text[k:-k]) != -1):
-                        l.append(possible_hit)
-                # 4. If only one value has been found, return it, else None.
-                if len(l) == 1:
-                    return l[0]
+                possible_hits = [self.cnc[i] for i in possible_hit_ixs]
+                # 2. Check the keywords if there are keywords in both hits.
+                if other_hit.kws and possible_hits[0].kws:
+                    possible_hits = match_by_kw(possible_hits, other_hit)
+                    # Return None if kw matching failed.
+                    if not possible_hits: return None
+                # 3. Check the text.
+                possible_hits = match_by_text(possible_hits, other_hit)
+                # If we're left with just one hit, use that
+                if len(possible_hits) == 1:
+                    return possible_hits[0]
+                # Nothing matches despite matching references, or 
+                # multiple matches that we can't disambiguate. In
+                # either case, matching has failed.
                 else:
                     return None
             else:
@@ -582,3 +561,65 @@ class TokenMerger():
                 tok.tags.update(d)
         return hit
             
+def match_by_kw(hits, other_hit):
+    """
+    Tries to disambiguate hits with an identical ref by using the
+    KEYWORD. If one text has no keywords, it 
+    
+    Parameters:
+        hits:                List of hits which could match other_hit
+        other_hit:           Single hit
+        
+    Returns:
+        match_by_kw(hits, other_hit):
+            A list of possible matches.
+    """
+    l = []
+    other_kw = other_hit.to_string(other_hit.KEYWORDS)
+    for hit in hits:
+        kw = hit.to_string(hit.KEYWORDS)
+        if kw == other_kw or not kw or not other_kw:
+            l.append(hit)
+    return l
+    
+def match_by_text(hits, other_hit):
+    """
+    Tries to disambiguate hits with an identical ref by using the
+    TOKEN string, trimming the context.
+    
+    Parameters:
+        hits:                List of hits which could match other_hit
+        other_hit:           Single hit
+        
+    Returns:
+        match_by_text(hits, other_hit):
+            A list of possible matches.
+    """
+    
+    # 1. Get the text from the other_hit.
+    other_text = other_hit.to_string(other_hit.TOKENS)
+    # 2. Iterate over possible matches and check against text.
+    l = []
+    for hit in hits:
+        hit_text = hit.to_string(hit.TOKENS)
+        # 3. Calculate difference in length of text
+        a, b = len(hit_text), len(other_text)
+        diff = a - b
+        # The amount of text to be *removed* from each side of the 
+        # LONGEST hit is either
+        #   - (i) the absolute value of the difference in length (so double what's necessary)
+        #   - (ii) or half of the difference in length between the longest hit and one-third
+        #          of the length of the shortest hit, so that at least one-third of the
+        #          shortest hit remains
+        # whichever value is SMALLER (delete as little as necessary)
+        k = min(
+            abs(diff),
+            (max(a, b) - (min(a, b) // 3)) // 2,
+        )
+        # Positive diff means possible_hit_text is longer and must be trimmed,
+        # and vice versa.
+        if (diff >= 0 and other_text.find(hit_text[k:-k]) != -1) \
+        or (diff < 0 and hit_text.find(other_text[k:-k]) != -1):
+            l.append(hit)
+    return l
+

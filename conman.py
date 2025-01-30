@@ -67,6 +67,7 @@ class Launcher():
         self.merger = None
         self.annotator = None
         self.workflow = None
+        self.annotator_script = None
         
     def _initialize_from_path(self):
         # Uses the path variables to set importers, exporters and mergers
@@ -91,6 +92,13 @@ class Launcher():
             self.exporter = get_exporter_from_path(self.path_out)
         else:
             self.path_save = self.path_out
+        if self.annotator_script:
+            self.annotator = Annotator.create('Annotator')
+            # Load the module
+            name = os.path.splitext(os.path.basename(self.annotator_script))[0]
+            script_module = load_module(name, self.annotator_script)
+            # Update the class method
+            Annotator.script = script_module.script
             
     def _initialize_from_workflow(self):
         # 1. Read setup section
@@ -106,6 +114,10 @@ class Launcher():
                 else:
                     obj = Importer.create(value)
                 setattr(self, key, obj)
+        # 1b. If there's an annotator script on the command line,
+        # create an annotator too.
+        if self.annotator_script:
+            self.annotator = Annotator.create('Annotator')
         # 2. Read importer and other_importer sections
         for section, importer in [
             ('importer', self.importer), ('other_importer', self.other_importer)
@@ -255,7 +267,8 @@ class Launcher():
                         self.annotator.kwargs[key] = eval(value)
                     except:
                         raise ConfigError('Error in annotator option "{}={}"'.format(key, value))
-            value = self.workflow.get('advanced', 'annotator_script_file', fallback='')
+            # Override with command line.
+            value = self.annotator_script or self.workflow.get('advanced', 'annotator_script_file', fallback='')
             if value:
                 # Load the module
                 name = os.path.splitext(os.path.basename(value))[0]
@@ -292,6 +305,8 @@ class Launcher():
             self._initialize_from_workflow()
         else:
             self._initialize_from_path()
+        if annotator_script:
+            self.annotator
         # 2. Importing
         print('Loading/importing concordance...')
         if not self.cnc:
@@ -330,7 +345,8 @@ class Launcher():
             raise ConfigError('Cannot save or export the result.')
         print('Done!')
 
-def main(path_in, path_out, path_other='', path_workflow='', 
+def main(path_in, path_out, path_other='', path_workflow='',
+    path_annotator_script='',
     save=False, json=False, gz=False):
     """
     Builds and runs a Launcher object.
@@ -341,6 +357,7 @@ def main(path_in, path_out, path_other='', path_workflow='',
     path_out (str):         Path to output file.
     path_merge (str):       Path to secondary input file.
     path_workflow (str):    Path to workflow configuration file.
+    path_annotator_script (str):    Path to annotator script file.
     """
     launcher = Launcher(path_in, path_out)
     if json:
@@ -356,6 +373,8 @@ def main(path_in, path_out, path_other='', path_workflow='',
         with open(path_workflow, 'r') as f:
             cfg.read_file(f)
         launcher.workflow = cfg
+    if path_annotator_script:
+        launcher.annotator_script = os.path.abspath(path_annotator_script)
     launcher.launch()
     
 def load_module(module_name, path):
@@ -398,11 +417,17 @@ if __name__ == '__main__':
     parser.add_argument('-z', '--zip', action='store_true',
         help='Gzip compress the .cnc or .json file while saving.'
     )
+    parser.add_argument('--annotator_script', nargs=1, default=[''],
+        help='Python script to be used by annotator module. ' + \
+        'Overrides value in workflow file.'
+    )
     # Convert Namespace to dict.
     args = vars(parser.parse_args())
     merge = args.pop('merge')[0] if 'merge' in args else ''
     workflow = args.pop('workflow')[0] if 'workflow' in args else ''
+    annotator_script = args.pop('annotator_script')[0] if 'annotator_script' in args else ''
     main(args.pop('infile'), args.pop('outfile'), merge,
-        workflow, args.pop('save'), args.pop('json'), args.pop('zip'))
+        workflow, annotator_script, 
+        args.pop('save'), args.pop('json'), args.pop('zip'))
     
 
