@@ -2,7 +2,7 @@
 
 Concordance management and generation tools for SILPAC H1 WP2.
 
-© Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, October 2023 - September 2024
+© Tom Rainsford, Institut für Linguistik/Romanistik, University of Stuttgart, October 2023 - January 2025
 
 [https://silpac.uni-mannheim.de/](https://silpac.uni-mannheim.de/)
 [https://sites.google.com/site/rainsfordtm/home](https://sites.google.com/site/rainsfordtm/home)
@@ -560,6 +560,7 @@ There are three options:
     if references in both corpora are unique;
 + `refandtext`: use the reference string (REF), the keywords and some
     of the context text.
+
 The `refandtext` method is designed for cases where the UUIDs can't be
 used and the REF strings are not unique (e.g. page reference).
 In this case, **Hits** only match if the reference is identical, the
@@ -796,8 +797,9 @@ def script(annotator):
 
 #### 6.3.3 Understanding Hits and Tokens
 
-The `conman.concordance.Hit` object passed to the script is a list of 
-`conman.concordance.Tokens` and has the following attributes:
+The `.hit` of the `annotator` object passed to the script is an 
+instance of `conman.concordance.Hit`, which is a list of
+`conman.concordance.Token` objects. It also has the following attributes:
 + `hit.kws`: list of keywords
 + `hit.tags`: dictionary of all hit-level tags
 + `hit.ref`: reference from corpus
