@@ -552,19 +552,28 @@ database.
 
 By default, the merger assumes that the two concordances contain the same
 **Hits** in the same order. If this isn't the case, you need to instruct the
-Merger how to match the **Hits** in the two concordances. There are two options:
-use the UUID (best) which ConMan attributes to every **Hit**, or use the reference
-string, the keyword, and the text from the corpus. Reference strings
-and keywords must be identical but the amount of context text checked is
-adjusted if the contexts are of different sizes. The matching mode is
-set by the `CM_match_by` parameter, e.g.:
+Merger how to match the **Hits** in the two concordances. 
+There are three options:
++ `uuid`: use the UUID, which ConMan attributes to every **Hit**
+    on import and is always unique;
++ `ref`: use the reference string (REF), which only works accurately
+    if references in both corpora are unique;
++ `refandtext`: use the reference string (REF), the keywords and some
+    of the context text.
+The `refandtext` method is designed for cases where the UUIDs can't be
+used and the REF strings are not unique (e.g. page reference).
+In this case, **Hits** only match if the reference is identical, the
+keywords are identical, and the context text is similar (the amount of
+context text that is checked is adjusted if the contexts are of different
+sizes). The matching mode is set by the `CM_match_by` parameter, e.g.:
 ```
 [setup]
 merger=ConcordanceMerger
 
 [merger]
 CM_match_by=uuid #match by UUID
-#CM_match_by=ref #match by reference, keyword, and text.
+#CM_match_by=ref #match by REF
+#CM_match_by=refandtext #match by REF, keyword, and context text.
 ```
 
 Additionally, if the user has updated existing tags, for example by correcting
@@ -752,8 +761,13 @@ tags=['lemma_rnn']
 
 #### 6.3.1 Calling the script
 
-Create a Python file anywhere on your computer for the script. The script
-is enabled using the following settings in the workflow file:
+Create a Python file anywhere on your computer for the script. 
+The script can be called from the command line:
+```
+./conman.py in_file.csv out_file.csv --annotator_script myannotator.py
+```
+Alternatively, the script can be enabled in a workflow file. This
+is necessary when you need to pass further arguments to your script.
 ```
 [setup]
 annotator=Annotator # Run an annotator
@@ -765,15 +779,19 @@ annotator=Annotator # Run an annotator
 [advanced]
 annotator_script_file=/home/me/myscripts/myannotator.py
 ```
+Scripts passed on the command line override the settings in the workflow
+file.
 
 #### 6.3.2 The `script()` method
 
-Your script file must contain a `script()` method with two positional
-arguments, `annotator` and `hit` and it must return a hit. Here is
-the minimal "do nothing" function:
+Your script file must contain a `script()` method with a single positional
+argument, `annotator`. ConMan passes an instance of the `Annotator` 
+class which has a `.hit` attribute pointing to the **Hit** to be annotated.
+The script shouldn't return anything, just modify `annotator.hit`.
+Here's the minimal do nothing script:
 ```
-def script(annotator, hit):
-    return hit
+def script(annotator):
+    pass
 ```
 
 #### 6.3.3 Understanding Hits and Tokens
@@ -799,9 +817,11 @@ all token-level annotation.
 Here's a commented version of the `KeywordTagAnnotator` script to demonstrate
 how **Hits** and **Tokens** can be processed by the Annotator module:
 ```
-def script(annotator, hit, tags=[]):
+def script(annotator, tags=[]):
     # The tags keyword argument is specified in the workflow file.
     # It contains a list of (kw_tag, hit_tag) tuples.
+    # We start by giving annotator.hit a more convenient name.
+    hit = annotator.hit
     # The main loop iterates over the tags list passed to the script.
     for kw_tag, hit_tag in tags:
     	# Initialize an empty list, which we will use to store the 
@@ -822,8 +842,6 @@ def script(annotator, hit, tags=[]):
 	# underscore and store this value in the hit.tags dictionary 
 	# under the key provided by the user in the tags list.
         hit.tags[hit_tag] = '_'.join(l)
-    # Return the modified hit.
-    return hit
 ```
 
 More complex queries are possible, for example using dependency annotation
@@ -911,6 +929,9 @@ tags=[('conll_DEPREL', 'deprel'), ('conll_HEAD', 'head')]
 
 ## Version history
 
++ January 2025: version 1.2
+    + added `refandtext` method to Merger
+    + enabled annotator scripts to be passed on the command line
 + September 2024: version 1.1
     + added handling of agglutinated tokens in CONLL-U format
     + change base save format to .json (formerly .cnc pickle)

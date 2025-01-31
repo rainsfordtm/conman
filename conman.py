@@ -231,7 +231,7 @@ class Launcher():
                     if value.lower() == 'true':
                         setattr(self.merger, key[3:], True)
                 value = self.workflow.get('merger', 'CM_match_by', fallback='')
-                if value in ['uuid', 'ref']: self.merger.match_by = value
+                if value in ['uuid', 'ref', 'refandtext']: self.merger.match_by = value
                 value = self.workflow.get('merger', 'CM_update_hit_tags', fallback='')
                 if value.lower() == 'true': self.merger.update_tags = True
                 value = self.workflow.get('merger', 'CM_merge_tokens', fallback='')

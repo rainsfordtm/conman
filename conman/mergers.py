@@ -329,8 +329,10 @@ class ConcordanceMerger(Merger):
         concordance. Uses UUIDs and therefore only applies where use_uuid is
         set to True. Default is False.
     match_by (str):
-        A string telling the merger how to match hits. The only possible values
-        are 'uuid' and 'ref'. If empty string (default), assumes list index.
+        A string telling the merger how to match hits. Possible values
+        are 'uuid', 'ref' and 'refandtext'. If the value is an empty
+        string (default), it assumes the two concordances contain the
+        same hits in the same order (i.e. list index).
     update_tags (bool):
         Update values already present in hit.tags with new values from the
         merging concordance. Default is False.
@@ -391,9 +393,32 @@ class ConcordanceMerger(Merger):
             if not hasattr(self, '_cnc_uuids'): self._cnc_uuids = self.cnc.get_uuids()
             l = self._cnc_uuids
             return self.cnc[l.index(other_hit.uuid)] if other_hit.uuid in l else None
-        if self.match_by == 'ref': 
+        if self.match_by in ['ref', 'refandtext']:
             # Calculate refs only once and store.
             if not hasattr(self, '_cnc_refs'): self._cnc_refs = self.cnc.get_refs()
+            # Count number of matching references
+            n = self._cnc_refs.count(other_hit.ref)
+        if self.match_by == 'ref':
+            # If there are any matching refs, return the final one.
+            # Why?
+            # Because we don't check other_cnc for duplicate refs. So
+            # in a one-to-many merge, we'll merge the final hit from
+            # other_cnc rather than complaining about duplicates.
+            # If there are duplicate REFs, we shouldn't be using this
+            # method.
+            if n > 0:
+                # To get the index of the LAST occurrence, we reverse
+                # the list, use index() to return the FIRST occurrence,
+                # and then express this as a negative index.
+                # I.e. index 0 in the reversed list is index -1 in the
+                # normal list, index 1 is index -2, etc.
+                return self.cnc[
+                    -1 - list(reversed(self._cnc_refs)).index(other_hit.ref)
+                ]
+            else:
+                # no matches
+                return None
+        if self.match_by == 'refandtext':
             #l = self._cnc_refs
             #matches = list(filter(lambda x: x[0] == other_hit.ref, l))
             if self._cnc_refs.count(other_hit.ref):
