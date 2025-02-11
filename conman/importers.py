@@ -102,6 +102,7 @@ class Importer():
           'Importer':  Importer,
           'TokenListImporter': TokenListImporter,
           'ConllImporter': ConllImporter,
+          'ConlluImporter': ConlluImporter,
           'TableImporter': TableImporter,
           'PennOutImporter': PennOutImporter,
           'BaseTreeImporter': BaseTreeImporter,
@@ -590,7 +591,7 @@ class GrewMatchImporter(Importer):
         self.add_ref_prefix = True
         self.corpus_path = ''
         self.keyword_node = 'X'
-        self._importer = ConllImporter()
+        self._importer = ConlluImporter()
         self._importer.head_is_kw = False
         self._multi = False # Hidden attribute, set from corpus_path extension
         
@@ -996,11 +997,26 @@ class ConllImporter(TokenListImporter):
         it's stored in the dictionary, otherwise it's ignored.
     """
     
+    ID = 'conll_ID'
+    HEAD = 'conll_HEAD'
+    
     def __init__(self):
         TokenListImporter.__init__(self)
         self.head_is_kw = True
         # Raise Parse Error if a token can't be dealt with.
         self._on_token_parse_error = 'raise'
+        self.lcx_regex = ''.join([
+            r'(?P<conll_ID>[0-9\-]+)\t',
+            r'(?P<word>[^\t]*)\t', # allow empty tokens
+            r'(?P<conll_LEMMA>[^\t]+)\t',
+            r'(?P<conll_CPOSTAG>[^\t]+)\t',
+            r'(?P<conll_POSTAG>[^\t]+)\t',
+            r'(?P<conll_FEATS>[^\t]+)\t',
+            r'(?P<conll_HEAD>[^\t]+)\t',
+            r'(?P<conll_DEPREL>[^\t]+)\t',
+            r'(?P<conll_PHEAD>[^\t]+)\t',
+            r'(?P<conll_PDEPREL>[^\t]+).*'
+        ])
         
     def head_to_kw(self):
         """
@@ -1011,7 +1027,7 @@ class ConllImporter(TokenListImporter):
         for hit in self.concordance:
             for tok in hit:
                 try: 
-                    if str(tok.tags['conll_HEAD']) == '0':
+                    if str(tok.tags[self.HEAD]) == '0':
                         hit.kws = [tok]
                         continue
                 except:
@@ -1052,7 +1068,7 @@ class ConllImporter(TokenListImporter):
                     # Decrease span
                     span += -1
                 else:
-                    ixs = tok.tags['conll_ID'].split('-')
+                    ixs = tok.tags[self.ID].split('-')
                     if len(ixs) > 1:
                         # append the token to the deletion list
                         l.append(tok)
@@ -1064,18 +1080,6 @@ class ConllImporter(TokenListImporter):
             for tok in l:
                 hit.remove(tok)
         
-        self.lcx_regex = ''.join([
-            r'(?P<conll_ID>[0-9\-]+)\t',
-            r'(?P<word>[^\t]*)\t', # allow empty tokens
-            r'(?P<conll_LEMMA>[^\t]+)\t',
-            r'(?P<conll_CPOSTAG>[^\t]+)\t',
-            r'(?P<conll_POSTAG>[^\t]+)\t',
-            r'(?P<conll_FEATS>[^\t]+)\t',
-            r'(?P<conll_HEAD>[^\t]+)\t',
-            r'(?P<conll_DEPREL>[^\t]+)\t',
-            r'(?P<conll_PHEAD>[^\t]+)\t',
-            r'(?P<conll_PDEPREL>[^\t]+).*'
-        ])
         # Run parse from the parent class
         TokenListImporter.parse(self, path)
         # Re-parse agglutinated tokens
@@ -1109,6 +1113,51 @@ class ConllImporter(TokenListImporter):
             return {m.group(1): m.group(2)}
         else:
             return {}
+            
+class ConlluImporter(ConllImporter):
+    """
+    Class to import Conll-U files. Identical to ConllImporter except
+    that it uses UD column names by resetting self.lcx_regex.
+    
+    Attributes:
+    -----------
+    head_is_kw (boolean):
+        If set to True, it turns the first sentence root element in a 
+        parsed structure into the keyword. If False, no keywords are
+        identified. Default is True.
+        
+    Methods:
+    --------
+    head_to_kw(self):
+        Promotes the first token for which conll_HEAD is 0 to a keyword,
+        allowing the hit to be treated as a concordance with left and
+        right context.
+        
+    parse(self, path):
+        Parses a conllu file, returns a Concordance
+        
+    parse_comment(self, s):
+        Parses a comment line. If the line has the form "# key = value",
+        it's stored in the dictionary, otherwise it's ignored.
+    """
+    
+    ID = 'ID'
+    HEAD = 'HEAD'
+    
+    def __init__(self):
+        ConllImporter.__init__(self)
+        self.lcx_regex = ''.join([
+            r'(?P<ID>[0-9\-]+)\t',
+            r'(?P<word>[^\t]*)\t', # allow empty tokens
+            r'(?P<LEMMA>[^\t]+)\t',
+            r'(?P<UPOS>[^\t]+)\t',
+            r'(?P<XPOS>[^\t]+)\t',
+            r'(?P<FEATS>[^\t]+)\t',
+            r'(?P<HEAD>[^\t]+)\t',
+            r'(?P<DEPREL>[^\t]+)\t',
+            r'(?P<DEPS>[^\t]+)\t',
+            r'(?P<MISC>[^\t]+).*'
+        ])
       
 def context_to_list(lcx, keywds, rcx):
     """

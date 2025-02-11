@@ -59,6 +59,7 @@ class Annotator():
         ANNOTATOR_TYPE_TO_CLASS_MAP = {
           'Annotator':  Annotator,
           'ConllAnnotator': ConllAnnotator,
+          'ConlluAnnotator': ConlluAnnotator,
           'CoreContextAnnotator': CoreContextAnnotator,
           'EvaluationAnnotator': EvaluationAnnotator,
           'KeywordTagAnnotator': KeywordTagAnnotator,
@@ -186,6 +187,9 @@ class ConllAnnotator(Annotator):
     file.
     """
     
+    ID = 'conll_ID'
+    HEAD = 'conll_HEAD'
+    
     def get_children(self, parent):
         """
         Returns all child toks of tok.
@@ -200,9 +204,9 @@ class ConllAnnotator(Annotator):
         """
         l = []
         for tok in self.hit:
-            if not 'conll_ID' in tok.tags: continue
+            if not self.HEAD in tok.tags: continue
             try:
-                if int(tok.tags['conll_HEAD']) == int(parent.tags['conll_ID']):
+                if int(tok.tags[self.HEAD]) == int(parent.tags[self.ID]):
                     l.append(tok)
             except:
                 print(self.hit)
@@ -231,7 +235,7 @@ class ConllAnnotator(Annotator):
             for tok in toks:
                 newl += self.get_children(tok)
             l += newl
-        l.sort(key=lambda x: int(x.tags['conll_ID']))
+        l.sort(key=lambda x: int(x.tags[self.ID]))
         return l
         
     def get_parent(self, tok):
@@ -247,9 +251,9 @@ class ConllAnnotator(Annotator):
             self.get_parent(tok)
                 The parent token identified by the conll_HEAD tag.
         """
-        head_id = int(tok.tags.get('conll_HEAD', '0'))
+        head_id = int(tok.tags.get(self.HEAD, '0'))
         if head_id == 0: return None
-        l = list(filter(lambda x: int(x.tags.get('conll_ID', '0')) == head_id, self.hit))
+        l = list(filter(lambda x: int(x.tags.get(self.ID, '0')) == head_id, self.hit))
         if not l: return None
         return l[0]
     
@@ -268,7 +272,7 @@ class ConllAnnotator(Annotator):
         """
         tree = self.get_descendents(parent)
         tree.append(parent)
-        tree.sort(key=lambda x: int(x.tags['conll_ID']))
+        tree.sort(key=lambda x: int(x.tags[self.ID]))
         return ' '.join([x.form for x in tree])
         
     def reset_ids(self):
@@ -278,13 +282,22 @@ class ConllAnnotator(Annotator):
         """
         i, last_id = 0, 0
         for tok in self.hit:
-            if not 'conll_ID' in tok.tags: continue
-            if int(tok.tags['conll_ID']) < last_id:
+            if not self.ID in tok.tags: continue
+            if int(tok.tags[self.ID]) < last_id:
                 last_id = 0
                 i += 1
-            last_id = int(tok.tags['conll_ID'])
-            tok.tags['conll_ID'] = str(i*100 + int(tok.tags['conll_ID']))
-            tok.tags['conll_HEAD'] = str(i*100 + int(tok.tags['conll_HEAD']))
+            last_id = int(tok.tags[self.ID])
+            tok.tags[self.ID] = str(i*100 + int(tok.tags[self.ID]))
+            tok.tags[self.HEAD] = str(i*100 + int(tok.tags[self.HEAD]))
+            
+class ConlluAnnotator(ConllAnnotator):
+    """
+    Annotator with methods for parsing the structure of a CONLL-U
+    file. Identical to ConllAnnotator but uses updated column names.
+    """
+    
+    ID = 'ID'
+    HEAD = 'HEAD'
 
 class CoreContextAnnotator(Annotator):
     """
